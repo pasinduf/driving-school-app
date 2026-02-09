@@ -9,9 +9,6 @@ import { AuthProvider } from './context/AuthContext';
 import { MasterDataProvider } from './context/MasterDataContext';
 import { Toaster } from 'sonner';
 
-// Placeholder components for now
-const ServicesPage = () => <div className="p-8"><h1 className="text-2xl font-bold">Services Placeholder</h1></div>;
-
 function App() {
   return (
     <AuthProvider>
@@ -22,9 +19,8 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<Layout />}>
               <Route index element={<HomePage />} />
-              <Route path="services" element={<ServicesPage />} />
               <Route path="booking" element={<BookingPage />} />
-              <Route path="admin" element={<AdminPage />} />
+              {/* <Route path="admin" element={<AdminPage />} /> */}
             </Route>
           </Routes>
         </BrowserRouter>

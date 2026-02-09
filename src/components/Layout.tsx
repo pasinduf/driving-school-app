@@ -47,7 +47,7 @@ export default function Layout() {
                                     <a href="/#contact" className="hover:text-primary transition-colors">CONTACT</a>
                                 </>
                             )}
-                            <Link to="/admin" className="hover:text-primary transition-colors">ADMIN</Link>
+                            {/* <Link to="/admin" className="hover:text-primary transition-colors">ADMIN</Link> */}
                         </nav>
                         {showFullNav && (
                             <Link
