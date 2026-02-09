@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
-import AdminPage from './pages/AdminPage';
+// import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import { AuthProvider } from './context/AuthContext';
 import { MasterDataProvider } from './context/MasterDataContext';
