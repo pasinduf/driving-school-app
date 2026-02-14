@@ -1,28 +1,34 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { fetchSuburbs, type Suburb } from '../api/client';
+import { fetchSuburbs, fetchTestingCenters, type Suburb, type TestingCenter } from '../api/client';
 
 interface MasterDataContextType {
     suburbs: Suburb[];
+    testingCenters: TestingCenter[];
     loading: boolean;
     error: any;
-    refreshSuburbs: () => Promise<void>;
+    refreshData: () => Promise<void>;
 }
 
 const MasterDataContext = createContext<MasterDataContextType | undefined>(undefined);
 
 export const MasterDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [suburbs, setSuburbs] = useState<Suburb[]>([]);
+    const [testingCenters, setTestingCenters] = useState<TestingCenter[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<any>(null);
 
-    const loadSuburbs = async () => {
+    const loadData = async () => {
         setLoading(true);
         try {
-            const data = await fetchSuburbs();
-            setSuburbs(data);
+            const [suburbsData, centersData] = await Promise.all([
+                fetchSuburbs(),
+                fetchTestingCenters()
+            ]);
+            setSuburbs(suburbsData);
+            setTestingCenters(centersData);
             setError(null);
         } catch (err) {
-            console.error("Failed to load suburbs", err);
+            console.error("Failed to load master data", err);
             setError(err);
         } finally {
             setLoading(false);
@@ -30,11 +36,11 @@ export const MasterDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
 
     useEffect(() => {
-        loadSuburbs();
+        loadData();
     }, []);
 
     return (
-        <MasterDataContext.Provider value={{ suburbs, loading, error, refreshSuburbs: loadSuburbs }}>
+        <MasterDataContext.Provider value={{ suburbs, testingCenters, loading, error, refreshData: loadData }}>
             {children}
         </MasterDataContext.Provider>
     );

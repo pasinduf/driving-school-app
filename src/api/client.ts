@@ -18,7 +18,7 @@ apiClient.interceptors.request.use((config) => {
 export interface Suburb {
     id: string;
     name: string;
-    postcode: string;
+    postalcode: string;
 }
 
 export interface Slot {
@@ -28,7 +28,7 @@ export interface Slot {
 }
 
 export interface BookingRequest {
-    suburbId: string;
+    suburbId: string | number;
     date: string; // YYYY-MM-DD
     time: string; // HH:mm
     duration: number; // minutes
@@ -42,34 +42,58 @@ export interface BookingRequest {
     token: string; // lock token
 }
 
+// ... existing imports
+export interface TestingCenter {
+    id: string;
+    name: string;
+    code: string;
+    postalcode: string;
+}
+
+export const fetchTestingCenters = async () => {
+    const response = await apiClient.get<TestingCenter[]>('/testing-centers');
+    return response.data;
+};
+
 export const fetchSuburbs = async () => {
     const response = await apiClient.get<Suburb[]>('/suburbs');
     return response.data;
 };
+export const getAvailableDates = async (startDate: string) => {
+    const response = await apiClient.get<{ date: string; isAvailable: boolean; reason?: string }[]>('/bookings/dates', {
+        params: { startDate },
+    });
+    return response.data;
+};
 
-export const fetchSlots = async (suburbId: string, date: string, duration: number) => {
+export const fetchSlots = async (date: string, duration: number, margin?: number, step?: number) => {
     const response = await apiClient.get<Slot[]>('/slots/availability', {
-        params: { suburbId, date, duration },
+        params: { date, duration, margin, step },
     });
     return response.data;
 };
 
-export const lockSlot = async (suburbId: string, date: string, time: string) => {
-    const response = await apiClient.post<{ token: string; expiresAt: number }>('/bookings/lock', {
-        suburbId, date, time
+export const lockSlots = async (slots: { date: string; time: string }[]) => {
+    const response = await apiClient.post<{ token: string; expiresAt: number, sessionDuration: number }>('/bookings/lock', {
+        slots
     });
     return response.data;
 };
 
-export const unlockSlot = async (suburbId: string, date: string, time: string, token: string) => {
+export const unlockSlots = async (slots: { date: string; time: string }[], token: string) => {
     const response = await apiClient.post('/bookings/unlock', {
-        suburbId, date, time, token
+        token, slots
     });
     return response.data;
 };
 
-export const confirmBooking = async (details: BookingRequest) => {
-    const response = await apiClient.post('/bookings/confirm', details);
+export const createBooking = async (details: BookingRequest & { slots?: { date: string; time: string }[]; totalAmount?: number; packageId?: string }) => {
+    const response = await apiClient.post('/bookings/create', details);
+    return response.data;
+};
+
+export const fetchPackages = async () => {
+    const response = await apiClient.get<any[]>('/packages');
     return response.data;
 };
 

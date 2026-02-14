@@ -219,7 +219,7 @@ export default function AdminPage() {
                             >
                                 <option value="">All Suburbs</option>
                                 {suburbs.map(s => (
-                                    <option key={s.id} value={s.id}>{s.name} ({s.postcode})</option>
+                                    <option key={s.id} value={s.id}>{s.name} ({s.postalcode})</option>
                                 ))}
                             </select>
                         </div>
@@ -401,7 +401,7 @@ export default function AdminPage() {
                                             >
                                                 <option value="">All Suburbs (Global)</option>
                                                 {suburbs.map(s => (
-                                                    <option key={s.id} value={s.id}>{s.name} ({s.postcode})</option>
+                                                    <option key={s.id} value={s.id}>{s.name} ({s.postalcode})</option>
                                                 ))}
                                             </select>
                                         </div>

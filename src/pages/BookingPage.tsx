@@ -1,277 +1,520 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchSlots, lockSlot, confirmBooking, unlockSlot } from '../api/client';
-import type { Suburb, Slot } from '../api/client';
+import { fetchSlots, lockSlots, createBooking, unlockSlots } from '../api/client';
+import type { Suburb, Slot, TestingCenter } from '../api/client';
 import { format, parseISO } from 'date-fns';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import BookingForm from '../components/BookingForm';
-import SlotGrid from '../components/SlotGrid';
+import PackageSelect from '../components/PackageSelect';
+import DateDropdown from '../components/DateDropdown';
 import { useMasterData } from '../context/MasterDataContext';
+import BookingStepper from '../components/BookingStepper';
+
+interface Package {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    maximumSlotsCount: number;
+}
+
+interface BookingSlot {
+    date: string;
+    time: string;
+}
 
 export default function BookingPage() {
     const [step, setStep] = useState(1);
+
+    // Step 1: Location
+    const [selectedCenter, setSelectedCenter] = useState<TestingCenter | null>(null);
     const [selectedSuburb, setSelectedSuburb] = useState<Suburb | null>(null);
+    const { suburbs, testingCenters, loading: loadingData } = useMasterData();
+
+    // Step 2: Package
+    const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+
+    // Step 3: Date & Time
     const [selectedDate, setSelectedDate] = useState<string>('');
-    const [duration, setDuration] = useState<number>(60);
-    const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+    const [selectedSlots, setSelectedSlots] = useState<BookingSlot[]>([]);
+    const [selectedSlotDetails, setSelectedSlotDetails] = useState<Slot[]>([]); // To store full slot objects for display
+
+    // Step 4: Booking
     const [lockToken, setLockToken] = useState<string | null>(null);
     const [lockExpiry, setLockExpiry] = useState<number | null>(null);
     const [timeLeft, setTimeLeft] = useState<string>('');
     const [successData, setSuccessData] = useState<any | null>(null);
 
-    // Fetch Suburbs using useMasterData hook
-    const { suburbs, loading: loadingSuburbs } = useMasterData();
+    // Derived State
+    // Derived State
+    const maxSlots = (() => {
+        if (!selectedPackage) return 1;
+        if (selectedPackage.name.includes('5 X 1HR')) return 5;
+        if (selectedPackage.name.includes('10 X 1HR')) return 10;
+        if (selectedPackage.name.includes('3 X 1HR')) return 3;
+        if (['45MIN LESSON', '1HR LESSON', '1.5HR LESSON', '2HR LESSON'].includes(selectedPackage.name)) {
+            return 10; // Allow multiple selection for single lessons
+        }
+        return 1;
+    })();
 
-    // Fetch Slots (Enabled when suburb and date selected)
-    const { data: slots, isLoading: loadingSlots, refetch: refetchSlots } = useQuery({
-        queryKey: ['slots', selectedSuburb?.id, selectedDate, duration],
-        queryFn: () => fetchSlots(selectedSuburb!.id, selectedDate, duration),
-        enabled: !!selectedSuburb && !!selectedDate,
+    const getMargin = (pkgName: string) => {
+        // Specific Single Lesson Rules
+        if (pkgName === '45MIN LESSON') return 15;
+        if (pkgName === '1HR LESSON') return 15;
+        if (pkgName === '1.5HR LESSON') return 30;
+        if (pkgName === '2HR LESSON') return 30;
+
+        // Packages usually default to 15 unless specified (e.g. 2HR package?)
+        // Assuming 15 for standard packages matches the component lesson margin.
+        if (pkgName.includes('2HR')) return 30;
+        return 15;
+    };
+
+    const getDuration = (pkgName: string) => {
+        if (pkgName.includes('45MIN')) return 45;
+        if (pkgName.includes('1.5HR')) return 90;
+        if (pkgName.includes('2HR')) return 120;
+        return 60; // Default 1HR
+    };
+
+    const margin = selectedPackage ? getMargin(selectedPackage.name) : 15;
+    const duration = selectedPackage ? getDuration(selectedPackage.name) : 60;
+
+    // Fetch Slots
+    const { data: rawSlots, isLoading: loadingSlots, refetch: refetchSlots } = useQuery({
+        queryKey: ['slots', selectedSuburb?.id, selectedDate, duration, margin],
+        queryFn: () => {
+            if (!selectedSuburb || !selectedDate) return [];
+            // Fetch finer grid (e.g. 15 min steps) to verify adjacency
+            // But we primarily want to display the "Standard" grid to start.
+            // Actually, to support "No Gap", we need to know if [SelectedEndTime] is a valid StartTime.
+            // If we fetch with step=15, we get ALL 15m slots.
+            // Then we filter for display.
+            return fetchSlots(selectedDate, duration, margin, 15);
+        },
+        enabled: !!selectedSuburb && !!selectedDate && step === 3,
     });
 
+    // Process slots for display
     // Timer Effect
     useEffect(() => {
         if (!lockExpiry) return;
-
         const interval = setInterval(() => {
             const now = Date.now();
             const diff = lockExpiry - now;
-
             if (diff <= 0) {
                 clearInterval(interval);
-                setTimeLeft('0:00');
-                toast.error('Session expired. Please select a slot again.', {
-                    duration: 5000,
-                    cancel: { label: 'Dismiss', onClick: () => { } }
-                });
-                setStep(1);
-                setLockToken(null);
-                setLockExpiry(null);
-                setSelectedSlot(null);
-                refetchSlots();
-                return;
+                handleExpire();
+            } else {
+                const minutes = Math.floor(diff / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [lockExpiry]);
+
+    // Process slots for display
+    const displaySlots = (() => {
+        if (!rawSlots) return [];
+
+        const totalStep = duration + margin;
+
+        // Helper to get minutes from midnight
+        const getMinutes = (dateStr: string) => {
+            const date = parseISO(dateStr);
+            return date.getHours() * 60 + date.getMinutes();
+        };
+
+        // Derive selected slots from rawSlots to ensure consistency
+        const currentSelectedSlots = rawSlots.filter(s => selectedSlots.some(sel => sel.time === s.startTime));
+
+        // Find the LATEST end time among selected slots to re-anchor the grid
+        let lastEndMinutes: number | null = null;
+        if (currentSelectedSlots.length > 0) {
+            const maxEnd = currentSelectedSlots.reduce((max, slot) => {
+                return slot.endTime > max ? slot.endTime : max;
+            }, currentSelectedSlots[0].endTime);
+            lastEndMinutes = getMinutes(maxEnd);
+        }
+
+        return rawSlots.filter(slot => {
+            // 1. Is Selected? Always show.
+            if (selectedSlots.some(s => s.time === slot.startTime)) return true;
+
+            // 2. Availability Check
+            if (!slot.available) return false;
+
+            // 3. Overlap Check (CRITICAL FIX)
+            // If this slot overlaps with ANY selected slot, it must be hidden.
+            // Overlap = (StartA < EndB) and (EndA > StartB)
+            // We use strings for comparison here or convert to time. Time is safer.
+            const slotStart = getMinutes(slot.startTime);
+            const slotEnd = getMinutes(slot.endTime);
+
+            const isOverlapping = currentSelectedSlots.some(selected => {
+                // Skip self-check (already handled by #1 but good for safety)
+                if (selected.startTime === slot.startTime) return false;
+
+                const selStart = getMinutes(selected.startTime);
+                const selEnd = getMinutes(selected.endTime);
+
+                return slotStart < selEnd && slotEnd > selStart;
+            });
+
+            if (isOverlapping) return false;
+
+            const slotMinutes = getMinutes(slot.startTime);
+
+            // 4. Re-anchoring Logic
+            if (lastEndMinutes !== null) {
+                // If slot starts AFTER or AT the anchor point
+                if (slotMinutes >= lastEndMinutes) {
+                    const diff = slotMinutes - lastEndMinutes;
+                    return diff % totalStep === 0;
+                }
+                // If before, fall through to default
             }
 
-            const minutes = Math.floor(diff / 60000);
-            const seconds = Math.floor((diff % 60000) / 1000);
-            setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        }, 1000);
+            // Standard Grid Logic (Anchor: 8:00 AM / 480 mins)
+            return (slotMinutes - 480) % totalStep === 0;
+        });
+    })();
 
-        return () => clearInterval(interval);
-    }, [lockExpiry, refetchSlots]);
+    const handleExpire = () => {
+        if (selectedSlots.length > 0) {
+            unlockSlots(selectedSlots, lockToken!);
+        }
+        setTimeLeft('0:00');
+        toast.error('Session expired. Please start over.');
+        setStep(1);
+        setLockToken(null);
+        setLockExpiry(null);
+        setSelectedSlots([]);
+        setSelectedSlotDetails([]);
+    };
 
     const handleSlotClick = (slot: Slot) => {
-        setSelectedSlot(slot);
-        // Reset lock if changing slot (though we haven't locked yet in this new flow)
-        if (lockToken) {
-            setLockToken(null);
-            setLockExpiry(null);
+        // Check if already selected
+        const isSelected = selectedSlots.some(s => s.time === slot.startTime);
+
+        if (isSelected) {
+            // Remove
+            setSelectedSlots(prev => prev.filter(s => s.time !== slot.startTime));
+            setSelectedSlotDetails(prev => prev.filter(s => s.startTime !== slot.startTime));
+        } else {
+            // Add
+            if (selectedSlots.length >= maxSlots) {
+                toast.error(`You can only select ${maxSlots} slots for this package.`);
+                return;
+            }
+            setSelectedSlots(prev => [...prev, { date: selectedDate, time: slot.startTime }]);
+            setSelectedSlotDetails(prev => [...prev, slot]);
         }
     };
 
-    // Handle Next Step (Locking)
-    const handleNextStep = async () => {
-        if (!selectedSlot || !selectedSuburb) return;
+    const getPrice = () => {
+        if (!selectedPackage) return 0;
 
-        try {
-            const time = format(parseISO(selectedSlot.startTime), 'HH:mm');
-            const result = await lockSlot(selectedSuburb.id, selectedDate, time); // API call
-            setLockToken(result.token);
-            setLockExpiry(result.expiresAt);
-            setTimeLeft('5:00'); // Initial display
-            setStep(2); // Move to form
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Failed to lock slot. It may be taken.', {
-                cancel: { label: 'Dismiss', onClick: () => { } }
-            });
-            refetchSlots(); // Refresh grid
-            setSelectedSlot(null);
+        const isSingle = ['45MIN LESSON', '1HR LESSON', '1.5HR LESSON', '2HR LESSON'].includes(selectedPackage.name);
+
+        if (isSingle) {
+            return selectedPackage.price * (selectedSlots.length || 1);
+        }
+        return selectedPackage.price;
+    };
+
+    const handleStep1Next = () => {
+        if (selectedSuburb) setStep(2);
+    };
+
+    const handleStep2Next = () => {
+        if (selectedPackage) {
+            // Reset slots if package changed
+            setSelectedSlots([]);
+            setSelectedSlotDetails([]);
+            setStep(3);
         }
     };
 
-    // Handle Booking Confirmation
-    const handleConfirm = async (formData: any) => {
-        if (!selectedSuburb || !selectedSlot || !lockToken) return;
-
-        try {
-            const time = format(parseISO(selectedSlot.startTime), 'HH:mm');
-            const result = await confirmBooking({
-                suburbId: selectedSuburb.id,
-                date: selectedDate,
-                time: time,
-                duration: duration,
-                token: lockToken,
-                customerDetails: formData
-            });
-            setSuccessData(result);
-            setStep(3); // Move to success
-            toast.success('Your driving lesson request has been submitted.', {
-                cancel: { label: 'Dismiss', onClick: () => { } }
-            });
-        } catch (err: any) {
-            toast.error(err.response?.data?.message || 'Booking failed. Please try again.', {
-                cancel: { label: 'Dismiss', onClick: () => { } }
-            });
-            // If lock expired, we might need to reset
-            if (err.response?.status === 400) {
-                setStep(1);
-                setLockToken(null);
-                setLockExpiry(null);
-                setSelectedSlot(null);
+    const handleStep3Next = async () => {
+        if (selectedSlots.length > 0) {
+            // Lock slots
+            try {
+                // We use the first slot time for the "time" param if needed, but we should use lockSlots endpoint
+                const result = await lockSlots(selectedSlots);
+                setLockToken(result.token);
+                setLockExpiry(result.expiresAt);
+                setTimeLeft(`${result.sessionDuration}`);
+                setStep(4);
+            } catch (error: any) {
+                toast.error(error.response?.data?.message || 'Failed to lock slots.');
                 refetchSlots();
             }
         }
     };
 
-    if (step === 3 && successData) {
+    const handleConfirm = async (formData: any) => {
+        try {
+            const payload = {
+                suburbId: +formData.suburb,
+                date: selectedDate,
+                time: selectedSlots[0].time, // Primary time
+                duration: duration,
+                token: lockToken!,
+                customerDetails: formData,
+                slots: selectedSlots, // Pass all slots
+                totalAmount: getPrice(),
+                packageId: selectedPackage?.id
+            }
+            console.log(payload);
+            // const result = await createBooking(payload);
+            // setSuccessData(result);
+            // toast.success('Booking Sumbitted!');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Booking failed.');
+        }
+    };
+
+    // SUCCESS VIEW
+    if (successData) {
         return (
-            <div className="max-w-2xl mx-auto p-8 text-center">
-                <div className="bg-yellow-100 text-yellow-800 p-6 rounded-lg mb-6">
-                    <h2 className="text-2xl font-bold mb-2">Booking Submitted!</h2>
-                    <p>Your driving lesson request has been submitted and is pending confirmation from an instructor. You will receive an email once confirmed.</p>
+            <div className="max-w-2xl mx-auto p-8 text-center space-y-6">
+                <div className="bg-green-100 text-green-800 p-6 rounded-lg">
+                    <h2 className="text-2xl font-bold">Booking Submitted!</h2>
+                    <p>Total: ${getPrice()}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-left bg-white p-6 rounded shadow border">
-                    <div><strong>Date:</strong> {format(parseISO(successData.startTime), 'EEEE, MMMM d, yyyy')}</div>
-                    <div><strong>Time:</strong> {format(parseISO(successData.startTime), 'h:mm a')}</div>
-                    <div><strong>Location:</strong> {selectedSuburb?.name}</div>
-                    <div><strong>Pickup:</strong> {successData.pickupAddress}</div>
-                </div>
-                <button onClick={() => window.location.reload()} className="mt-8 px-6 py-2 bg-primary text-white rounded hover:bg-red-700">
-                    Book Another Lesson
+                <button onClick={() => window.location.reload()} className="px-6 py-2 bg-primary text-white rounded">
+                    Book Another
                 </button>
             </div>
         );
     }
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">Book a Driving Lesson</h1>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+            {/* Progress Bar or Title */}
+            <h1 className="text-3xl font-bold mb-8 text-center">Book a Driving Lesson</h1>
+            <BookingStepper currentStep={step} steps={['Location', 'Package', 'Date & Time', 'Details']} />
 
-            {step === 1 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* Filters */}
-                    <div className="md:col-span-1 space-y-6 bg-white p-6 rounded-lg shadow-sm border h-fit">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Suburb</label>
-                            {loadingSuburbs ? <Loader2 className="animate-spin text-gray-500" /> : (
+            <div className='my-12'>
+                {/* Step 1: Location */}
+                {step === 1 && (
+                    <div className="max-w-md mx-auto pt-12">
+                        <div className="space-y-4">
+                            {/* Testing Center Selection */}
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Testing Center</label>
+                                {loadingData ? <Loader2 className="animate-spin" /> : (
+                                    <select
+                                        className="w-full border p-2 rounded"
+                                        onChange={(e) => {
+                                            const center = testingCenters?.find(tc => tc.id.toString() === e.target.value) || null;
+                                            setSelectedCenter(center);
+                                            setSelectedSuburb(null); // Reset suburb when center changes
+                                        }}
+                                        value={selectedCenter?.id || ''}
+                                    >
+                                        <option value="">Select a testing center...</option>
+                                        {testingCenters?.map(tc => <option key={tc.id} value={tc.id}>{tc.name}</option>)}
+                                    </select>
+                                )}
+                            </div>
+
+                            {/* Suburb Selection */}
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Your Suburb</label>
                                 <select
-                                    className="w-full border p-2 rounded"
-                                    onChange={(e) => setSelectedSuburb(suburbs?.find(s => s.id === e.target.value) || null)}
+                                    className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400"
+                                    onChange={(e) => setSelectedSuburb(suburbs?.find(s => s.id.toString() === e.target.value) || null)}
                                     value={selectedSuburb?.id || ''}
+                                    disabled={!selectedCenter}
                                 >
-                                    <option value="">Select a suburb...</option>
-                                    {suburbs?.map(s => <option key={s.id} value={s.id}>{s.name} ({s.postcode})</option>)}
+                                    <option value="">{selectedCenter ? 'Select a suburb...' : 'Select a testing center first'}</option>
+                                    {suburbs.map(s => <option key={s.id} value={s.id}>{s.name} ({s.postalcode})</option>)}
                                 </select>
-                            )}
-                        </div>
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Date</label>
-                            <input
-                                type="date"
-                                className="w-full border p-2 rounded"
-                                min={new Date().toISOString().split('T')[0]}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                value={selectedDate}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Duration</label>
-                            <div className="flex space-x-2">
+                            <div className="flex justify-end pt-4">
                                 <button
-                                    onClick={() => {
-                                        setDuration(60);
-                                        setSelectedSlot(null);
-                                    }}
-                                    className={`flex-1 py-2 rounded border ${duration === 60 ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300'}`}
+                                    onClick={handleStep1Next}
+                                    disabled={!selectedSuburb}
+                                    className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300"
                                 >
-                                    1 Hour
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setDuration(120);
-                                        setSelectedSlot(null);
-                                    }}
-                                    className={`flex-1 py-2 rounded border ${duration === 120 ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300'}`}
-                                >
-                                    2 Hours
+                                    Next
                                 </button>
                             </div>
                         </div>
                     </div>
+                )}
 
-                    {/* Slots */}
-                    <div className="md:col-span-2 bg-white p-6 rounded-lg shadow-sm border min-h-[400px] flex flex-col">
-                        <h2 className="text-xl font-semibold mb-4">Available Slots</h2>
-                        <div className="flex-grow">
-                            {!selectedSuburb || !selectedDate ? (
-                                <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                                    <p>Please select a suburb and date to view availability.</p>
-                                </div>
-                            ) : (
-                                <SlotGrid
-                                    slots={slots || []}
-                                    isLoading={loadingSlots}
-                                    onSelect={handleSlotClick}
-                                    selectedSlot={selectedSlot}
-                                />
-                            )}
-                        </div>
-
-                        {/* Next Button */}
-                        <div className="mt-6 pt-4 border-t flex justify-end">
+                {/* Step 2: Package */}
+                {step === 2 && (
+                    <div>
+                        <PackageSelect
+                            onSelect={setSelectedPackage}
+                            selectedPackage={selectedPackage}
+                        />
+                        <div className="flex justify-between items-center pt-6">
                             <button
-                                onClick={handleNextStep}
-                                disabled={!selectedSlot}
-                                className={`px-6 py-2 rounded-md font-medium transition-colors ${selectedSlot
-                                    ? 'bg-primary text-white hover:bg-red-700'
-                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    }`}
+                                onClick={() => setStep(1)}
+                                className="text-sm text-gray-500 hover:text-gray-700 ml-2"
                             >
-                                Next Step
+                                Back
+                            </button>
+
+                            <button
+                                onClick={handleStep2Next}
+                                disabled={!selectedPackage}
+                                className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300"
+                            >
+                                Next
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {step === 2 && (
-                <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow text-left">
-                    <div className="mb-6 pb-4 border-b flex justify-between items-center">
-                        <div>
-                            <h2 className="text-xl font-bold">Complete Your Booking</h2>
-                            <p className="text-gray-500 text-sm">
-                                {selectedSuburb?.name} • {selectedDate} • {format(parseISO(selectedSlot!.startTime), 'h:mm a')} ({duration} mins)
-                            </p>
+                {/* Step 3: Date & Slots */}
+                {step === 3 && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="md:col-span-1 space-y-6">
+
+                            <div className="bg-blue-50 p-4 rounded-lg border border-primary mb-4">
+                                <h3 className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Selected Package</h3>
+                                <p className="text-lg font-medium text-primary">{selectedPackage?.name}</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Select Date</label>
+                                <DateDropdown
+                                    suburbId={selectedSuburb!.id}
+                                    selectedDate={selectedDate}
+                                    onSelect={setSelectedDate}
+                                />
+                            </div>
+
+                            {/* Selected Slots List */}
+                            <div className="bg-gray-50 p-4 rounded-lg border">
+                                {selectedPackage && (selectedPackage.name.includes('PACKAGE') || selectedPackage.name.includes('DRIVE TEST')) ?
+                                    <h3 className="font-semibold mb-2">Selected Slots ({selectedSlots.length}/{maxSlots})</h3> :
+                                    <h3 className="font-semibold mb-2">{selectedSlots.length} Slot Selected</h3>
+                                }
+
+                                {selectedSlotDetails.length === 0 && <p className="text-sm text-gray-400">No slots selected.</p>}
+                                <div className="space-y-2">
+                                    {[...selectedSlotDetails]
+                                        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+                                        .map((slot, idx) => (
+                                            <div key={idx} className="flex justify-between items-center bg-white p-2 rounded shadow-sm text-sm">
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium text-gray-900">{format(parseISO(slot.startTime), 'EEE, d MMM yyyy')}</span>
+                                                    <span className="text-gray-600">{format(parseISO(slot.startTime), 'h:mm a')} - {format(parseISO(slot.endTime), 'h:mm a')}</span>
+                                                </div>
+                                                <button onClick={() => handleSlotClick(slot)} className="text-red-500 hover:text-red-700 p-1">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                </div>
+                                <div className="mt-4 pt-4 border-t flex justify-between items-center font-bold">
+                                    <span>Total:</span>
+                                    <span>${getPrice()}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setStep(2)} className="text-sm text-gray-500 hover:text-gray-700 mb-2 ml-2">Back</button>
+
                         </div>
-                        <div className="text-right text-sm text-red-600 bg-red-50 px-3 py-1 rounded">
-                            Expires in {timeLeft}
+
+                        <div className="md:col-span-2">
+                            {/* Render Slots */}
+                            {loadingSlots ? <div className="p-8 text-center">Loading slots...</div> : (
+                                <>
+                                    <h2 className="text-xl font-semibold mt-8 mb-4">Available Time Slots</h2>
+
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                        {displaySlots.map((slot: Slot) => {
+                                            const isSelected = selectedSlots.some(s => s.time === slot.startTime);
+                                            return (
+                                                <button
+                                                    key={slot.startTime}
+                                                    onClick={() => handleSlotClick(slot)}
+                                                    disabled={!slot.available && !isSelected}
+                                                    className={`p-3 rounded border text-sm font-medium transition-colors ${isSelected ? 'bg-primary text-white border-primary' :
+                                                        slot.available ? 'bg-white text-primary border-primary hover:border-primary hover:shadow-md' :
+                                                            'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                                        } `}
+                                                >
+                                                    {format(parseISO(slot.startTime), 'h:mm a')}
+                                                    <span className="block text-xs font-normal opacity-75">
+                                                        to {format(parseISO(slot.endTime), 'h:mm a')}
+                                                    </span>
+                                                </button>
+                                            )
+                                        })}
+                                        {(!displaySlots || displaySlots.length === 0) && selectedDate && (
+                                            <div className="col-span-full text-center py-10 text-gray-500">
+                                                No available slots for this date.
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                            <div className="flex justify-end py-6">
+                                <button
+                                    onClick={handleStep3Next}
+                                    disabled={selectedSlots.length === 0}
+                                    className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300"
+                                >
+                                    Next
+                                </button>
+                            </div>
                         </div>
                     </div>
+                )}
 
-                    <BookingForm
-                        onCancel={async () => {
-                            if (selectedSuburb && selectedSlot && lockToken) {
-                                try {
-                                    const time = format(parseISO(selectedSlot.startTime), 'HH:mm');
-                                    await unlockSlot(selectedSuburb.id, selectedDate, time, lockToken);
-                                } catch (e) {
-                                    console.error('Failed to unlock slot', e);
+                {/* Step 4: Details */}
+                {step === 4 && (
+                    <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow border">
+                        <div className="flex justify-between items-center mb-6 pb-4 border-b">
+                            <h2 className="text-xl font-bold">Finalize Booking</h2>
+                            <div className="text-red-600 font-medium bg-red-50 px-3 py-1 rounded">Time Remaining: {timeLeft}</div>
+                        </div>
+
+                        <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-1">
+                            <p><strong>Package:</strong> {selectedPackage?.name}</p>
+                            <p><strong>Date:</strong> {selectedDate}</p>
+                            <p><strong>Slots:</strong> {selectedSlotDetails.map(s => format(parseISO(s.startTime), 'h:mm a')).join(', ')}</p>
+                            <p className="font-bold pt-2">Total Amount: ${getPrice()}</p>
+                        </div>
+
+                        <BookingForm
+                            onSubmit={handleConfirm}
+                            isSubmitting={false}
+                            onCancel={async () => {
+                                if (lockToken && selectedSuburb && selectedDate) {
+                                    try {
+                                        // Unlock all slots
+                                        if (selectedSlots.length > 0) {
+                                            await unlockSlots(selectedSlots, lockToken);
+                                        }
+                                    } catch (e) {
+                                        console.error('Failed to unlock slots', e);
+                                    }
                                 }
-                            }
-                            setStep(1);
-                            setLockToken(null);
-                            setLockExpiry(null);
-                            setSelectedSlot(null);
-                            refetchSlots();
-                        }}
-                        onSubmit={handleConfirm}
-                        isSubmitting={false}
-                    />
-                </div>
-            )}
+                                setStep(3);
+                                setLockToken(null);
+                                setLockExpiry(null);
+                                setTimeLeft('');
+                            }}
+                            selectedSuburb={selectedSuburb}
+                        />
+                    </div>
+                )}
+            </div>
+
         </div>
     );
 }
