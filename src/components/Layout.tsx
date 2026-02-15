@@ -16,16 +16,31 @@ export default function Layout() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Top Bar */}
             <div className="bg-gray-900 text-white text-sm py-2">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+
+                    {/* Left content */}
                     <div className="flex space-x-4">
                         <span>📞 (02) 1234 5678</span>
                         <span>✉ info@drivingschool.com.au</span>
                     </div>
-                    <div className="hidden sm:block">
-                        <span>⏲ Mon - Sat : 8am - 9pm</span>
+
+                    {/* Right content */}
+                    <div className="ml-auto flex items-center space-x-6">
+                        <span className="hidden sm:block">
+                            ⏲ Mon - Sat : 8AM - 6PM
+                        </span>
+
+                        <Link
+                            to="/admin"
+                            className="hover:text-primary transition-colors underline"
+                        >
+                            LOGIN
+                        </Link>
                     </div>
+
                 </div>
             </div>
+
 
             {/* Main Header */}
             <header className="bg-white shadow-md sticky top-0 z-50">
@@ -47,7 +62,6 @@ export default function Layout() {
                                     <a href="/#contact" className="hover:text-primary transition-colors">CONTACT</a>
                                 </>
                             )}
-                            {/* <Link to="/admin" className="hover:text-primary transition-colors">ADMIN</Link> */}
                         </nav>
                         {showFullNav && (
                             <Link

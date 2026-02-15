@@ -87,7 +87,31 @@ export const unlockSlots = async (slots: { date: string; time: string }[], token
     return response.data;
 };
 
-export const createBooking = async (details: BookingRequest & { slots?: { date: string; time: string }[]; totalAmount?: number; packageId?: string }) => {
+export interface CreateBookingRequest {
+    testingCenterId?: string | number;
+    suburbId: string | number;
+    packageId?: string | number;
+    duration: number;
+    lockToken: string;
+    slots: { date: string; time: string }[];
+    customerDetails: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone: string;
+        pickupAddress: string;
+        transmission: string;
+        registerFor: string;
+        contactPersonFirstName?: string;
+        contactPersonLastName?: string;
+        contactPersonEmail?: string;
+        contactPersonPhone?: string;
+        relation?: string;
+        notes?: string;
+    };
+}
+
+export const createBooking = async (details: CreateBookingRequest) => {
     const response = await apiClient.post('/bookings/create', details);
     return response.data;
 };
@@ -102,7 +126,7 @@ export const loginUser = async (email: string, password: string) => {
     return response.data;
 };
 
-export const fetchBookings = async (params?: { date?: string; suburbId?: string; page?: number; limit?: number }) => {
+export const fetchBookings = async (params?: { date?: string; centerId?: string; suburbId?: string; page?: number; limit?: number }) => {
     const response = await apiClient.get<{ data: any[]; total: number }>('/bookings', { params });
     return response.data;
 };

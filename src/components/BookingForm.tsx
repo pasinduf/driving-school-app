@@ -24,6 +24,7 @@ export default function BookingForm({
         defaultValues: {
             suburb: '',
             registerFor: 'myself',
+            transmission: 'Automatic',
             pickupAddress: '',
             firstName: '',
             lastName: '',
@@ -46,6 +47,7 @@ export default function BookingForm({
     }, [selectedSuburb, setValue]);
 
     const registerFor = watch('registerFor');
+    const termsAccepted = watch('terms');
 
     useEffect(() => {
         if (registerFor === "myself") {
@@ -253,8 +255,8 @@ export default function BookingForm({
                 </button>
                 <button
                     type="submit"
-                    className="px-8 py-2 bg-primary text-white rounded-md hover:bg-primary disabled:bg-primary font-medium"
-                    disabled={isSubmitting}
+                    className={`px-8 py-2 bg-primary text-white rounded-md hover:bg-primary font-medium ${isSubmitting || !termsAccepted ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={isSubmitting || !termsAccepted}
                 >
                     {isSubmitting ? 'Confirming...' : 'Confirm Booking'}
                 </button>

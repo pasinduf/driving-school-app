@@ -10,7 +10,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function AdminPage() {
     const { user, logout, loading } = useAuth();
-    const { suburbs } = useMasterData();
+    const { suburbs, testingCenters } = useMasterData();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'bookings' | 'holidays'>('bookings');
     const [bookings, setBookings] = useState<any[]>([]);
@@ -21,6 +21,7 @@ export default function AdminPage() {
     // Filters & Pagination
     const [filterDate, setFilterDate] = useState('');
     const [filterSuburb, setFilterSuburb] = useState('');
+    const [filterCenter, setFilterCenter] = useState('');
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [totalBookings, setTotalBookings] = useState(0);
@@ -79,6 +80,7 @@ export default function AdminPage() {
             const bResponse = await fetchBookings({
                 date: filterDate || undefined,
                 suburbId: filterSuburb || undefined,
+                centerId: filterCenter || undefined,
                 page,
                 limit
             });
@@ -95,7 +97,7 @@ export default function AdminPage() {
         if (user && activeTab === 'bookings') {
             loadBookingsOnly();
         }
-    }, [user, page, filterDate, filterSuburb]); // Trigger on filter/page change
+    }, [user, page, filterDate, filterCenter, filterSuburb]); // Trigger on filter/page change
 
     const handleLogout = () => {
         logout();
@@ -152,6 +154,12 @@ export default function AdminPage() {
     const handleConfirmBooking = (id: string) => openModal('CONFIRM_BOOKING', id);
     const handleCancelBooking = (id: string) => openModal('CANCEL_BOOKING', id);
 
+    const resetFilters = () => {
+        setFilterDate('');
+        setFilterCenter('');
+        setFilterSuburb('');
+        setPage(1);
+    };
 
     if (loading || !user) return <div className="p-8">Loading...</div>;
 
@@ -211,6 +219,19 @@ export default function AdminPage() {
                             />
                         </div>
                         <div className="flex-1 min-w-[200px]">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Center</label>
+                            <select
+                                className="w-full border rounded p-2"
+                                value={filterCenter}
+                                onChange={(e) => { setFilterCenter(e.target.value); setPage(1); }}
+                            >
+                                <option value="">All Centers</option>
+                                {testingCenters.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex-1 min-w-[200px]">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Suburb</label>
                             <select
                                 className="w-full border rounded p-2"
@@ -224,9 +245,8 @@ export default function AdminPage() {
                             </select>
                         </div>
                         <div className="flex-none">
-                            {/* Reset Button */}
                             <button
-                                onClick={() => { setFilterDate(''); setFilterSuburb(''); setPage(1); }}
+                                onClick={resetFilters}
                                 className="bg-gray-100 text-gray-600 px-4 py-2 rounded hover:bg-gray-200"
                             >
                                 Reset
@@ -246,8 +266,11 @@ export default function AdminPage() {
                                         <thead className="bg-gray-50">
                                             <tr>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Center</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Suburb</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                             </tr>
@@ -257,19 +280,32 @@ export default function AdminPage() {
                                                 <tr key={booking.id}>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900">
-                                                            {format(new Date(booking.startTime), 'PPP')}
+                                                            {booking.bookingSlots?.[0] ? format(new Date(booking.bookingSlots[0].startTime), 'PPP') : 'N/A'}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
-                                                            {format(new Date(booking.startTime), 'p')} - {format(new Date(booking.endTime), 'p')}
+                                                            {booking.bookingSlots?.[0] ? (
+                                                                <>
+                                                                    {format(new Date(booking.bookingSlots[0].startTime), 'p')} - {format(new Date(booking.bookingSlots[booking.bookingSlots.length - 1].endTime), 'p')}
+                                                                </>
+                                                            ) : 'N/A'}
                                                         </div>
                                                     </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {booking.testingCenter}
+                                                    </td>
                                                     <td className="px-6 py-4">
-                                                        <div className="text-sm text-gray-900">{booking.customerName}</div>
-                                                        <div className="text-sm text-gray-500">{booking.customerEmail}</div>
-                                                        <div className="text-sm text-gray-500">{booking.customerPhone}</div>
+                                                        <div className="text-sm text-gray-900">{booking?.bookingDetails.customerFirstName} {booking?.bookingDetails.customerLastName}</div>
+                                                        <div className="text-sm text-gray-500">{booking?.bookingDetails?.customerPhone}</div>
+                                                        <div className="text-sm text-gray-500">{booking?.bookingDetails?.pickupAddress}</div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {booking.suburb?.name || 'Unknown'}
+                                                        {booking.suburb?.name}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {booking.package}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        {booking.price}$
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${booking.status === 'CONFIRMED'
@@ -392,7 +428,7 @@ export default function AdminPage() {
                                                 required
                                             />
                                         </div>
-                                        <div>
+                                        {/* <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Suburb (Optional)</label>
                                             <select
                                                 className="w-full border rounded p-2"
@@ -404,12 +440,12 @@ export default function AdminPage() {
                                                     <option key={s.id} value={s.id}>{s.name} ({s.postalcode})</option>
                                                 ))}
                                             </select>
-                                        </div>
+                                        </div> */}
                                         <button
                                             type="submit"
                                             className="bg-primary text-white p-2 rounded hover:bg-red-700"
                                         >
-                                            Add Block
+                                            Save
                                         </button>
                                     </form>
                                 </div>

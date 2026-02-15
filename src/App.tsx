@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import { AuthProvider } from './context/AuthContext';
 import { MasterDataProvider } from './context/MasterDataContext';
 import { Toaster } from 'sonner';
+import AdminPage from './pages/AdminPage';
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
             <Route path="/" element={<Layout />}>
               <Route index element={<HomePage />} />
               <Route path="booking" element={<BookingPage />} />
-              {/* <Route path="admin" element={<AdminPage />} /> */}
+              <Route path="admin" element={<AdminPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

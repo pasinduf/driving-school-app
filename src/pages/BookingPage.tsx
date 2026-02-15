@@ -45,6 +45,7 @@ export default function BookingPage() {
     const [lockToken, setLockToken] = useState<string | null>(null);
     const [lockExpiry, setLockExpiry] = useState<number | null>(null);
     const [timeLeft, setTimeLeft] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [successData, setSuccessData] = useState<any | null>(null);
 
     // Derived State
@@ -258,24 +259,28 @@ export default function BookingPage() {
     };
 
     const handleConfirm = async (formData: any) => {
+        setIsSubmitting(true);
         try {
             const payload = {
+                testingCenterId: selectedCenter?.id,
                 suburbId: +formData.suburb,
-                date: selectedDate,
-                time: selectedSlots[0].time, // Primary time
+                packageId: selectedPackage?.id,
                 duration: duration,
-                token: lockToken!,
+                lockToken: lockToken!,
                 customerDetails: formData,
-                slots: selectedSlots, // Pass all slots
-                totalAmount: getPrice(),
-                packageId: selectedPackage?.id
+                slots: selectedSlots,
             }
-            console.log(payload);
-            // const result = await createBooking(payload);
-            // setSuccessData(result);
-            // toast.success('Booking Sumbitted!');
+            const result = await createBooking(payload);
+            setSuccessData(result);
+            setLockToken(null);
+            setLockExpiry(null);
+            setSelectedSlots([]);
+            setSelectedSlotDetails([]);
+            setStep(5);
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Booking failed.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -284,10 +289,22 @@ export default function BookingPage() {
         return (
             <div className="max-w-2xl mx-auto p-8 text-center space-y-6">
                 <div className="bg-green-100 text-green-800 p-6 rounded-lg">
-                    <h2 className="text-2xl font-bold">Booking Submitted!</h2>
-                    <p>Total: ${getPrice()}</p>
+                    <h2 className="text-2xl font-bold mb-2">Booking Submitted!</h2>
+                    <p className="mb-4">Your booking has been submitted successfully. An instructor will contact you shortly.</p>
+
+                    {successData.instructor && (
+                        <div className="bg-white p-4 rounded-md shadow-sm inline-block text-left mt-4 border border-green-200">
+                            <h3 className="font-semibold text-gray-900 mb-2">Assigned Instructor</h3>
+                            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                                <span className="text-gray-500">Name:</span>
+                                <span className="font-medium">{successData.instructor.name}</span>
+                                <span className="text-gray-500">Contact:</span>
+                                <span className="font-medium">{successData.instructor.contact}</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
-                <button onClick={() => window.location.reload()} className="px-6 py-2 bg-primary text-white rounded">
+                <button onClick={() => window.location.reload()} className="px-6 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition-colors">
                     Book Another
                 </button>
             </div>
@@ -492,7 +509,7 @@ export default function BookingPage() {
 
                         <BookingForm
                             onSubmit={handleConfirm}
-                            isSubmitting={false}
+                            isSubmitting={isSubmitting}
                             onCancel={async () => {
                                 if (lockToken && selectedSuburb && selectedDate) {
                                     try {
