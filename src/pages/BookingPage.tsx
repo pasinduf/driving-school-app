@@ -125,9 +125,8 @@ export default function BookingPage() {
 
         const totalStep = duration + margin;
 
-        // Helper to get minutes from midnight
-        const getMinutes = (dateStr: string) => {
-            const date = parseISO(dateStr);
+        const getMinutes = (d: string | Date) => {
+            const date = typeof d === 'string' ? new Date(d) : d;
             return date.getHours() * 60 + date.getMinutes();
         };
 
@@ -138,9 +137,10 @@ export default function BookingPage() {
         let lastEndMinutes: number | null = null;
         if (currentSelectedSlots.length > 0) {
             const maxEnd = currentSelectedSlots.reduce((max, slot) => {
-                return slot.endTime > max ? slot.endTime : max;
-            }, currentSelectedSlots[0].endTime);
-            lastEndMinutes = getMinutes(maxEnd);
+                const sEnd = getMinutes(slot.endTime);
+                return sEnd > max ? sEnd : max;
+            }, 0);
+            lastEndMinutes = maxEnd;
         }
 
         return rawSlots.filter(slot => {
@@ -150,39 +150,44 @@ export default function BookingPage() {
             // 2. Availability Check
             if (!slot.available) return false;
 
-            // 3. Overlap Check (CRITICAL FIX)
-            // If this slot overlaps with ANY selected slot, it must be hidden.
-            // Overlap = (StartA < EndB) and (EndA > StartB)
-            // We use strings for comparison here or convert to time. Time is safer.
             const slotStart = getMinutes(slot.startTime);
             const slotEnd = getMinutes(slot.endTime);
 
-            const isOverlapping = currentSelectedSlots.some(selected => {
-                // Skip self-check (already handled by #1 but good for safety)
-                if (selected.startTime === slot.startTime) return false;
-
-                const selStart = getMinutes(selected.startTime);
-                const selEnd = getMinutes(selected.endTime);
-
-                return slotStart < selEnd && slotEnd > selStart;
-            });
-
-            if (isOverlapping) return false;
-
-            const slotMinutes = getMinutes(slot.startTime);
-
-            // 4. Re-anchoring Logic
-            if (lastEndMinutes !== null) {
-                // If slot starts AFTER or AT the anchor point
-                if (slotMinutes >= lastEndMinutes) {
-                    const diff = slotMinutes - lastEndMinutes;
-                    return diff % totalStep === 0;
-                }
-                // If before, fall through to default
+            // 3. Overlap Check
+            if (currentSelectedSlots.length > 0) {
+                const isOverlapping = currentSelectedSlots.some(selected => {
+                    const selStart = getMinutes(selected.startTime);
+                    const selEnd = getMinutes(selected.endTime);
+                    // Standard overlap
+                    return slotStart < selEnd && slotEnd > selStart;
+                });
+                if (isOverlapping) return false;
             }
 
-            // Standard Grid Logic (Anchor: 8:00 AM / 480 mins)
-            return (slotMinutes - 480) % totalStep === 0;
+            // 4. Re-anchoring Logic (Consecutive)
+            if (lastEndMinutes !== null) {
+                if (slotStart >= lastEndMinutes) {
+                    const diff = slotStart - lastEndMinutes;
+                    return diff % totalStep === 0;
+                }
+            }
+
+            // 5. Standard Grid Check (With Gap / Margin)
+            // Ensure slots align with the start of the day + multiples of (duration + margin)
+            const onStandardGrid = (slotStart - 480) % totalStep === 0;
+
+            if (onStandardGrid) return true;
+
+            // 6. Post-Booking Availability Check (Edge Detection)
+            const step = 15;
+            const prevTime = slotStart - step;
+            const prevSlot = rawSlots.find(s => getMinutes(s.startTime) === prevTime);
+
+            if (prevSlot && !prevSlot.available) {
+                return true;
+            }
+
+            return false;
         });
     })();
 
