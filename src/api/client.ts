@@ -67,7 +67,7 @@ export const getAvailableDates = async (startDate: string) => {
 };
 
 export const fetchSlots = async (date: string, duration: number, margin?: number, step?: number) => {
-    const response = await apiClient.get<Slot[]>('/slots/availability', {
+    const response = await apiClient.get<Slot[]>('/bookings/availability', {
         params: { date, duration, margin, step },
     });
     return response.data;
@@ -136,8 +136,8 @@ export const fetchHolidays = async () => {
     return response.data;
 };
 
-export const createHoliday = async (date: string, reason: string, suburbId?: string) => {
-    const response = await apiClient.post('/holidays', { date, reason, suburbId });
+export const createHoliday = async (date: string, reason: string) => {
+    const response = await apiClient.post('/holidays', { date, reason });
     return response.data;
 };
 

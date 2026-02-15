@@ -32,7 +32,6 @@ export default function AdminPage() {
     // Holiday Form
     const [holidayDate, setHolidayDate] = useState('');
     const [holidayReason, setHolidayReason] = useState('');
-    const [holidaySuburb, setHolidaySuburb] = useState('');
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,6 +39,8 @@ export default function AdminPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const [isConfirming, setIsConfirming] = useState(false);
+    const [isAddingHoliday, setIsAddingHoliday] = useState(false);
+
 
     useEffect(() => {
         if (!loading && !user) {
@@ -108,16 +109,18 @@ export default function AdminPage() {
 
     const handleAddHoliday = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsAddingHoliday(true);
         try {
-            await createHoliday(holidayDate, holidayReason, holidaySuburb || undefined);
+            await createHoliday(holidayDate, holidayReason);
+            toast.success('Leave/Block date added successfully');
             setHolidayDate('');
             setHolidayReason('');
-            setHolidaySuburb('');
-            const h = await fetchHolidays();
-            setHolidays(h);
+            const data = await fetchHolidays();
+            setHolidays(data);
         } catch (error) {
-            console.error("Failed to create holiday", error);
-            alert("Failed to create holiday");
+            toast.error("Failed to create leave/block date");
+        } finally {
+            setIsAddingHoliday(false);
         }
     };
 
@@ -134,17 +137,22 @@ export default function AdminPage() {
         try {
             if (modalAction === 'DELETE_HOLIDAY' && selectedId) {
                 await deleteHoliday(selectedId);
-                fetchHolidays();
+                toast.success('Leave/Block date deleted successfully');
+                const data = await fetchHolidays();
+                setHolidays(data);
+
             } else if (modalAction === 'CONFIRM_BOOKING' && selectedId) {
                 setIsConfirming(true);
                 await confirmBookingAdmin(selectedId);
                 toast.success('Booking confirmed successfully');
                 loadBookingsOnly();
+
             } else if (modalAction === 'CANCEL_BOOKING' && selectedId) {
                 setIsConfirming(true);
                 await cancelBookingAdmin(selectedId);
                 toast.success('Booking cancelled successfully');
                 loadBookingsOnly()
+
             } else if (modalAction === 'LOGOUT') {
                 logout();
                 navigate('/login');
@@ -414,7 +422,8 @@ export default function AdminPage() {
                                         </div> */}
                                         <button
                                             type="submit"
-                                            className="bg-primary text-white p-2 rounded hover:bg-red-700"
+                                            className="bg-primary text-white p-2 rounded hover:bg-red-700 disabled:opacity-50"
+                                            disabled={isAddingHoliday}
                                         >
                                             Save
                                         </button>
@@ -442,7 +451,7 @@ export default function AdminPage() {
                                                         {holiday.reason}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {holiday.suburbId ? suburbs.find(s => s.id === holiday.suburbId)?.name || 'Unknown Suburb' : 'Global (All Suburbs)'}
+                                                        Global (All Suburbs)
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <button
@@ -479,7 +488,7 @@ export default function AdminPage() {
                         : modalAction === 'CANCEL_BOOKING'
                             ? 'Cancel Booking'
                             : modalAction === 'DELETE_HOLIDAY'
-                                ? 'Delete Holiday'
+                                ? 'Delete Leave / Block Date'
                                 : 'Confirm Logout'
                 }
                 message={
@@ -488,7 +497,7 @@ export default function AdminPage() {
                         : modalAction === 'CANCEL_BOOKING'
                             ? 'Are you sure you want to cancel this booking? This action cannot be undone.'
                             : modalAction === 'DELETE_HOLIDAY'
-                                ? 'Are you sure you want to remove this holiday/block?'
+                                ? 'Are you sure you want to remove this leave/block?'
                                 : 'Are you sure you want to log out?'
                 }
                 confirmText={modalAction === 'CONFIRM_BOOKING' ? 'Confirm' : modalAction === 'LOGOUT' ? 'Logout' : 'Proceed'}
