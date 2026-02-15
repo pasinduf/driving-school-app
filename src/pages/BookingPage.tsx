@@ -183,7 +183,7 @@ export default function BookingPage() {
             const prevTime = slotStart - step;
             const prevSlot = rawSlots.find(s => getMinutes(s.startTime) === prevTime);
 
-            if (prevSlot && !prevSlot.available) {
+            if (!prevSlot || !prevSlot.available) {
                 return true;
             }
 
@@ -447,7 +447,12 @@ export default function BookingPage() {
                                     <span>${getPrice()}</span>
                                 </div>
                             </div>
-                            <button onClick={() => setStep(2)} className="text-sm text-gray-500 hover:text-gray-700 mb-2 ml-2">Back</button>
+                            <button
+                                onClick={() => { setSelectedDate(''); setStep(2) }}
+                                className="text-sm text-gray-500 hover:text-gray-700 mb-2 ml-2"
+                            >
+                                Back
+                            </button>
 
                         </div>
 
