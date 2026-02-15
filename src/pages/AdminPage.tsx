@@ -33,7 +33,7 @@ export default function AdminPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalAction, setModalAction] = useState<'CONFIRM_BOOKING' | 'CANCEL_BOOKING' | 'DELETE_HOLIDAY' | null>(null);
+    const [modalAction, setModalAction] = useState<'CONFIRM_BOOKING' | 'CANCEL_BOOKING' | 'DELETE_HOLIDAY' | 'LOGOUT' | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -100,8 +100,8 @@ export default function AdminPage() {
     }, [user, page, filterDate, filterCenter, filterSuburb]); // Trigger on filter/page change
 
     const handleLogout = () => {
-        logout();
-        navigate('/login');
+        setModalAction('LOGOUT');
+        setIsModalOpen(true);
     };
 
     const handleAddHoliday = async (e: React.FormEvent) => {
@@ -126,18 +126,22 @@ export default function AdminPage() {
     };
 
     const executeAction = async () => {
-        if (!selectedId || !modalAction) return;
+        if (!modalAction) return;
+        if (modalAction !== 'LOGOUT' && !selectedId) return;
 
         try {
-            if (modalAction === 'DELETE_HOLIDAY') {
+            if (modalAction === 'DELETE_HOLIDAY' && selectedId) {
                 await deleteHoliday(selectedId);
                 setHolidays(holidays.filter(h => h.id !== selectedId));
-            } else if (modalAction === 'CONFIRM_BOOKING') {
+            } else if (modalAction === 'CONFIRM_BOOKING' && selectedId) {
                 await confirmBookingAdmin(selectedId);
                 setBookings(bookings.map(b => b.id === selectedId ? { ...b, status: 'CONFIRMED' } : b));
-            } else if (modalAction === 'CANCEL_BOOKING') {
+            } else if (modalAction === 'CANCEL_BOOKING' && selectedId) {
                 await cancelBookingAdmin(selectedId);
                 setBookings(bookings.map(b => b.id === selectedId ? { ...b, status: 'CANCELLED' } : b));
+            } else if (modalAction === 'LOGOUT') {
+                logout();
+                navigate('/login');
             }
         } catch (error) {
             console.error(`Failed to execute ${modalAction}`, error);
@@ -506,17 +510,21 @@ export default function AdminPage() {
                         ? 'Confirm Booking'
                         : modalAction === 'CANCEL_BOOKING'
                             ? 'Cancel Booking'
-                            : 'Delete Holiday'
+                            : modalAction === 'DELETE_HOLIDAY'
+                                ? 'Delete Holiday'
+                                : 'Confirm Logout'
                 }
                 message={
                     modalAction === 'CONFIRM_BOOKING'
                         ? 'Are you sure you want to confirm this booking?'
                         : modalAction === 'CANCEL_BOOKING'
                             ? 'Are you sure you want to cancel this booking? This action cannot be undone.'
-                            : 'Are you sure you want to remove this holiday/block?'
+                            : modalAction === 'DELETE_HOLIDAY'
+                                ? 'Are you sure you want to remove this holiday/block?'
+                                : 'Are you sure you want to log out?'
                 }
-                confirmLabel={modalAction === 'CONFIRM_BOOKING' ? 'Confirm' : 'Yes, Proceed'}
-                isDestructive={modalAction !== 'CONFIRM_BOOKING'}
+                confirmText={modalAction === 'CONFIRM_BOOKING' ? 'Confirm' : modalAction === 'LOGOUT' ? 'Logout' : 'Proceed'}
+                variant={modalAction === 'CONFIRM_BOOKING' ? 'primary' : 'danger'}
             />
         </div>
     );
