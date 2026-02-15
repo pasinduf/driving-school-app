@@ -11,6 +11,7 @@ import PackageSelect from '../components/PackageSelect';
 import DateDropdown from '../components/DateDropdown';
 import { useMasterData } from '../context/MasterDataContext';
 import BookingStepper from '../components/BookingStepper';
+import Spinner from '../components/Spinner';
 
 interface Package {
     id: string;
@@ -447,7 +448,9 @@ export default function BookingPage() {
 
                         <div className="md:col-span-2">
                             {/* Render Slots */}
-                            {loadingSlots ? <div className="p-8 text-center">Loading slots...</div> : (
+                            {loadingSlots ? <div className="p-8 text-center">
+                                <Spinner size="lg" text="Loading slots..." />
+                            </div> : (
                                 <>
                                     <h2 className="text-xl font-semibold mt-8 mb-4">Available Time Slots</h2>
 

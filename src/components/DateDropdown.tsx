@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getAvailableDates } from '../api/client';
 import { Loader2 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
+import Spinner from './Spinner';
 
 interface DateDropdownProps {
     suburbId: string;
@@ -38,7 +39,9 @@ export default function DateDropdown({ suburbId, onSelect, selectedDate }: DateD
     }, [suburbId]);
 
     if (loading) {
-        return <div className="flex items-center space-x-2"><Loader2 className="animate-spin h-4 w-4" /> <span>Loading dates...</span></div>;
+        return <div className="flex items-center space-x-2">
+            <Spinner size="lg" text="Loading dates..." />
+        </div>;
     }
 
     return (

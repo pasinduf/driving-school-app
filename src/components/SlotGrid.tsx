@@ -1,6 +1,7 @@
 
 import type { Slot } from '../api/client';
 import { format, parseISO } from 'date-fns';
+import Spinner from './Spinner';
 
 interface SlotGridProps {
     slots: Slot[];
@@ -11,7 +12,9 @@ interface SlotGridProps {
 
 export default function SlotGrid({ slots, onSelect, selectedSlot, isLoading }: SlotGridProps) {
     if (isLoading) {
-        return <div className="text-center py-8">Loading available slots...</div>;
+        return <div className="text-center py-8">
+            <Spinner size="lg" text="Loading available slots..." />
+        </div>;
     }
 
     if (slots.length === 0) {
@@ -30,10 +33,10 @@ export default function SlotGrid({ slots, onSelect, selectedSlot, isLoading }: S
                         onClick={() => onSelect(slot)}
                         disabled={!slot.available}
                         className={`p-3 rounded-md text-center border transition-colors ${isSelected
-                                ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                                : slot.available
-                                    ? 'border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 cursor-pointer'
-                                    : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                            ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                            : slot.available
+                                ? 'border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 cursor-pointer'
+                                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
                             }`}
                     >
                         {format(parseISO(slot.startTime), 'h:mm a')}

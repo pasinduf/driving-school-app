@@ -17,7 +17,7 @@ export default function LoginPage() {
         try {
             const data = await loginUser(email, password);
             login(data.access_token);
-            navigate('/admin');
+            navigate('/portal');
         } catch (err: any) {
             console.error(err);
             setError('Invalid credentials');

@@ -5,8 +5,11 @@ import { useMasterData } from '../context/MasterDataContext';
 import { useNavigate } from 'react-router-dom';
 import { fetchBookings, fetchHolidays, createHoliday, deleteHoliday, confirmBookingAdmin, cancelBookingAdmin } from '../api/client';
 import { format } from 'date-fns';
-import { Calendar, Users, LogOut, Plus, Trash2, Check, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Users, LogOut, Plus, Trash2, Check, X } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
+import Spinner from '../components/Spinner';
+import Pagination from '../components/Pagination';
+import { toast } from 'sonner';
 
 export default function AdminPage() {
     const { user, logout, loading } = useAuth();
@@ -35,6 +38,8 @@ export default function AdminPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalAction, setModalAction] = useState<'CONFIRM_BOOKING' | 'CANCEL_BOOKING' | 'DELETE_HOLIDAY' | 'LOGOUT' | null>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+
+    const [isConfirming, setIsConfirming] = useState(false);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -70,9 +75,6 @@ export default function AdminPage() {
         }
     };
 
-    // Reload booking data when filters/page change (separate effect to avoid reloading holidays/suburbs unnecessarily?
-    // For simplicity, we can just call loadBookings separately or keep loadData but optimize.
-    // Let's refactor slightly to separate loading.
 
     const loadBookingsOnly = async () => {
         setIsLoadingData(true); // localize logic if needed
@@ -132,21 +134,25 @@ export default function AdminPage() {
         try {
             if (modalAction === 'DELETE_HOLIDAY' && selectedId) {
                 await deleteHoliday(selectedId);
-                setHolidays(holidays.filter(h => h.id !== selectedId));
+                fetchHolidays();
             } else if (modalAction === 'CONFIRM_BOOKING' && selectedId) {
+                setIsConfirming(true);
                 await confirmBookingAdmin(selectedId);
-                setBookings(bookings.map(b => b.id === selectedId ? { ...b, status: 'CONFIRMED' } : b));
+                toast.success('Booking confirmed successfully');
+                loadBookingsOnly();
             } else if (modalAction === 'CANCEL_BOOKING' && selectedId) {
+                setIsConfirming(true);
                 await cancelBookingAdmin(selectedId);
-                setBookings(bookings.map(b => b.id === selectedId ? { ...b, status: 'CANCELLED' } : b));
+                toast.success('Booking cancelled successfully');
+                loadBookingsOnly()
             } else if (modalAction === 'LOGOUT') {
                 logout();
                 navigate('/login');
             }
-        } catch (error) {
-            console.error(`Failed to execute ${modalAction}`, error);
-            alert("Action failed");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Action failed");
         } finally {
+            setIsConfirming(false);
             setIsModalOpen(false);
             setModalAction(null);
             setSelectedId(null);
@@ -260,7 +266,9 @@ export default function AdminPage() {
                 )}
 
                 {isLoadingData ? (
-                    <div>Loading data...</div>
+                    <div className="flex justify-center items-center py-12">
+                        <Spinner size="lg" text="Loading data..." />
+                    </div>
                 ) : (
                     <>
                         {activeTab === 'bookings' && (
@@ -269,14 +277,14 @@ export default function AdminPage() {
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Center</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Suburb</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Date & Time</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Center</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Customer</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Suburb</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Package</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Amount</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Status</th>
+                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
@@ -334,7 +342,7 @@ export default function AdminPage() {
                                                         {booking.status !== 'CANCELLED' && (
                                                             <button
                                                                 onClick={() => handleCancelBooking(booking.id)}
-                                                                className="text-red-600 hover:text-red-900"
+                                                                className="text-red-600 hover:text-red-900 pl-3"
                                                                 title="Cancel Booking"
                                                             >
                                                                 <X className="w-5 h-5" />
@@ -351,55 +359,14 @@ export default function AdminPage() {
                                         </tbody>
                                     </table>
                                 </div>
-                                {/* Pagination Controls */}
-                                <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4 rounded-lg shadow">
-                                    <div className="flex-1 flex justify-between sm:hidden">
-                                        <button
-                                            onClick={() => setPage(p => Math.max(1, p - 1))}
-                                            disabled={page === 1}
-                                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                                        >
-                                            Previous
-                                        </button>
-                                        <button
-                                            onClick={() => setPage(p => p + 1)}
-                                            disabled={bookings.length < limit}
-                                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                                        <div>
-                                            <p className="text-sm text-gray-700">
-                                                Showing <span className="font-medium">{bookings.length > 0 ? (page - 1) * limit + 1 : 0}</span> to <span className="font-medium">{Math.min(page * limit, totalBookings)}</span> of <span className="font-medium">{totalBookings}</span> results
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                                <button
-                                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                                    disabled={page === 1}
-                                                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                                >
-                                                    <span className="sr-only">Previous</span>
-                                                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                                                </button>
-                                                <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                                    Page {page}
-                                                </span>
-                                                <button
-                                                    onClick={() => setPage(p => (page * limit < totalBookings ? p + 1 : p))}
-                                                    disabled={page * limit >= totalBookings}
-                                                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                                                >
-                                                    <span className="sr-only">Next</span>
-                                                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
-                                                </button>
-                                            </nav>
-                                        </div>
-                                    </div>
-                                </div>
+
+                                <Pagination
+                                    itemCount={bookings.length}
+                                    page={page}
+                                    setPage={setPage}
+                                    total={totalBookings}
+                                    limit={limit}
+                                />
                             </>
                         )}
 
@@ -505,6 +472,7 @@ export default function AdminPage() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={executeAction}
+                isConfirming={isConfirming}
                 title={
                     modalAction === 'CONFIRM_BOOKING'
                         ? 'Confirm Booking'

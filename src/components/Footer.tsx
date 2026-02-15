@@ -40,11 +40,6 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/services" className="text-gray-400 hover:text-white hover:translate-x-1 transition-all inline-block flex items-center">
-                                    <ArrowRight size={14} className="mr-2 text-primary" /> Services
-                                </Link>
-                            </li>
-                            <li>
                                 <Link to="/booking" className="text-gray-400 hover:text-white hover:translate-x-1 transition-all inline-block flex items-center">
                                     <ArrowRight size={14} className="mr-2 text-primary" /> Book Lesson
                                 </Link>

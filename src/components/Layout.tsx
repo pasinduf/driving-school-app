@@ -31,7 +31,7 @@ export default function Layout() {
                         </span>
 
                         <Link
-                            to="/admin"
+                            to="/portal"
                             className="hover:text-primary transition-colors underline"
                         >
                             LOGIN
