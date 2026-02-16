@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { fetchMyBookings } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -19,42 +20,43 @@ interface Booking {
     bookingSlots: { startTime: string; endTime: string }[];
 }
 
+interface BookingsResponse {
+    data: Booking[];
+    total: number;
+}
+
 export default function StudentBookingsPage() {
-    const { user, logout, loading } = useAuth();
+    const { user, logout, loading: authLoading } = useAuth();
     const navigate = useNavigate();
-    const [bookings, setBookings] = useState<Booking[]>([]);
-    const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
-    const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useEffect(() => {
-        if (user) {
-            loadBookings();
-        }
-    }, [user, page]);
+    const { data: bookingData, isLoading, isError } = useQuery<BookingsResponse>({
+        queryKey: ['my-bookings', page, limit],
+        queryFn: () => fetchMyBookings(page, limit),
+        placeholderData: keepPreviousData,
+        enabled: !!user,
+    });
 
-    const loadBookings = async () => {
-        setIsLoading(true);
-        try {
-            const data = await fetchMyBookings(page, limit);
-            setBookings(data.data);
-            setTotal(data.total);
-        } catch (error) {
-            console.error("Failed to fetch bookings", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const bookings = bookingData?.data || [];
+    const total = bookingData?.total || 0;
 
     const signout = () => {
         logout();
         navigate('/login');
     }
 
-    if (loading) return <div><Spinner size="lg" text="Loading bookings..." /></div>;
+    if (authLoading) return <div><Spinner size="lg" text="Checking authentication..." /></div>;
     if (!user) return <Navigate to="/login" />;
+
+    if (isError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-red-500">Failed to load bookings. Please try again later.</div>
+            </div>
+        );
+    }
 
     const totalPages = Math.ceil(total / limit);
 
@@ -79,7 +81,7 @@ export default function StudentBookingsPage() {
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {isLoading ? (
-                    <div>Loading bookings...</div>
+                    <div><Spinner size="lg" text="Loading bookings..." /></div>
                 ) : bookings.length === 0 ? (
                     <div className="text-gray-500">You have no bookings yet.</div>
                 ) : (

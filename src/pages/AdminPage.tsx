@@ -298,15 +298,18 @@ export default function AdminPage() {
                                             {bookings.map((booking: any) => (
                                                 <tr key={booking.id}>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-gray-900">
-                                                            {booking.bookingSlots?.[0] ? format(new Date(booking.bookingSlots[0].startTime), 'PPP') : 'N/A'}
-                                                        </div>
                                                         <div className="text-sm text-gray-500">
-                                                            {booking.bookingSlots?.[0] ? (
-                                                                <>
-                                                                    {format(new Date(booking.bookingSlots[0].startTime), 'p')} - {format(new Date(booking.bookingSlots[booking.bookingSlots.length - 1].endTime), 'p')}
-                                                                </>
-                                                            ) : 'N/A'}
+                                                            {booking.bookingSlots.map((slot: any, idx: number) => (
+                                                                <div key={idx} className='py-1'>
+                                                                    <>
+                                                                        <div className="text-sm font-medium text-gray-900">
+                                                                            {slot ? format(new Date(slot.startTime), 'PPP') : 'N/A'}
+                                                                        </div>
+                                                                        {/* {format(new Date(slot.startTime), 'MMMM do yyyy, h:mm a')} - {format(new Date(slot.endTime), 'h:mm a')} */}
+                                                                        {format(new Date(slot.startTime), 'h:mm a')} - {format(new Date(slot.endTime), 'h:mm a')}
+                                                                    </>
+                                                                </div>
+                                                            ))}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
