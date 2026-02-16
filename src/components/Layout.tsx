@@ -31,10 +31,11 @@ export default function Layout() {
                         </span>
 
                         <Link
-                            to="/portal"
+                            to={user ? (user.role === 'Student' ? "/my-bookings" : "/portal") : "/login"}
                             className="hover:text-primary transition-colors underline"
                         >
                             LOGIN
+                            {/* {user ? 'LOGGED IN' : 'LOGIN'} */}
                         </Link>
                     </div>
 

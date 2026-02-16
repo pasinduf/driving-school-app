@@ -183,12 +183,11 @@ export default function AdminPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
             <header className="bg-white shadow">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
                     <div className="flex items-center space-x-4">
-                        <span className="text-gray-600">Welcome, {user.email}</span>
+                        <span className="h3">Welcome, {user.name}</span>
                         <button
                             onClick={handleLogout}
                             className="flex items-center text-red-600 hover:text-red-800"

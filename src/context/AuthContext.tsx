@@ -6,6 +6,7 @@ interface User {
     userId: string;
     email: string;
     role: string;
+    name: string;
 }
 
 interface AuthContextType {
@@ -41,7 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('token', token);
         const decoded = jwtDecode<User>(token);
         setUser(decoded);
-        // Navigate or let the component handle it
     };
 
     const logout = () => {

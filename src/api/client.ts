@@ -157,3 +157,10 @@ export const cancelBookingAdmin = async (id: string): Promise<any> => {
     const response = await apiClient.post(`/bookings/${id}/cancel`);
     return response.data;
 };
+
+export const fetchMyBookings = async (page: number = 1, limit: number = 10) => {
+    const response = await apiClient.get<{ data: any[]; total: number }>('/bookings/my-bookings', {
+        params: { page, limit },
+    });
+    return response.data;
+};

@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loginUser } from '../api/client';
+import { jwtDecode } from 'jwt-decode';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -10,6 +12,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -17,7 +20,15 @@ export default function LoginPage() {
         try {
             const data = await loginUser(email, password);
             login(data.access_token);
-            navigate('/portal');
+
+            // Decode token to get role
+            const decoded: any = jwtDecode(data.access_token);
+
+            if (decoded.role === 'Student') {
+                navigate('/my-bookings');
+            } else {
+                navigate('/portal');
+            }
         } catch (err: any) {
             console.error(err);
             setError('Invalid credentials');
@@ -41,14 +52,23 @@ export default function LoginPage() {
                         />
                     </div>
                     <div className="mb-6">
-                        <label className="block text-gray-700 mb-2">Password</label>
-                        <input
-                            type="password"
-                            className="w-full border p-2 rounded"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className='relative'>
+                            <label className="block text-gray-700">Password</label>
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                className="w-full border p-2 rounded block"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-2/3 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                            >
+                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
                     </div>
                     <button
                         type="submit"
