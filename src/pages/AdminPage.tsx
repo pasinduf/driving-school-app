@@ -179,7 +179,7 @@ export default function AdminPage() {
         setPage(1);
     };
 
-    if (loading || !user) return <div className="p-8">Loading...</div>;
+    if (loading || !user) return <div className="p-8"><Spinner size="lg" text="Loading..." /></div>;
 
     return (
         <div className="min-h-screen bg-gray-50">

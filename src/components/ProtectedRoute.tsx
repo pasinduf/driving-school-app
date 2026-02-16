@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Spinner from './Spinner';
 
 interface ProtectedRouteProps {
     allowedRoles?: string[];
@@ -10,7 +11,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div>
+            <Spinner size="lg" text="Loading..." />
+        </div>;
     }
 
     if (!user) {

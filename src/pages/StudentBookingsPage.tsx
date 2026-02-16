@@ -5,6 +5,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { LogOut } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
+import Spinner from '../components/Spinner';
 
 interface Booking {
     id: string;
@@ -52,7 +53,7 @@ export default function StudentBookingsPage() {
         navigate('/login');
     }
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <div><Spinner size="lg" text="Loading bookings..." /></div>;
     if (!user) return <Navigate to="/login" />;
 
     const totalPages = Math.ceil(total / limit);
