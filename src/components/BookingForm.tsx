@@ -1,7 +1,9 @@
 import { useForm } from 'react-hook-form';
 import type { Suburb } from '../api/client';
 import { useMasterData } from '../context/MasterDataContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { generateRandomPassword } from '../util/generateRandomPassword';
 
 interface BookingFormProps {
     onSubmit: (data: any) => void;
@@ -19,6 +21,8 @@ export default function BookingForm({
 
     const { suburbs } = useMasterData();
     const relations = ['Parent', 'Guardian', 'Grandparent', 'Partner', 'Other']
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const { register, handleSubmit, setValue, watch, resetField, formState: { errors } } = useForm({
         defaultValues: {
@@ -36,7 +40,9 @@ export default function BookingForm({
             contactPersonPhone: '',
             relation: '',
             notes: '',
-            terms: false
+            terms: false,
+            password: '',
+            confirmPassword: ''
         }
     });
 
@@ -59,6 +65,13 @@ export default function BookingForm({
         }
     }, [registerFor, resetField]);
 
+
+
+    const generatePassword = () => {
+        const password = generateRandomPassword();
+        setValue("password", password, { shouldValidate: true });
+        setValue("confirmPassword", password, { shouldValidate: true });
+    };
 
     const handleFormSubmit = (data: any) => onSubmit(data);
 
@@ -160,6 +173,63 @@ export default function BookingForm({
                         />
                         {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message as string}</p>}
                     </div>
+                    {registerFor === 'myself' && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        {...register('password', { required: 'Password is required', minLength: { value: 8, message: 'Password must be at least 8 characters' } })}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 pr-24 focus:ring-primary focus:border-primary"
+                                    />
+                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                                        <button
+                                            type="button"
+                                            onClick={generatePassword}
+                                            className="text-xs text-primary hover:underline font-medium"
+                                        >
+                                            Auto-generate
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                                        >
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
+                                </div>
+                                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message as string}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Confirm Password <span className="text-red-500">*</span></label>
+                                <div className="relative">
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        {...register('confirmPassword', {
+                                            required: 'Please confirm your password',
+                                            validate: (val) => watch('password') === val || "Passwords do not match"
+                                        })}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 pr-10 focus:ring-primary focus:border-primary"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                                {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message as string}</p>}
+                            </div>
+                            <div className="md:col-span-2">
+                                <p className="text-sm text-gray-500 bg-yellow-50 p-2 rounded border border-blue-100">
+                                    <span className="font-semibold">Note:</span> Use the above email and password to log in to the portal.
+                                </p>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -204,6 +274,59 @@ export default function BookingForm({
                                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
                             />
                             {errors.contactPersonPhone && <p className="text-red-500 text-sm mt-1">{errors.contactPersonPhone.message as string}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    {...register('password', { required: 'Password is required', minLength: { value: 6, message: 'Password must be at least 6 characters' } })}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 pr-24 focus:ring-primary focus:border-primary"
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                                    <button
+                                        type="button"
+                                        onClick={generatePassword}
+                                        className="text-xs text-primary hover:underline font-medium"
+                                    >
+                                        Auto-generate
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message as string}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Confirm Password <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    {...register('confirmPassword', {
+                                        required: 'Please confirm your password',
+                                        validate: (val) => watch('password') === val || "Passwords do not match"
+                                    })}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 pr-10 focus:ring-primary focus:border-primary"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                            {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message as string}</p>}
+                        </div>
+                        <div className="md:col-span-2">
+                            <p className="text-sm text-gray-500 bg-blue-50 p-2 rounded border border-blue-100">
+                                <span className="font-semibold">Note:</span> Use the above email and password to log in to the portal.
+                            </p>
                         </div>
 
                         <div>

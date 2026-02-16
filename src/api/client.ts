@@ -98,6 +98,7 @@ export interface CreateBookingRequest {
         firstName: string;
         lastName: string;
         email: string;
+        password: string;
         phone: string;
         pickupAddress: string;
         transmission: string;

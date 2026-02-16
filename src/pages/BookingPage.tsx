@@ -258,16 +258,17 @@ export default function BookingPage() {
         }
     };
 
-    const handleConfirm = async (formData: any) => {
+    const handleSubmitBooking = async (formData: any) => {
         setIsSubmitting(true);
         try {
+            const { confirmPassword, ...customerDetails } = formData;
             const payload = {
                 testingCenterId: selectedCenter?.id,
                 suburbId: +formData.suburb,
                 packageId: selectedPackage?.id,
                 duration: duration,
                 lockToken: lockToken!,
-                customerDetails: formData,
+                customerDetails: customerDetails,
                 slots: selectedSlots,
             }
             const result = await createBooking(payload);
@@ -278,7 +279,9 @@ export default function BookingPage() {
             setSelectedSlotDetails([]);
             setStep(5);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Booking failed.');
+            const raw = error.response?.data?.message;
+            const errorMessage = Array.isArray(raw) ? raw[0] : raw;
+            toast.error(errorMessage?.replace(/^.*?\./, '') || 'Booking failed.');
         } finally {
             setIsSubmitting(false);
         }
@@ -294,7 +297,7 @@ export default function BookingPage() {
 
                     {successData.instructor && (
                         <div className="bg-white p-4 rounded-md shadow-sm inline-block text-left mt-4 border border-green-200">
-                            <h3 className="font-semibold text-gray-900 mb-2">Assigned Instructor</h3>
+                            <h3 className="font-semibold text-gray-900 mb-2">Driving Instructor</h3>
                             <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
                                 <span className="text-gray-500">Name:</span>
                                 <span className="font-medium">{successData.instructor.name}</span>
@@ -515,7 +518,7 @@ export default function BookingPage() {
                         </div>
 
                         <BookingForm
-                            onSubmit={handleConfirm}
+                            onSubmit={handleSubmitBooking}
                             isSubmitting={isSubmitting}
                             onCancel={async () => {
                                 if (lockToken && selectedSuburb && selectedDate) {
