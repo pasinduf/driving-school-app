@@ -90,18 +90,12 @@ export default function BookingPage() {
         queryKey: ['slots', selectedSuburb?.id, selectedDate, duration, margin],
         queryFn: () => {
             if (!selectedSuburb || !selectedDate) return [];
-            // Fetch finer grid (e.g. 15 min steps) to verify adjacency
-            // But we primarily want to display the "Standard" grid to start.
-            // Actually, to support "No Gap", we need to know if [SelectedEndTime] is a valid StartTime.
-            // If we fetch with step=15, we get ALL 15m slots.
-            // Then we filter for display.
             return fetchSlots(selectedDate, duration, margin, 15);
         },
         enabled: !!selectedSuburb && !!selectedDate && step === 3,
     });
 
     // Process slots for display
-    // Timer Effect
     useEffect(() => {
         if (!lockExpiry) return;
         const interval = setInterval(() => {
