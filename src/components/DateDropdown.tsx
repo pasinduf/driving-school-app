@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { getAvailableDates } from '../api/client';
-import { Loader2 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import Spinner from './Spinner';
 
