@@ -1,7 +1,7 @@
-
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Footer from './Footer';
+import ChatWidget from './ChatWidget';
 
 export default function Layout() {
     const { user } = useAuth();
@@ -88,6 +88,7 @@ export default function Layout() {
                 <Outlet />
             </main>
             <Footer />
+            <ChatWidget />
         </div>
     );
 }

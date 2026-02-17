@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-    baseURL: '/api',
+    baseURL: 'http://localhost:8020',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -169,5 +169,10 @@ export const fetchMyBookings = async (page: number = 1, limit: number = 10) => {
 
 export const submitReview = async (userName: string, rating: number, comment: string) => {
     const response = await apiClient.post('/reviews', { userName, rating, comment });
+    return response.data;
+};
+
+export const sendMessage = async (message: string) => {
+    const response = await apiClient.post('/chat', { message });
     return response.data;
 };
