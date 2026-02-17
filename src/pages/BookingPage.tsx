@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchSlots, lockSlots, createBooking, unlockSlots } from '../api/client';
 import type { Suburb, Slot, TestingCenter } from '../api/client';
 import { format, parseISO } from 'date-fns';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import BookingForm from '../components/BookingForm';
 import PackageSelect from '../components/PackageSelect';
@@ -381,7 +381,7 @@ export default function BookingPage() {
                         <div className="flex justify-between items-center pt-6">
                             <button
                                 onClick={() => setStep(1)}
-                                className="text-sm text-gray-500 hover:text-gray-700 ml-2"
+                                className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:text-gray-700"
                             >
                                 Back
                             </button>
@@ -399,7 +399,7 @@ export default function BookingPage() {
 
                 {/* Step 3: Date & Slots */}
                 {step === 3 && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
                         <div className="md:col-span-1 space-y-6">
 
                             <div className="bg-blue-50 p-4 rounded-lg border border-primary mb-4">
@@ -444,23 +444,22 @@ export default function BookingPage() {
                                     <span>${getPrice()}</span>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => { setSelectedDate(''); setStep(2) }}
-                                className="text-sm text-gray-500 hover:text-gray-700 mb-2 ml-2"
-                            >
-                                Back
-                            </button>
+
 
                         </div>
 
                         <div className="md:col-span-2">
                             {/* Render Slots */}
-                            {loadingSlots ? <div className="p-8 text-center">
+                            {!selectedDate ? (
+                                <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200 mt-8">
+                                    <Calendar className="w-12 h-12 text-gray-300 mb-3" />
+                                    <p className="text-lg font-medium text-gray-600">Select a date to find available slots</p>
+                                </div>
+                            ) : loadingSlots ? <div className="p-8 text-center">
                                 <Spinner size="lg" text="Loading slots..." />
                             </div> : (
                                 <>
-                                    <h2 className="text-xl font-semibold mt-8 mb-4">Available Time Slots</h2>
-
+                                    <p className="text-md font-semibold mt-8 mb-4">Available Time Slots</p>
                                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                                         {displaySlots.map((slot: Slot) => {
                                             const isSelected = selectedSlots.some(s => s.time === slot.startTime);
@@ -489,7 +488,15 @@ export default function BookingPage() {
                                     </div>
                                 </>
                             )}
-                            <div className="flex justify-end py-6">
+                            <div className="flex justify-between items-center py-6">
+                                <button
+                                    onClick={() => { setSelectedDate(''); setStep(2); }}
+                                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:text-gray-700 ml-2"
+                                >
+                                    Back
+                                </button>
+
+
                                 <button
                                     onClick={handleStep3Next}
                                     disabled={selectedSlots.length === 0}
