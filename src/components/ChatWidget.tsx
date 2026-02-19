@@ -37,11 +37,10 @@ export default function ChatWidget() {
         onSuccess: (response: any) => {
             setMessages((prev) => [
                 ...prev,
-                { role: 'assistant', content: response.data.response },
+                { role: 'assistant', content: response?.response },
             ]);
         },
         onError: () => {
-            toast.error('Failed to send message. Please try again.');
             setMessages((prev) => [
                 ...prev,
                 { role: 'assistant', content: 'Sorry, something went wrong. Please try again later.' },
