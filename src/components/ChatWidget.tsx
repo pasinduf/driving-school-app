@@ -71,7 +71,7 @@ export default function ChatWidget() {
             {isOpen && (
                 <div className="mb-4 w-80 sm:w-96 bg-white rounded-lg shadow-2xl overflow-hidden border border-gray-200 flex flex-col h-[500px] transition-all duration-300 ease-in-out transform origin-bottom-right">
                     {/* Header */}
-                    <div className="bg-primary p-4 text-white flex justify-between items-center bg-red-600">
+                    <div className="bg-primary p-4 text-white flex justify-between items-center">
                         <div className="flex items-center gap-2">
                             <MessageCircle className="w-5 h-5" />
                             <h3 className="font-semibold">Driving School Assistant</h3>
