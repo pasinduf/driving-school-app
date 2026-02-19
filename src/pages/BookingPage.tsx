@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSlots, lockSlots, createBooking, unlockSlots } from '../api/client';
 import type { Suburb, Slot, TestingCenter } from '../api/client';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { Loader2, Trash2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import BookingForm from '../components/BookingForm';
@@ -430,8 +430,8 @@ export default function BookingPage() {
                                         .map((slot, idx) => (
                                             <div key={idx} className="flex justify-between items-center bg-white p-2 rounded shadow-sm text-sm">
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium text-gray-900">{format(parseISO(slot.startTime), 'EEE, d MMM yyyy')}</span>
-                                                    <span className="text-gray-600">{format(parseISO(slot.startTime), 'h:mm a')} - {format(parseISO(slot.endTime), 'h:mm a')}</span>
+                                                    <span className="font-medium text-gray-900">{format((slot.startTime), 'EEE, d MMM yyyy')}</span>
+                                                    <span className="text-gray-600">{format((slot.startTime), 'h:mm a')} - {format((slot.endTime), 'h:mm a')}</span>
                                                 </div>
                                                 <button onClick={() => handleSlotClick(slot)} className="text-red-500 hover:text-red-700 p-1">
                                                     <Trash2 size={16} />
@@ -473,9 +473,9 @@ export default function BookingPage() {
                                                             'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                                                         } `}
                                                 >
-                                                    {format(parseISO(slot.startTime), 'h:mm a')}
+                                                    {format((slot.startTime), 'h:mm a')}
                                                     <span className="block text-xs font-normal opacity-75">
-                                                        to {format(parseISO(slot.endTime), 'h:mm a')}
+                                                        to {format((slot.endTime), 'h:mm a')}
                                                     </span>
                                                 </button>
                                             )
@@ -520,7 +520,7 @@ export default function BookingPage() {
                         <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-1">
                             <p><strong>Package:</strong> {selectedPackage?.name}</p>
                             <p><strong>Date:</strong> {selectedDate}</p>
-                            <p><strong>Slots:</strong> {selectedSlotDetails.map(s => format(parseISO(s.startTime), 'h:mm a')).join(', ')}</p>
+                            <p><strong>Slots:</strong> {selectedSlotDetails.map(s => format((s.startTime), 'h:mm a')).join(', ')}</p>
                             <p className="font-bold pt-2">Total Amount: ${getPrice()}</p>
                         </div>
 
