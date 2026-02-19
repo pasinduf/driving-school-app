@@ -66,7 +66,7 @@ export default function BookingPage() {
         // Specific Single Lesson Rules
         if (pkgName === '45MIN LESSON') return 15;
         if (pkgName === '1HR LESSON') return 15;
-        if (pkgName === '1.5HR LESSON') return 30;
+        if (pkgName === '1.5HR LESSON') return 15;
         if (pkgName === '2HR LESSON') return 30;
 
         // Packages usually default to 15 unless specified (e.g. 2HR package?)
