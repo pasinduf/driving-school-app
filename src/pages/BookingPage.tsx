@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSlots, lockSlots, createBooking, unlockSlots } from '../api/client';
 import type { Suburb, Slot, TestingCenter } from '../api/client';
-import { format } from 'date-fns';
+import { format } from "date-fns-tz";
+import { parseISO } from "date-fns";
 import { Loader2, Trash2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import BookingForm from '../components/BookingForm';
@@ -315,240 +316,243 @@ export default function BookingPage() {
     }
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8">
-            {/* Progress Bar or Title */}
-            <h1 className="text-3xl font-bold mb-8 text-center">Book a Driving Lesson</h1>
-            <BookingStepper currentStep={step} steps={['Location', 'Package', 'Date & Time', 'Details']} />
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Progress Bar or Title */}
+        <h1 className="text-3xl font-bold mb-8 text-center">Book a Driving Lesson</h1>
+        <BookingStepper currentStep={step} steps={["Location", "Package", "Date & Time", "Details"]} />
 
-            <div className='my-12'>
-                {/* Step 1: Location */}
-                {step === 1 && (
-                    <div className="max-w-md mx-auto pt-12">
-                        <div className="space-y-4">
-                            {/* Testing Center Selection */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Testing Center</label>
-                                {loadingData ? <Loader2 className="animate-spin" /> : (
-                                    <select
-                                        className="w-full border p-2 rounded"
-                                        onChange={(e) => {
-                                            const center = testingCenters?.find(tc => tc.id.toString() === e.target.value) || null;
-                                            setSelectedCenter(center);
-                                            setSelectedSuburb(null); // Reset suburb when center changes
-                                        }}
-                                        value={selectedCenter?.id || ''}
-                                    >
-                                        <option value="">Select a testing center...</option>
-                                        {testingCenters?.map(tc => <option key={tc.id} value={tc.id}>{tc.name}</option>)}
-                                    </select>
-                                )}
-                            </div>
+        <div className="my-12">
+          {/* Step 1: Location */}
+          {step === 1 && (
+            <div className="max-w-md mx-auto pt-12">
+              <div className="space-y-4">
+                {/* Testing Center Selection */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Testing Center</label>
+                  {loadingData ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <select
+                      className="w-full border p-2 rounded"
+                      onChange={(e) => {
+                        const center = testingCenters?.find((tc) => tc.id.toString() === e.target.value) || null;
+                        setSelectedCenter(center);
+                        setSelectedSuburb(null); // Reset suburb when center changes
+                      }}
+                      value={selectedCenter?.id || ""}
+                    >
+                      <option value="">Select a testing center...</option>
+                      {testingCenters?.map((tc) => (
+                        <option key={tc.id} value={tc.id}>
+                          {tc.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
 
-                            {/* Suburb Selection */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Your Suburb</label>
-                                <select
-                                    className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400"
-                                    onChange={(e) => setSelectedSuburb(suburbs?.find(s => s.id.toString() === e.target.value) || null)}
-                                    value={selectedSuburb?.id || ''}
-                                    disabled={!selectedCenter}
-                                >
-                                    <option value="">{selectedCenter ? 'Select a suburb...' : 'Select a testing center first'}</option>
-                                    {suburbs.map(s => <option key={s.id} value={s.id}>{s.name} ({s.postalcode})</option>)}
-                                </select>
-                            </div>
+                {/* Suburb Selection */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Your Suburb</label>
+                  <select
+                    className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400"
+                    onChange={(e) => setSelectedSuburb(suburbs?.find((s) => s.id.toString() === e.target.value) || null)}
+                    value={selectedSuburb?.id || ""}
+                    disabled={!selectedCenter}
+                  >
+                    <option value="">{selectedCenter ? "Select a suburb..." : "Select a testing center first"}</option>
+                    {suburbs.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.postalcode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                            <div className="flex justify-end pt-4">
-                                <button
-                                    onClick={handleStep1Next}
-                                    disabled={!selectedSuburb}
-                                    className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 2: Package */}
-                {step === 2 && (
-                    <div>
-                        <PackageSelect
-                            onSelect={setSelectedPackage}
-                            selectedPackage={selectedPackage}
-                        />
-                        <div className="flex justify-between items-center pt-6">
-                            <button
-                                onClick={() => setStep(1)}
-                                className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:text-gray-700"
-                            >
-                                Back
-                            </button>
-
-                            <button
-                                onClick={handleStep2Next}
-                                disabled={!selectedPackage}
-                                className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 3: Date & Slots */}
-                {step === 3 && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                        <div className="md:col-span-1 space-y-6">
-
-                            <div className="bg-blue-50 p-4 rounded-lg border border-primary mb-4">
-                                <h3 className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Selected Package</h3>
-                                <p className="text-lg font-medium text-primary">{selectedPackage?.name}</p>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Select Date</label>
-                                <DateDropdown
-                                    suburbId={selectedSuburb!.id}
-                                    selectedDate={selectedDate}
-                                    onSelect={setSelectedDate}
-                                />
-                            </div>
-
-                            {/* Selected Slots List */}
-                            <div className="bg-gray-50 p-4 rounded-lg border">
-                                {selectedPackage && (selectedPackage.name.includes('PACKAGE') || selectedPackage.name.includes('DRIVE TEST')) ?
-                                    <h3 className="font-semibold mb-2">Selected Slots ({selectedSlots.length}/{maxSlots})</h3> :
-                                    <h3 className="font-semibold mb-2">{selectedSlots.length} Slot Selected</h3>
-                                }
-
-                                {selectedSlotDetails.length === 0 && <p className="text-sm text-gray-400">No slots selected.</p>}
-                                <div className="space-y-2">
-                                    {[...selectedSlotDetails]
-                                        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-                                        .map((slot, idx) => (
-                                            <div key={idx} className="flex justify-between items-center bg-white p-2 rounded shadow-sm text-sm">
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium text-gray-900">{format((slot.startTime), 'EEE, d MMM yyyy')}</span>
-                                                    <span className="text-gray-600">{format((slot.startTime), 'h:mm a')} - {format((slot.endTime), 'h:mm a')}</span>
-                                                </div>
-                                                <button onClick={() => handleSlotClick(slot)} className="text-red-500 hover:text-red-700 p-1">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                </div>
-                                <div className="mt-4 pt-4 border-t flex justify-between items-center font-bold">
-                                    <span>Total:</span>
-                                    <span>${getPrice()}</span>
-                                </div>
-                            </div>
-
-
-                        </div>
-
-                        <div className="md:col-span-2">
-                            {/* Render Slots */}
-                            {!selectedDate ? (
-                                <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200 mt-8">
-                                    <Calendar className="w-12 h-12 text-gray-300 mb-3" />
-                                    <p className="text-lg font-medium text-gray-600">Select a date to find available slots</p>
-                                </div>
-                            ) : loadingSlots ? <div className="p-8 text-center">
-                                <Spinner size="lg" text="Loading slots..." />
-                            </div> : (
-                                <>
-                                    <p className="text-md font-semibold mt-8 mb-4">Available Time Slots</p>
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                                        {displaySlots.map((slot: Slot) => {
-                                            const isSelected = selectedSlots.some(s => s.time === slot.startTime);
-                                            return (
-                                                <button
-                                                    key={slot.startTime}
-                                                    onClick={() => handleSlotClick(slot)}
-                                                    disabled={!slot.available && !isSelected}
-                                                    className={`p-3 rounded border text-sm font-medium transition-colors ${isSelected ? 'bg-primary text-white border-primary' :
-                                                        slot.available ? 'bg-white text-primary border-primary hover:border-primary hover:shadow-md' :
-                                                            'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                                                        } `}
-                                                >
-                                                    {format((slot.startTime), 'h:mm a')}
-                                                    <span className="block text-xs font-normal opacity-75">
-                                                        to {format((slot.endTime), 'h:mm a')}
-                                                    </span>
-                                                </button>
-                                            )
-                                        })}
-                                        {(!displaySlots || displaySlots.length === 0) && selectedDate && (
-                                            <div className="col-span-full text-center py-10 text-gray-500">
-                                                No available slots for this date.
-                                            </div>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                            <div className="flex justify-between items-center py-6">
-                                <button
-                                    onClick={() => { setSelectedDate(''); setStep(2); }}
-                                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:text-gray-700 ml-2"
-                                >
-                                    Back
-                                </button>
-
-
-                                <button
-                                    onClick={handleStep3Next}
-                                    disabled={selectedSlots.length === 0}
-                                    className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 4: Details */}
-                {step === 4 && (
-                    <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow border">
-                        <div className="flex justify-between items-center mb-6 pb-4 border-b">
-                            <h2 className="text-xl font-bold">Finalize Booking</h2>
-                            <div className="text-red-600 font-medium bg-red-50 px-3 py-1 rounded">Time Remaining: {timeLeft}</div>
-                        </div>
-
-                        <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-1">
-                            <p><strong>Package:</strong> {selectedPackage?.name}</p>
-                            <p><strong>Date:</strong> {selectedDate}</p>
-                            <p><strong>Slots:</strong> {selectedSlotDetails.map(s => format((s.startTime), 'h:mm a')).join(', ')}</p>
-                            <p className="font-bold pt-2">Total Amount: ${getPrice()}</p>
-                        </div>
-
-                        <BookingForm
-                            onSubmit={handleSubmitBooking}
-                            isSubmitting={isSubmitting}
-                            onCancel={async () => {
-                                if (lockToken && selectedSuburb && selectedDate) {
-                                    try {
-                                        // Unlock all slots
-                                        if (selectedSlots.length > 0) {
-                                            await unlockSlots(selectedSlots, lockToken);
-                                        }
-                                    } catch (e) {
-                                        console.error('Failed to unlock slots', e);
-                                    }
-                                }
-                                setStep(3);
-                                setLockToken(null);
-                                setLockExpiry(null);
-                                setTimeLeft('');
-                            }}
-                            selectedSuburb={selectedSuburb}
-                        />
-                    </div>
-                )}
+                <div className="flex justify-end pt-4">
+                  <button onClick={handleStep1Next} disabled={!selectedSuburb} className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300">
+                    Next
+                  </button>
+                </div>
+              </div>
             </div>
+          )}
 
+          {/* Step 2: Package */}
+          {step === 2 && (
+            <div>
+              <PackageSelect onSelect={setSelectedPackage} selectedPackage={selectedPackage} />
+              <div className="flex justify-between items-center pt-6">
+                <button onClick={() => setStep(1)} className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:text-gray-700">
+                  Back
+                </button>
+
+                <button onClick={handleStep2Next} disabled={!selectedPackage} className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300">
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Date & Slots */}
+          {step === 3 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              <div className="md:col-span-1 space-y-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-primary mb-4">
+                  <h3 className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Selected Package</h3>
+                  <p className="text-lg font-medium text-primary">{selectedPackage?.name}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Select Date</label>
+                  <DateDropdown suburbId={selectedSuburb!.id} selectedDate={selectedDate} onSelect={setSelectedDate} />
+                </div>
+
+                {/* Selected Slots List */}
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  {selectedPackage && (selectedPackage.name.includes("PACKAGE") || selectedPackage.name.includes("DRIVE TEST")) ? (
+                    <h3 className="font-semibold mb-2">
+                      Selected Slots ({selectedSlots.length}/{maxSlots})
+                    </h3>
+                  ) : (
+                    <h3 className="font-semibold mb-2">{selectedSlots.length} Slot Selected</h3>
+                  )}
+
+                  {selectedSlotDetails.length === 0 && <p className="text-sm text-gray-400">No slots selected.</p>}
+                  <div className="space-y-2">
+                    {[...selectedSlotDetails]
+                      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+                      .map((slot, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-white p-2 rounded shadow-sm text-sm">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-900">{format(parseISO(slot.startTime), "EEE, d MMM yyyy", { timeZone: "UTC" })}</span>
+                            <span className="text-gray-600">
+                              {format(parseISO(slot.startTime), "h:mm a", { timeZone: "UTC" })} -{" "}
+                              {format(parseISO(slot.endTime), "h:mm a", { timeZone: "UTC" })}
+                            </span>
+                          </div>
+                          <button onClick={() => handleSlotClick(slot)} className="text-red-500 hover:text-red-700 p-1">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="mt-4 pt-4 border-t flex justify-between items-center font-bold">
+                    <span>Total:</span>
+                    <span>${getPrice()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                {/* Render Slots */}
+                {!selectedDate ? (
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200 mt-8">
+                    <Calendar className="w-12 h-12 text-gray-300 mb-3" />
+                    <p className="text-lg font-medium text-gray-600">Select a date to find available slots</p>
+                  </div>
+                ) : loadingSlots ? (
+                  <div className="p-8 text-center">
+                    <Spinner size="lg" text="Loading slots..." />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-md font-semibold mt-8 mb-4">Available Time Slots</p>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {displaySlots.map((slot: Slot) => {
+                        const isSelected = selectedSlots.some((s) => s.time === slot.startTime);
+                        return (
+                          <button
+                            key={slot.startTime}
+                            onClick={() => handleSlotClick(slot)}
+                            disabled={!slot.available && !isSelected}
+                            className={`p-3 rounded border text-sm font-medium transition-colors ${
+                              isSelected
+                                ? "bg-primary text-white border-primary"
+                                : slot.available
+                                  ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
+                                  : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                            } `}
+                          >
+                            {format(parseISO(slot.startTime), "h:mm a", { timeZone: "UTC" })}
+                            <span className="block text-xs font-normal opacity-75">to {format(parseISO(slot.endTime), "h:mm a", { timeZone: "UTC" })}</span>
+                          </button>
+                        );
+                      })}
+                      {(!displaySlots || displaySlots.length === 0) && selectedDate && (
+                        <div className="col-span-full text-center py-10 text-gray-500">No available slots for this date.</div>
+                      )}
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between items-center py-6">
+                  <button
+                    onClick={() => {
+                      setSelectedDate("");
+                      setStep(2);
+                    }}
+                    className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:text-gray-700 ml-2"
+                  >
+                    Back
+                  </button>
+
+                  <button
+                    onClick={handleStep3Next}
+                    disabled={selectedSlots.length === 0}
+                    className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Details */}
+          {step === 4 && (
+            <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow border">
+              <div className="flex justify-between items-center mb-6 pb-4 border-b">
+                <h2 className="text-xl font-bold">Finalize Booking</h2>
+                <div className="text-red-600 font-medium bg-red-50 px-3 py-1 rounded">Time Remaining: {timeLeft}</div>
+              </div>
+
+              <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-1">
+                <p>
+                  <strong>Package:</strong> {selectedPackage?.name}
+                </p>
+                <p>
+                  <strong>Date:</strong> {selectedDate}
+                </p>
+                <p>
+                  <strong>Slots:</strong> {selectedSlotDetails.map((s) => format(parseISO(s.startTime), "h:mm a", { timeZone: "UTC" })).join(", ")}
+                </p>
+                <p className="font-bold pt-2">Total Amount: ${getPrice()}</p>
+              </div>
+
+              <BookingForm
+                onSubmit={handleSubmitBooking}
+                isSubmitting={isSubmitting}
+                onCancel={async () => {
+                  if (lockToken && selectedSuburb && selectedDate) {
+                    try {
+                      // Unlock all slots
+                      if (selectedSlots.length > 0) {
+                        await unlockSlots(selectedSlots, lockToken);
+                      }
+                    } catch (e) {
+                      console.error("Failed to unlock slots", e);
+                    }
+                  }
+                  setStep(3);
+                  setLockToken(null);
+                  setLockExpiry(null);
+                  setTimeLeft("");
+                }}
+                selectedSuburb={selectedSuburb}
+              />
+            </div>
+          )}
         </div>
+      </div>
     );
 }
