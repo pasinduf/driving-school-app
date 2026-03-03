@@ -28,7 +28,6 @@ export default function BookingForm({
         defaultValues: {
             suburb: '',
             registerFor: 'myself',
-            transmission: 'Automatic',
             pickupAddress: '',
             firstName: '',
             lastName: '',

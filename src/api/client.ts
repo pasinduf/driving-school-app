@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-    baseURL: '/api',
+    baseURL: 'http://localhost:8020',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -52,8 +52,26 @@ export interface TestingCenter {
     longitude?: number;
 }
 
+export interface Instructor {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    contactNumber: string;
+    address: string;
+    transmission: 'Automatic' | 'Manual' | 'Both';
+    isActive: boolean;
+}
+
 export const fetchTestingCenters = async () => {
     const response = await apiClient.get<TestingCenter[]>('/testing-centers');
+    return response.data;
+};
+
+export const fetchAvailableInstructors = async (suburbId: string | number, transmission: string) => {
+    const response = await apiClient.get<Instructor[]>('/instructors/available', {
+        params: { suburbId, transmission },
+    });
     return response.data;
 };
 
@@ -176,3 +194,25 @@ export const sendMessage = async (message: string) => {
     const response = await apiClient.post('/chat', { message });
     return response.data;
 };
+
+// Admin Instructors
+export const fetchAdminInstructors = async () => {
+    const response = await apiClient.get<any[]>('/instructors');
+    return response.data;
+};
+
+export const createInstructor = async (data: any) => {
+    const response = await apiClient.post('/instructors', data);
+    return response.data;
+};
+
+export const updateInstructor = async (id: string, data: any) => {
+    const response = await apiClient.put(`/instructors/${id}`, data);
+    return response.data;
+};
+
+export const deleteInstructor = async (id: string) => {
+    const response = await apiClient.delete(`/instructors/${id}`);
+    return response.data;
+};
+

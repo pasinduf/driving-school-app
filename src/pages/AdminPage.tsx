@@ -5,7 +5,8 @@ import { useMasterData } from '../context/MasterDataContext';
 import { useNavigate } from 'react-router-dom';
 import { fetchBookings, fetchHolidays, createHoliday, deleteHoliday, confirmBookingAdmin, cancelBookingAdmin } from '../api/client';
 import { format } from 'date-fns';
-import { Calendar, Users, LogOut, Plus, Trash2, Check, X } from 'lucide-react';
+import { Calendar, Users, LogOut, Plus, Trash2, Check, X, Briefcase } from 'lucide-react';
+import AdminInstructorsTab from '../components/admin/AdminInstructorsTab';
 import ConfirmationModal from '../components/ConfirmationModal';
 import Spinner from '../components/Spinner';
 import Pagination from '../components/Pagination';
@@ -13,9 +14,9 @@ import { toast } from 'sonner';
 
 export default function AdminPage() {
     const { user, logout, loading } = useAuth();
-    const { suburbs, testingCenters } = useMasterData();
+    const { suburbs } = useMasterData();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'bookings' | 'holidays'>('bookings');
+    const [activeTab, setActiveTab] = useState<'bookings' | 'holidays' | 'instructors'>('bookings');
     const [bookings, setBookings] = useState<any[]>([]);
     const [holidays, setHolidays] = useState<any[]>([]);
 
@@ -24,7 +25,6 @@ export default function AdminPage() {
     // Filters & Pagination
     const [filterDate, setFilterDate] = useState('');
     const [filterSuburb, setFilterSuburb] = useState('');
-    const [filterCenter, setFilterCenter] = useState('');
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [totalBookings, setTotalBookings] = useState(0);
@@ -83,7 +83,6 @@ export default function AdminPage() {
             const bResponse = await fetchBookings({
                 date: filterDate || undefined,
                 suburbId: filterSuburb || undefined,
-                centerId: filterCenter || undefined,
                 page,
                 limit
             });
@@ -100,7 +99,7 @@ export default function AdminPage() {
         if (user && activeTab === 'bookings') {
             loadBookingsOnly();
         }
-    }, [user, page, filterDate, filterCenter, filterSuburb]); // Trigger on filter/page change
+    }, [user, page, filterDate, filterSuburb]); // Trigger on filter/page change
 
     const handleLogout = () => {
         setModalAction('LOGOUT');
@@ -174,7 +173,6 @@ export default function AdminPage() {
 
     const resetFilters = () => {
         setFilterDate('');
-        setFilterCenter('');
         setFilterSuburb('');
         setPage(1);
     };
@@ -221,6 +219,15 @@ export default function AdminPage() {
                     >
                         <Calendar className="w-5 h-5 mr-2" /> Holidays & Leaves
                     </button>
+                    <button
+                        onClick={() => setActiveTab('instructors')}
+                        className={`pb-2 px-4 flex items-center ${activeTab === 'instructors'
+                            ? 'border-b-2 border-primary text-primary font-medium'
+                            : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        <Briefcase className="w-5 h-5 mr-2" /> Instructors
+                    </button>
                 </div>
 
                 {/* Filters (only for bookings tab) */}
@@ -235,19 +242,7 @@ export default function AdminPage() {
                                 onChange={(e) => { setFilterDate(e.target.value); setPage(1); }}
                             />
                         </div>
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Center</label>
-                            <select
-                                className="w-full border rounded p-2"
-                                value={filterCenter}
-                                onChange={(e) => { setFilterCenter(e.target.value); setPage(1); }}
-                            >
-                                <option value="">All Centers</option>
-                                {testingCenters.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                        </div>
+
                         <div className="flex-1 min-w-[200px]">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Suburb</label>
                             <select
@@ -285,7 +280,7 @@ export default function AdminPage() {
                                         <thead className="bg-gray-50">
                                             <tr>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Date & Time</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Center</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Instructor</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Customer</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Suburb</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Package</th>
@@ -312,8 +307,8 @@ export default function AdminPage() {
                                                             ))}
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {booking.testingCenter}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                                        {booking.instructor?.name || '-'}
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="text-sm text-gray-900">{booking?.bookingDetails.customerFirstName} {booking?.bookingDetails.customerLastName}</div>
@@ -476,6 +471,9 @@ export default function AdminPage() {
                             </div>
                         )}
                     </>
+                )}
+                {activeTab === 'instructors' && (
+                    <AdminInstructorsTab />
                 )}
             </main>
 
