@@ -4,7 +4,7 @@ import { fetchMyBookings } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { LogOut } from 'lucide-react';
+
 import ConfirmationModal from '../components/ConfirmationModal';
 import Spinner from '../components/Spinner';
 import Pagination from '../components/Pagination';
@@ -62,25 +62,9 @@ export default function StudentBookingsPage() {
     const totalPages = Math.ceil(total / limit);
 
     return (
-
-        <div className="min-h-screen bg-gray-50">
-
-            <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
-                    <div className="flex items-center space-x-4">
-                        <span className="h3">Welcome, {user.name}</span>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="flex items-center text-red-600 hover:text-red-800"
-                        >
-                            <LogOut className="w-5 h-5 mr-1" /> Logout
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="w-full">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">My Bookings</h1>
+            <main className="w-full">
                 {isLoading ? (
                     <div><Spinner size="lg" text="Loading bookings..." /></div>
                 ) : bookings.length === 0 ? (

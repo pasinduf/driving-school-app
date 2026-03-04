@@ -10,6 +10,9 @@ import { Toaster } from 'sonner';
 import AdminPage from './pages/AdminPage';
 import StudentBookingsPage from './pages/StudentBookingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import DashboardLayout from './components/layout/DashboardLayout';
+import DashboardPage from './pages/DashboardPage';
+import { Navigate } from 'react-router-dom';
 
 function App() {
   return (
@@ -22,13 +25,17 @@ function App() {
             <Route path="/" element={<Layout />}>
               <Route index element={<HomePage />} />
               <Route path="booking" element={<BookingPage />} />
-
-              <Route element={<ProtectedRoute allowedRoles={['Student']} />}>
-                <Route path="my-bookings" element={<StudentBookingsPage />} />
-              </Route>
-
-              <Route element={<ProtectedRoute allowedRoles={['Admin', 'Instructor']} />}>
-                <Route path="portal" element={<AdminPage />} />
+              <Route element={<ProtectedRoute allowedRoles={['Student', 'Admin', 'Instructor']} />}>
+                <Route path="portal" element={<DashboardLayout />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<DashboardPage />} />
+                  <Route path="bookings" element={<AdminPage />} />
+                  <Route path="my-bookings" element={<StudentBookingsPage />} />
+                  <Route path="instructors" element={<AdminPage />} />
+                  <Route path="holidays" element={<AdminPage />} />
+                  <Route path="students" element={<AdminPage />} />
+                  <Route path="profile" element={<div className="p-4">Profile Component Placeholder</div>} />
+                </Route>
               </Route>
             </Route>
           </Routes>

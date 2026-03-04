@@ -24,11 +24,8 @@ export default function LoginPage() {
             // Decode token to get role
             const decoded: any = jwtDecode(data.access_token);
 
-            if (decoded.role === 'Student') {
-                navigate('/my-bookings');
-            } else {
-                navigate('/portal');
-            }
+            // Navigate everyone to the newly implemented Dashboard layout view natively
+            navigate('/portal/dashboard');
         } catch (err: any) {
             console.error(err);
             setError('Invalid credentials');

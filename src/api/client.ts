@@ -224,3 +224,7 @@ export const deleteInstructor = async (id: string) => {
     return response.data;
 };
 
+export const fetchDashboardMetrics = async () => {
+    const response = await apiClient.get('/dashboard/metrics');
+    return response.data;
+};

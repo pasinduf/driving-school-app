@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { fetchBookings, fetchHolidays, createHoliday, deleteHoliday, confirmBookingAdmin, cancelBookingAdmin, searchInstructorsDropdown } from '../api/client';
 import { format } from 'date-fns';
-import { Calendar, Users, LogOut, Plus, Trash2, Check, X, CarFront } from 'lucide-react';
+import { Plus, Trash2, Check, X } from 'lucide-react';
 import AdminInstructorsTab from '../components/admin/AdminInstructorsTab';
 import ConfirmationModal from '../components/ConfirmationModal';
 import Spinner from '../components/Spinner';
@@ -14,7 +14,14 @@ import SearchableDropdown from '../components/SearchableDropdown';
 export default function AdminPage() {
     const { user, logout, loading } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'bookings' | 'holidays' | 'instructors'>('bookings');
+    const location = useLocation();
+
+    // Bind active tab state natively checking URL parameters directly matching nested route schema
+    const activeTab = location.pathname.includes('holidays')
+        ? 'holidays'
+        : location.pathname.includes('instructors')
+            ? 'instructors'
+            : 'bookings';
     const [bookings, setBookings] = useState<any[]>([]);
     const [holidays, setHolidays] = useState<any[]>([]);
 
@@ -187,55 +194,8 @@ export default function AdminPage() {
     if (loading || !user) return <div className="p-8"><Spinner size="lg" text="Loading..." /></div>;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                    <div className="flex items-center space-x-4">
-                        <span className="h3">Welcome, {user.name}</span>
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center text-red-600 hover:text-red-800"
-                        >
-                            <LogOut className="w-5 h-5 mr-1" /> Logout
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Tabs */}
-                {/* ... existing tabs code ... */}
-                <div className="flex space-x-4 mb-6 border-b">
-                    <button
-                        onClick={() => setActiveTab('bookings')}
-                        className={`pb-2 px-4 flex items-center ${activeTab === 'bookings'
-                            ? 'border-b-2 border-primary text-primary font-medium'
-                            : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                    >
-                        <CarFront className="w-5 h-5 mr-2" /> Bookings
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('holidays')}
-                        className={`pb-2 px-4 flex items-center ${activeTab === 'holidays'
-                            ? 'border-b-2 border-primary text-primary font-medium'
-                            : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                    >
-                        <Calendar className="w-5 h-5 mr-2" /> Holidays & Leaves
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('instructors')}
-                        className={`pb-2 px-4 flex items-center ${activeTab === 'instructors'
-                            ? 'border-b-2 border-primary text-primary font-medium'
-                            : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                    >
-                        <Users className="w-5 h-5 mr-2" /> Instructors
-                    </button>
-                </div>
+        <div className="w-full">
+            <main className="w-full">
 
                 {/* Filters (only for bookings tab) */}
                 {activeTab === 'bookings' && (

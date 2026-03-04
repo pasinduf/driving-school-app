@@ -31,11 +31,10 @@ export default function Layout() {
                         </span>
 
                         <Link
-                            to={user ? (user.role === 'Student' ? "/my-bookings" : "/portal") : "/login"}
-                            className="hover:text-primary transition-colors underline"
+                            to={user ? "/portal/dashboard" : "/login"}
+                            className="hover:text-primary transition-colors underline uppercase font-bold tracking-wide"
                         >
-                            LOGIN
-                            {/* {user ? 'LOGGED IN' : 'LOGIN'} */}
+                            {user ? 'Home' : 'Login'}
                         </Link>
                     </div>
 
@@ -46,12 +45,10 @@ export default function Layout() {
             {/* Main Header */}
             <header className="bg-white shadow-md sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    {/* Logo */}
                     <Link to="/" className="text-3xl font-bold text-primary tracking-tight" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                         DRIVING<span className="text-gray-900">SCHOOL</span>
                     </Link>
 
-                    {/* Desktop Components */}
                     <div className="hidden md:flex items-center space-x-8">
                         <nav className="flex space-x-6 font-medium text-gray-700">
                             <Link to="/" className="hover:text-primary transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>HOME</Link>
@@ -74,7 +71,6 @@ export default function Layout() {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button */}
                     <div className="md:hidden">
                         <button className="text-gray-700 hover:text-primary focus:outline-none">
                             <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
