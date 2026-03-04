@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { User, Settings, LogOut, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ConfirmationModal from '../ConfirmationModal';
 
 export default function Header({ setMobileMenuOpen }: { setMobileMenuOpen?: (v: boolean) => void }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -19,8 +21,13 @@ export default function Header({ setMobileMenuOpen }: { setMobileMenuOpen?: (v: 
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleLogout = () => {
+    const handleLogoutClick = () => {
         setMenuOpen(false);
+        setShowLogoutModal(true);
+    };
+
+    const confirmLogout = () => {
+        setShowLogoutModal(false);
         logout();
         navigate('/login');
     };
@@ -54,14 +61,16 @@ export default function Header({ setMobileMenuOpen }: { setMobileMenuOpen?: (v: 
                     </div>
                     <div className="hidden md:block text-left">
                         <p className="text-sm font-medium text-gray-700 leading-none">{user.name}</p>
+                        <p className="text-xs text-gray-500 mt-1 leading-none font-medium">{user.role}</p>
                     </div>
                 </button>
 
                 {menuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-100 ring-1 ring-black ring-opacity-5 animate-in fade-in slide-in-from-top-2">
-                        <div className="px-4 py-3 border-b border-gray-100 md:hidden">
+                        <div className="px-4 py-3 border-b border-gray-100 md:hidden flex flex-col gap-0.5">
                             <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                            <p className="text-xs text-gray-500 truncate font-medium">{user.role}</p>
+                            <p className="text-xs text-gray-500/80 truncate">{user.email}</p>
                         </div>
 
                         <button
@@ -80,7 +89,7 @@ export default function Header({ setMobileMenuOpen }: { setMobileMenuOpen?: (v: 
                         </button>
                         <div className="border-t border-gray-100 mt-1"></div>
                         <button
-                            onClick={handleLogout}
+                            onClick={handleLogoutClick}
                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
                         >
                             <LogOut size={16} className="mr-2 text-red-500" />
@@ -89,6 +98,17 @@ export default function Header({ setMobileMenuOpen }: { setMobileMenuOpen?: (v: 
                     </div>
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={confirmLogout}
+                isConfirming={false}
+                title="Log Out"
+                message="Are you sure you want to log out of your session?"
+                confirmText="Log Out"
+                variant="danger"
+            />
         </header>
     );
 }
