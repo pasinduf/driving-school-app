@@ -51,7 +51,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
             <aside
                 className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
                     } ${collapsed ? "md:w-20 w-64" : "w-64"
-                    } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-900 text-white min-h-screen border-r border-gray-800 top-0 h-screen overflow-y-auto flex flex-col z-50`}
+                    } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-900 text-white border-r border-gray-800 top-0 h-full overflow-y-auto flex flex-col z-50`}
             >
                 {/* Brand Header */}
                 <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">

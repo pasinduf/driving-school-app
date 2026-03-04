@@ -23,7 +23,7 @@ export default function DashboardLayout() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden bg-gray-50 w-full">
             {/* Sidebar */}
             <Sidebar
                 collapsed={sidebarCollapsed}
