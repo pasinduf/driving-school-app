@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { fetchSuburbs, fetchTestingCenters, type Suburb, type TestingCenter } from '../api/client';
+import { fetchTestingCenters, type TestingCenter } from '../api/client';
 
 interface MasterDataContextType {
-    suburbs: Suburb[];
     testingCenters: TestingCenter[];
     loading: boolean;
     error: any;
@@ -12,7 +11,6 @@ interface MasterDataContextType {
 const MasterDataContext = createContext<MasterDataContextType | undefined>(undefined);
 
 export const MasterDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [suburbs, setSuburbs] = useState<Suburb[]>([]);
     const [testingCenters, setTestingCenters] = useState<TestingCenter[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<any>(null);
@@ -20,11 +18,7 @@ export const MasterDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const loadData = async () => {
         setLoading(true);
         try {
-            const [suburbsData, centersData] = await Promise.all([
-                fetchSuburbs(),
-                fetchTestingCenters()
-            ]);
-            setSuburbs(suburbsData);
+            const [centersData] = await Promise.all([fetchTestingCenters()]);
             setTestingCenters(centersData);
             setError(null);
         } catch (err) {
@@ -40,7 +34,7 @@ export const MasterDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }, []);
 
     return (
-        <MasterDataContext.Provider value={{ suburbs, testingCenters, loading, error, refreshData: loadData }}>
+        <MasterDataContext.Provider value={{ testingCenters, loading, error, refreshData: loadData }}>
             {children}
         </MasterDataContext.Provider>
     );

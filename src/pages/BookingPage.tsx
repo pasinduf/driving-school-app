@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchSlots, lockSlots, createBooking, unlockSlots, fetchAvailableInstructors } from '../api/client';
+import { fetchSlots, lockSlots, createBooking, unlockSlots, fetchAvailableInstructors, fetchSuburbs } from '../api/client';
 import type { Suburb, Slot } from '../api/client';
 import { format, parseISO } from 'date-fns';
 import { Loader2, Trash2, Calendar } from 'lucide-react';
@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import BookingForm from '../components/BookingForm';
 import PackageSelect from '../components/PackageSelect';
 import DateDropdown from '../components/DateDropdown';
-import { useMasterData } from '../context/MasterDataContext';
+import SearchableDropdown from '../components/SearchableDropdown';
 import BookingStepper from '../components/BookingStepper';
 import Spinner from '../components/Spinner';
 
@@ -31,12 +31,21 @@ export default function BookingPage() {
 
   // Step 1: Location
   const [selectedSuburb, setSelectedSuburb] = useState<Suburb | null>(null);
+  const [fetchedSuburbs, setFetchedSuburbs] = useState<Suburb[]>([]);
   const [selectedTransmission, setSelectedTransmission] = useState<string>("Automatic");
   const [selectedInstructor, setSelectedInstructor] = useState<any | null>(null);
   const [isSearched, setIsSearched] = useState<boolean>(false);
-  const { suburbs, loading: loadingData } = useMasterData();
 
   // Fetch Instructors based on Suburb & Transmission
+  const loadSuburbsData = useCallback(async (query: string) => {
+    const data = await fetchSuburbs(query);
+    setFetchedSuburbs(data);
+    return data.map((s: Suburb) => ({
+      id: s.id.toString(),
+      label: `${s.name}, ${s.stateCode} (${s.postalcode})`
+    }));
+  }, []);
+
   const { data: availableInstructors = [], isLoading: loadingInstructors, isFetching } = useQuery({
     queryKey: ['instructors', selectedSuburb?.id, selectedTransmission],
     queryFn: () => {
@@ -277,7 +286,7 @@ export default function BookingPage() {
       const payload = {
         suburbId: +formData.suburb,
         instructorId: selectedInstructor?.id,
-        transmission:selectedTransmission,
+        transmission: selectedTransmission,
         packageId: selectedPackage?.id,
         duration: duration,
         lockToken: lockToken!,
@@ -336,32 +345,32 @@ export default function BookingPage() {
       <div className="my-12">
         {/* Step 1: Location */}
         {step === 1 && (
-          <div className="max-w-md mx-auto pt-12">
+          <div className="max-w-3xl mx-auto pt-12">
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row items-end gap-4">
+              <div className="flex flex-col md:flex-row items-end gap-4">
                 {/* Suburb Selection */}
-                <div className="flex-1 w-full relative">
+                <div className="flex-[2] w-full relative">
                   <label className="block text-sm font-medium mb-1 text-gray-700">Pick-up Location <span className="text-yellow-500">*</span></label>
-                  {loadingData ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <select
-                      className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      onChange={(e) => {
-                        setSelectedSuburb(suburbs?.find((s) => s.id.toString() === e.target.value) || null);
-                        setSelectedInstructor(null);
-                        setIsSearched(false);
-                      }}
-                      value={selectedSuburb?.id || ""}
-                    >
-                      <option value="" disabled hidden>Enter your suburb</option>
-                      {suburbs.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name} ({s.postalcode})
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                  <SearchableDropdown
+                    placeholder="Enter your suburb..."
+                    fetchOptions={loadSuburbsData}
+                    onSelect={(opt) => {
+                      if (opt) {
+                        setSelectedSuburb(fetchedSuburbs.find(s => s.id.toString() === opt.id) || null);
+                      } else {
+                        setSelectedSuburb(null);
+                      }
+                      setSelectedInstructor(null);
+                      setIsSearched(false);
+                    }}
+                    onClear={() => {
+                      setSelectedSuburb(null);
+                      setSelectedInstructor(null);
+                      setIsSearched(false);
+                    }}
+                    hasSelection={!!selectedSuburb}
+                    value={selectedSuburb ? `${selectedSuburb.name} (${selectedSuburb.postalcode})` : ''}
+                  />
                 </div>
 
                 {/* Transmission Selection */}

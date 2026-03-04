@@ -18,6 +18,7 @@ apiClient.interceptors.request.use((config) => {
 export interface Suburb {
     id: string;
     name: string;
+    stateCode: string;
     postalcode: string;
 }
 
@@ -75,8 +76,10 @@ export const fetchAvailableInstructors = async (suburbId: string | number, trans
     return response.data;
 };
 
-export const fetchSuburbs = async () => {
-    const response = await apiClient.get<Suburb[]>('/suburbs');
+export const fetchSuburbs = async (search?: string) => {
+    const response = await apiClient.get<Suburb[]>('/suburbs', {
+        params: { search },
+    });
     return response.data;
 };
 export const getAvailableDates = async (startDate: string) => {
@@ -147,7 +150,7 @@ export const loginUser = async (email: string, password: string) => {
     return response.data;
 };
 
-export const fetchBookings = async (params?: { date?: string; centerId?: string; suburbId?: string; page?: number; limit?: number }) => {
+export const fetchBookings = async (params?: { date?: string; instructorId?: string; page?: number; limit?: number }) => {
     const response = await apiClient.get<{ data: any[]; total: number }>('/bookings', { params });
     return response.data;
 };
@@ -196,8 +199,13 @@ export const sendMessage = async (message: string) => {
 };
 
 // Admin Instructors
-export const fetchAdminInstructors = async () => {
-    const response = await apiClient.get<any[]>('/instructors');
+export const fetchAdminInstructors = async (page: number = 1, limit: number = 10) => {
+    const response = await apiClient.get<any>('/instructors', { params: { page, limit } });
+    return response.data;
+};
+
+export const searchInstructorsDropdown = async (searchTerm?: string) => {
+    const response = await apiClient.get<any[]>('/instructors/search', { params: { searchTerm } });
     return response.data;
 };
 

@@ -1,20 +1,18 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useMasterData } from '../context/MasterDataContext';
 import { useNavigate } from 'react-router-dom';
-import { fetchBookings, fetchHolidays, createHoliday, deleteHoliday, confirmBookingAdmin, cancelBookingAdmin } from '../api/client';
+import { fetchBookings, fetchHolidays, createHoliday, deleteHoliday, confirmBookingAdmin, cancelBookingAdmin, searchInstructorsDropdown } from '../api/client';
 import { format } from 'date-fns';
-import { Calendar, Users, LogOut, Plus, Trash2, Check, X, Briefcase } from 'lucide-react';
+import { Calendar, Users, LogOut, Plus, Trash2, Check, X, CarFront } from 'lucide-react';
 import AdminInstructorsTab from '../components/admin/AdminInstructorsTab';
 import ConfirmationModal from '../components/ConfirmationModal';
 import Spinner from '../components/Spinner';
 import Pagination from '../components/Pagination';
 import { toast } from 'sonner';
+import SearchableDropdown from '../components/SearchableDropdown';
 
 export default function AdminPage() {
     const { user, logout, loading } = useAuth();
-    const { suburbs } = useMasterData();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'bookings' | 'holidays' | 'instructors'>('bookings');
     const [bookings, setBookings] = useState<any[]>([]);
@@ -24,7 +22,8 @@ export default function AdminPage() {
 
     // Filters & Pagination
     const [filterDate, setFilterDate] = useState('');
-    const [filterSuburb, setFilterSuburb] = useState('');
+    const [filterInstructorId, setFilterInstructorId] = useState('');
+    const [searchInstructorText, setSearchInstructorText] = useState('');
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [totalBookings, setTotalBookings] = useState(0);
@@ -41,6 +40,14 @@ export default function AdminPage() {
     const [isConfirming, setIsConfirming] = useState(false);
     const [isAddingHoliday, setIsAddingHoliday] = useState(false);
 
+    const loadInstructorOptions = useCallback(async (query: string) => {
+        try {
+            const data = await searchInstructorsDropdown(query);
+            return data.map(inst => ({ id: inst.id, label: inst.name }));
+        } catch {
+            return [];
+        }
+    }, []);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -60,7 +67,6 @@ export default function AdminPage() {
             const [bookingResponse, holidayResponse] = await Promise.all([
                 fetchBookings({
                     date: filterDate || undefined,
-                    suburbId: filterSuburb || undefined,
                     page,
                     limit
                 }),
@@ -82,7 +88,7 @@ export default function AdminPage() {
         try {
             const bResponse = await fetchBookings({
                 date: filterDate || undefined,
-                suburbId: filterSuburb || undefined,
+                instructorId: filterInstructorId || undefined,
                 page,
                 limit
             });
@@ -99,7 +105,7 @@ export default function AdminPage() {
         if (user && activeTab === 'bookings') {
             loadBookingsOnly();
         }
-    }, [user, page, filterDate, filterSuburb]); // Trigger on filter/page change
+    }, [user, page, filterDate, filterInstructorId]); // Trigger on filter/page change
 
     const handleLogout = () => {
         setModalAction('LOGOUT');
@@ -173,7 +179,8 @@ export default function AdminPage() {
 
     const resetFilters = () => {
         setFilterDate('');
-        setFilterSuburb('');
+        setFilterInstructorId('');
+        setSearchInstructorText('');
         setPage(1);
     };
 
@@ -208,7 +215,7 @@ export default function AdminPage() {
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
-                        <Users className="w-5 h-5 mr-2" /> Bookings
+                        <CarFront className="w-5 h-5 mr-2" /> Bookings
                     </button>
                     <button
                         onClick={() => setActiveTab('holidays')}
@@ -226,7 +233,7 @@ export default function AdminPage() {
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
-                        <Briefcase className="w-5 h-5 mr-2" /> Instructors
+                        <Users className="w-5 h-5 mr-2" /> Instructors
                     </button>
                 </div>
 
@@ -242,19 +249,26 @@ export default function AdminPage() {
                                 onChange={(e) => { setFilterDate(e.target.value); setPage(1); }}
                             />
                         </div>
-
                         <div className="flex-1 min-w-[200px]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Suburb</label>
-                            <select
-                                className="w-full border rounded p-2"
-                                value={filterSuburb}
-                                onChange={(e) => { setFilterSuburb(e.target.value); setPage(1); }}
-                            >
-                                <option value="">All Suburbs</option>
-                                {suburbs.map(s => (
-                                    <option key={s.id} value={s.id}>{s.name} ({s.postalcode})</option>
-                                ))}
-                            </select>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Instructor</label>
+                            <SearchableDropdown
+                                placeholder="Search instructor..."
+                                fetchOptions={loadInstructorOptions}
+                                value={searchInstructorText}
+                                hasSelection={!!filterInstructorId}
+                                onClear={() => {
+                                    setFilterInstructorId('');
+                                    setSearchInstructorText('');
+                                    //setPage(1);
+                                }}
+                                onSelect={(opt) => {
+                                    if (opt) {
+                                        setFilterInstructorId(opt.id);
+                                        setSearchInstructorText(opt.label);
+                                        //setPage(1);
+                                    }
+                                }}
+                            />
                         </div>
                         <div className="flex-none">
                             <button
@@ -366,11 +380,9 @@ export default function AdminPage() {
                                 </div>
 
                                 <Pagination
-                                    itemCount={bookings.length}
-                                    page={page}
-                                    setPage={setPage}
-                                    total={totalBookings}
-                                    limit={limit}
+                                    currentPage={page}
+                                    totalPages={Math.ceil(totalBookings / limit)}
+                                    onPageChange={setPage}
                                 />
                             </>
                         )}

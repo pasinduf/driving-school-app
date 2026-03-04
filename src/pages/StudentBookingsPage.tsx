@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { LogOut } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
 import Spinner from '../components/Spinner';
+import Pagination from '../components/Pagination';
 
 interface Booking {
     id: string;
@@ -129,25 +130,11 @@ export default function StudentBookingsPage() {
                         ))}
 
                         {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex justify-center space-x-2 mt-8">
-                                <button
-                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                    disabled={page === 1}
-                                    className="px-4 py-2 border rounded disabled:opacity-50"
-                                >
-                                    Previous
-                                </button>
-                                <span className="px-4 py-2">Page {page} of {totalPages}</span>
-                                <button
-                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={page === totalPages}
-                                    className="px-4 py-2 border rounded disabled:opacity-50"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        )}
+                        <Pagination
+                            currentPage={page}
+                            totalPages={totalPages}
+                            onPageChange={setPage}
+                        />
                     </div>
                 )}
             </main>
