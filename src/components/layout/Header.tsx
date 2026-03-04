@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { User, Settings, LogOut, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Header() {
+export default function Header({ setMobileMenuOpen }: { setMobileMenuOpen?: (v: boolean) => void }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [menuOpen, setMenuOpen] = useState(false);
@@ -32,7 +32,10 @@ export default function Header() {
 
             {/* Mobile Menu Toggle + Breadcrumbs/Title Placeholder */}
             <div className="flex items-center flex-1">
-                <button className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-md">
+                <button
+                    onClick={() => setMobileMenuOpen && setMobileMenuOpen(true)}
+                    className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-md"
+                >
                     <Menu size={20} />
                 </button>
                 <span className="hidden md:block text-gray-500 font-medium ml-2">

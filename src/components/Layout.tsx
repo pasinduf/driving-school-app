@@ -84,7 +84,7 @@ export default function Layout() {
                 <Outlet />
             </main>
             <Footer />
-            <ChatWidget />
+            {/* <ChatWidget /> */}
         </div>
     );
 }

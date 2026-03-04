@@ -8,6 +8,7 @@ import Spinner from '../Spinner';
 export default function DashboardLayout() {
     const { user, loading } = useAuth();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     if (loading) {
         return (
@@ -24,12 +25,17 @@ export default function DashboardLayout() {
     return (
         <div className="min-h-screen bg-gray-50 flex overflow-hidden">
             {/* Sidebar */}
-            <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
+            <Sidebar
+                collapsed={sidebarCollapsed}
+                setCollapsed={setSidebarCollapsed}
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+            />
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header */}
-                <Header />
+                <Header setMobileMenuOpen={setMobileMenuOpen} />
 
                 {/* Scrollable Content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
