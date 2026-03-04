@@ -12,6 +12,7 @@ import StudentBookingsPage from './pages/StudentBookingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
 import { Navigate } from 'react-router-dom';
 
 function App() {
@@ -34,7 +35,7 @@ function App() {
                   <Route path="instructors" element={<AdminPage />} />
                   <Route path="holidays" element={<AdminPage />} />
                   <Route path="students" element={<AdminPage />} />
-                  <Route path="profile" element={<div className="p-4">Profile Component Placeholder</div>} />
+                  <Route path="profile" element={<ProfilePage />} />
                 </Route>
               </Route>
             </Route>

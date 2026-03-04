@@ -22,7 +22,7 @@ export default function LoginPage() {
             login(data.access_token);
 
             // Decode token to get role
-            const decoded: any = jwtDecode(data.access_token);
+            jwtDecode(data.access_token);
 
             // Navigate everyone to the newly implemented Dashboard layout view natively
             navigate('/portal/dashboard');

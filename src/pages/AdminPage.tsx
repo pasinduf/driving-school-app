@@ -114,10 +114,7 @@ export default function AdminPage() {
         }
     }, [user, page, filterDate, filterInstructorId]); // Trigger on filter/page change
 
-    const handleLogout = () => {
-        setModalAction('LOGOUT');
-        setIsModalOpen(true);
-    };
+
 
     const handleAddHoliday = async (e: React.FormEvent) => {
         e.preventDefault();
