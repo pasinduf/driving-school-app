@@ -69,13 +69,13 @@ export default function LoginPage() {
                     </div>
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+                        className="w-full bg-primary text-white p-2 rounded hover:bg-primary"
                     >
                         Login
                     </button>
                 </form>
                 <div className="mt-4 text-center">
-                    <Link to="/" className="text-blue-600 hover:underline text-sm">Back to Home</Link>
+                    <Link to="/" className="text-primary hover:underline text-sm">Back to Home</Link>
                 </div>
             </div>
         </div>
