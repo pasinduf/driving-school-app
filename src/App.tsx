@@ -10,13 +10,13 @@ import { AuthProvider } from './context/AuthContext';
 import { MasterDataProvider } from './context/MasterDataContext';
 import { Toaster } from 'sonner';
 import AdminPage from './pages/AdminPage';
-import StudentBookingsPage from './pages/StudentBookingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import { Navigate } from 'react-router-dom';
+import MyBookingsPage from './pages/MyBookingsPage';
 
 function App() {
   return (
@@ -36,7 +36,7 @@ function App() {
                   <Route index element={<Navigate to="dashboard" replace />} />
                   <Route path="dashboard" element={<DashboardPage />} />
                   <Route path="bookings" element={<AdminPage />} />
-                  <Route path="my-bookings" element={<StudentBookingsPage />} />
+                  <Route path="my-bookings" element={<MyBookingsPage />} />
                   <Route path="instructors" element={<AdminPage />} />
                   <Route path="holidays" element={<AdminPage />} />
                   <Route path="profile" element={<ProfilePage />} />
