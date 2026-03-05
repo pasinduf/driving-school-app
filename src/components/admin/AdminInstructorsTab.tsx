@@ -5,8 +5,10 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import InstructorModal from './InstructorModal';
 import ConfirmationModal from '../ConfirmationModal';
 import Pagination from '../Pagination';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AdminInstructorsTab() {
+  const { updateUser } = useAuth();
   const [instructors, setInstructors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -60,6 +62,7 @@ export default function AdminInstructorsTab() {
       } else {
         await createInstructor(data);
         toast.success('Instructor added successfully');
+        updateUser({ existMultipleInstructors: true });
       }
       if (page === 1) {
         loadInstructors();

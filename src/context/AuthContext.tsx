@@ -7,12 +7,14 @@ interface User {
     email: string;
     role: string;
     name: string;
+    existMultipleInstructors: boolean;
 }
 
 interface AuthContextType {
     user: User | null;
     login: (token: string) => void;
     logout: () => void;
+    updateUser: (data: Partial<User>) => void;
     isAuthenticated: boolean;
     loading: boolean;
 }
@@ -49,8 +51,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
     };
 
+    const updateUser = (data: Partial<User>) => {
+        setUser(prev => prev ? { ...prev, ...data } : null);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated: !!user, loading }}>
             {children}
         </AuthContext.Provider>
     );
