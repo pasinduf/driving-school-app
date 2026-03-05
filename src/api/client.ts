@@ -83,30 +83,34 @@ export const fetchSuburbs = async (search?: string) => {
     });
     return response.data;
 };
-export const getAvailableDates = async (startDate: string) => {
+export const getAvailableDates = async (startDate: string, instructorId?: string) => {
+    const params: any = { startDate };
+    if (instructorId) {
+        params.instructorId = instructorId;
+    }
     const response = await apiClient.get<{ date: string; isAvailable: boolean; reason?: string }[]>('/bookings/dates', {
-        params: { startDate },
+        params
     });
     return response.data;
 };
 
-export const fetchSlots = async (date: string, duration: number, margin?: number, step?: number) => {
+export const fetchSlots = async (date: string, instructorId: string, duration: number, margin?: number, step?: number) => {
     const response = await apiClient.get<Slot[]>('/bookings/availability', {
-        params: { date, duration, margin, step },
+        params: { date, instructorId, duration, margin, step },
     });
     return response.data;
 };
 
-export const lockSlots = async (slots: { date: string; time: string }[]) => {
+export const lockSlots = async (slots: { date: string; time: string }[], instructorId: string) => {
     const response = await apiClient.post<{ token: string; expiresAt: number, sessionDuration: number }>('/bookings/lock', {
-        slots
+        slots, instructorId
     });
     return response.data;
 };
 
-export const unlockSlots = async (slots: { date: string; time: string }[], token: string) => {
+export const unlockSlots = async (slots: { date: string; time: string }[], token: string, instructorId: string) => {
     const response = await apiClient.post('/bookings/unlock', {
-        token, slots
+        token, slots, instructorId
     });
     return response.data;
 };

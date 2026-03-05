@@ -110,10 +110,10 @@ export default function BookingPage() {
   const { data: rawSlots, isLoading: loadingSlots, refetch: refetchSlots } = useQuery({
     queryKey: ['slots', selectedSuburb?.id, selectedDate, duration, margin],
     queryFn: () => {
-      if (!selectedSuburb || !selectedDate) return [];
-      return fetchSlots(selectedDate, duration, margin, 15);
+      if (!selectedSuburb || !selectedDate || !selectedInstructor) return [];
+      return fetchSlots(selectedDate, selectedInstructor.id, duration, margin, 15);
     },
-    enabled: !!selectedSuburb && !!selectedDate && step === 3,
+    enabled: !!selectedSuburb && !!selectedDate && !!selectedInstructor && step === 3,
   });
 
   // Process slots for display
@@ -207,8 +207,8 @@ export default function BookingPage() {
   })();
 
   const handleExpire = () => {
-    if (selectedSlots.length > 0) {
-      unlockSlots(selectedSlots, lockToken!);
+    if (selectedSlots.length > 0 && selectedInstructor?.id) {
+      unlockSlots(selectedSlots, lockToken!, selectedInstructor.id);
     }
     setTimeLeft('0:00');
     toast.error('Session expired. Please start over.');
@@ -267,7 +267,7 @@ export default function BookingPage() {
       // Lock slots
       try {
         // We use the first slot time for the "time" param if needed, but we should use lockSlots endpoint
-        const result = await lockSlots(selectedSlots);
+        const result = await lockSlots(selectedSlots, selectedInstructor!.id);
         setLockToken(result.token);
         setLockExpiry(result.expiresAt);
         setTimeLeft(`${result.sessionDuration}`);
@@ -479,7 +479,7 @@ export default function BookingPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Select Date</label>
-                <DateDropdown suburbId={selectedSuburb!.id} selectedDate={selectedDate} onSelect={setSelectedDate} />
+                <DateDropdown suburbId={selectedSuburb!.id} instructorId={selectedInstructor?.id} selectedDate={selectedDate} onSelect={setSelectedDate} />
               </div>
 
               {/* Selected Slots List */}
@@ -605,11 +605,11 @@ export default function BookingPage() {
               onSubmit={handleSubmitBooking}
               isSubmitting={isSubmitting}
               onCancel={async () => {
-                if (lockToken && selectedSuburb && selectedDate) {
+                if (lockToken && selectedSuburb && selectedDate && selectedInstructor?.id) {
                   try {
                     // Unlock all slots
                     if (selectedSlots.length > 0) {
-                      await unlockSlots(selectedSlots, lockToken);
+                      await unlockSlots(selectedSlots, lockToken, selectedInstructor.id);
                     }
                   } catch (e) {
                     console.error("Failed to unlock slots", e);
