@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { changePassword } from '../../api/client';
 import { Loader2, X, AlertCircle, Eye, EyeOff } from 'lucide-react';
