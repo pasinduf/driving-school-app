@@ -55,6 +55,7 @@ export interface TestingCenter {
 
 export interface Instructor {
     id: string;
+    name:string;
     firstName: string;
     lastName: string;
     email: string;

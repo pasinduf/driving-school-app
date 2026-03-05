@@ -424,7 +424,7 @@ export default function BookingPage() {
                             className="mt-1 text-primary focus:ring-primary"
                           />
                           <div className="ml-3">
-                            <p className="font-medium text-gray-900">{instructor.firstName} {instructor.lastName}</p>
+                            <p className="font-medium text-gray-900">{instructor.name}</p>
                             {instructor.transmission === 'Both' ?
                               <p className="text-xs text-gray-500">Automatic & Manual | {instructor.contactNumber}</p> :
                               <p className="text-xs text-gray-500">{instructor.transmission} | {instructor.contactNumber}</p>

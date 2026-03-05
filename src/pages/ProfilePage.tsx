@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
-import { getProfile, updateProfile, uploadProfileImage } from '../api/client';
+import { useState, useEffect, useCallback } from 'react';
+import { getProfile, updateProfile, uploadProfileImage, fetchSuburbs } from '../api/client';
+import type { Suburb } from '../api/client';
+import SearchableMultiSelect, { type DropdownOption } from '../components/SearchableMultiSelect';
 import { useAuth } from '../context/AuthContext';
 import { Camera, Loader2, Save } from 'lucide-react';
 import ChangePasswordModal from '../components/profile/ChangePasswordModal';
@@ -14,12 +16,19 @@ export default function ProfilePage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [selectedSuburbs, setSelectedSuburbs] = useState<DropdownOption[]>([]);
 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const data = await getProfile();
                 setProfile(data);
+                if (data.suburbs) {
+                    setSelectedSuburbs(data.suburbs.map((s: any) => ({
+                        id: s.id.toString(),
+                        label: `${s.name}, ${s.stateCode} (${s.postalcode})`
+                    })));
+                }
             } catch (err: any) {
                 setError(err.response?.data?.message || 'Failed to load profile');
             } finally {
@@ -35,6 +44,29 @@ export default function ProfilePage() {
         setError('');
         setSuccess('');
     };
+
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, checked } = e.target;
+        setProfile((prev: any) => ({ ...prev, [name]: checked }));
+        setError('');
+        setSuccess('');
+    };
+
+    const handleAddSuburb = (opt: DropdownOption) => {
+        setSelectedSuburbs(prev => [...prev, opt]);
+    };
+
+    const handleRemoveSuburb = (id: string) => {
+        setSelectedSuburbs(prev => prev.filter(s => s.id !== id));
+    };
+
+    const loadSuburbsData = useCallback(async (query: string) => {
+        const data = await fetchSuburbs(query);
+        return data.map((s: Suburb) => ({
+            id: s.id.toString(),
+            label: `${s.name}, ${s.stateCode} (${s.postalcode})`
+        }));
+    }, []);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const field = 'profileImage';
@@ -68,7 +100,9 @@ export default function ProfilePage() {
                 name: profile.name,
                 contactNumber: profile.contactNumber,
                 address: profile.address,
-                profileImage: profile.profileImage
+                profileImage: profile.profileImage,
+                showAsInstructor: profile.showAsInstructor,
+                suburbIds: selectedSuburbs.map(s => Number(s.id)),
             };
             const updated = await updateProfile(dataToUpdate);
             setProfile(updated);
@@ -94,7 +128,7 @@ export default function ProfilePage() {
     const canEditContact = user?.role === 'Instructor' || user?.role === 'Student';
 
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="max-w-4xl mx-auto px-4">
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
                 <p className="text-gray-500 mt-1">Manage your account details and preferences.</p>
@@ -190,6 +224,43 @@ export default function ProfilePage() {
                                         />
                                     </div>
                                 </>
+                            )}
+
+                            {user?.role === 'Admin' && (
+                                <div className="md:col-span-2 pt-6 border-t border-gray-100">
+                                    <h3 className="text-lg font-medium text-gray-900 mb-6">Instructor Settings</h3>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="flex items-center space-x-3 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    name="showAsInstructor"
+                                                    checked={profile.showAsInstructor !== false}
+                                                    onChange={handleCheckboxChange}
+                                                    className="w-5 h-5 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2"
+                                                />
+                                                <span className="text-gray-900 font-medium cursor-pointer select-none">Show as Instructor in Booking</span>
+                                            </label>
+                                            <p className="mt-1 ml-8 text-xs text-gray-500">
+                                                If checked, you will be displayed as an available instructor on the booking page. Otherwise, you will be hidden.
+                                            </p>
+                                        </div>
+
+                                        <div className='pt-2'>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Suburbs</label>
+                                            <SearchableMultiSelect
+                                                placeholder="Search and select suburbs..."
+                                                fetchOptions={loadSuburbsData}
+                                                selectedOptions={selectedSuburbs}
+                                                onAdd={handleAddSuburb}
+                                                onRemove={handleRemoveSuburb}
+                                            />
+                                            <p className="mt-2 text-xs text-gray-500">
+                                                Select the suburbs where you are available.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
                         </div>
 
