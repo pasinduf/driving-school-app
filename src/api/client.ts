@@ -145,6 +145,16 @@ export const createBooking = async (details: CreateBookingRequest) => {
     return response.data;
 };
 
+export const createManualBooking = async (details: {
+    date: string;
+    time: string;
+    duration: number;
+    note?: string;
+}) => {
+    const response = await apiClient.post('/bookings/manual', details);
+    return response.data;
+};
+
 export const fetchPackages = async () => {
     const response = await apiClient.get<any[]>('/packages');
     return response.data;

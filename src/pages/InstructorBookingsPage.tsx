@@ -20,9 +20,10 @@ import {
   startOfDay,
   endOfDay
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X } from 'lucide-react';
+import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
-import { fetchInstructorBookings } from '../api/client';
+import { fetchInstructorBookings, createManualBooking } from '../api/client';
 
 interface BookingSlot {
   startTime: string;
@@ -39,6 +40,8 @@ interface Booking {
   status: string;
   price: string;
   bookingSlots: BookingSlot[];
+  isManualBooking?: boolean;
+  note?: string;
 }
 
 interface BookingsResponse {
@@ -57,9 +60,16 @@ const PIXELS_PER_HOUR = 60;
 
 export default function InstructorBookingsPage() {
   const { user } = useAuth();
-
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('Week');
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<number | null>(null);
+  const [duration, setDuration] = useState(60);
+  const [note, setNote] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calculate fetch bounds based on the current view
   const { startDateStr, endDateStr } = useMemo(() => {
@@ -84,6 +94,7 @@ export default function InstructorBookingsPage() {
     data: bookingData,
     isLoading,
     isError,
+    refetch,
   } = useQuery<BookingsResponse>({
     queryKey: ['instructor-bookings', startDateStr, endDateStr, view],
     queryFn: () => fetchInstructorBookings(1, 1000, startDateStr, endDateStr),
@@ -130,13 +141,11 @@ export default function InstructorBookingsPage() {
     );
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'CONFIRMED': return 'bg-green-100 text-green-800 border-green-200';
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'CANCELLED': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  const getStatusColor = (booking: Booking) => {
+    if (booking.isManualBooking) {
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     }
+    return 'bg-green-100 text-green-800 border-green-200';
   };
 
   // Helper to calculate absolute positioning for time blocks
@@ -170,6 +179,40 @@ export default function InstructorBookingsPage() {
       zIndex: 10,
     };
   };
+
+  const handleGridClick = (day: Date, hour: number) => {
+    if (day < startOfDay(new Date())) return; // Prevent past bookings if needed
+    setSelectedDate(day);
+    setSelectedTime(hour);
+    setIsModalOpen(true);
+  };
+
+  const submitManualBooking = async () => {
+    if (!selectedDate || selectedTime === null) return;
+    setIsSubmitting(true);
+    try {
+      const timeStr = `${selectedTime.toString().padStart(2, '0')}:00`;
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+
+      await createManualBooking({
+        date: dateStr,
+        time: timeStr,
+        duration,
+        note
+      });
+
+      toast.success('Manual booking added successfully.');
+      setIsModalOpen(false);
+      setNote('');
+      setDuration(60);
+      refetch(); // Reload calendar
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to create manual booking.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   if (isError) {
     return (
@@ -301,15 +344,26 @@ export default function InstructorBookingsPage() {
                         <div
                           key={booking.id + slot.startTime}
                           className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 
-                            ${getStatusColor(booking.status)} cursor-default hover:shadow transition-shadow`}
-                          title={`${booking.package} - ${booking.suburb.name}`}
+                            ${getStatusColor(booking)} cursor-default hover:shadow transition-shadow`}
+                          title={`${booking.package || 'Manual Lock'} - ${booking.isManualBooking ? 'Instructor booked' : booking.suburb?.name}`}
                         >
-                          <div className="flex items-center justify-between font-semibold">
-                            <span>{format(parseISO(slot.startTime), 'h:mm a')}</span>
-                            <span className="truncate max-w-[50px] ml-1 opacity-70 font-normal">{booking.transmission.substring(0, 4)}</span>
-                          </div>
-                          <div className="truncate opacity-90 font-medium">{booking.package || 'Lesson'}</div>
-                          <div className="truncate text-[10px] opacity-75">{booking.suburb.name}</div>
+                          {booking.isManualBooking ? (
+                            <>
+                              <div className="font-semibold">{format(parseISO(slot.startTime), 'h:mm a')}</div>
+                              <div className="truncate opacity-90 font-medium">{booking.note || 'Manual Booking'}</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between font-semibold">
+                                <span>{format(parseISO(slot.startTime), 'h:mm a')}</span>
+                                <span className="truncate max-w-[50px] ml-1 opacity-70 font-normal">{booking.transmission?.substring(0, 4)}</span>
+                              </div>
+                              <div className="truncate opacity-90 font-medium">{booking.package || 'Lesson'}</div>
+                              {booking.suburb && (
+                                <div className="truncate text-[10px] opacity-75">{booking.suburb.name}</div>
+                              )}
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -379,12 +433,32 @@ export default function InstructorBookingsPage() {
                     ))}
                   </div>
 
-                  {/* Day Columns */}
+                  {/* Day Columns (Grid Interactions & Events) */}
                   {daysInGrid.map((day, idx) => {
                     const daySlots = getSlotsForDay(day);
 
                     return (
                       <div key={day.toISOString()} className={`relative border-gray-100 ${idx !== 0 ? 'border-l' : ''}`}>
+                        {/* Clickable Empty Slots */}
+                        {Array.from({ length: HOURS_IN_GRID }).map((_, hourIdx) => {
+                          const isPastDay = day < startOfDay(new Date());
+                          return (
+                            <div
+                              key={`empty-${hourIdx}`}
+                              className={`w-full absolute ${isPastDay ? 'cursor-not-allowed bg-gray-50/40' : 'cursor-pointer hover:bg-primary/5 transition-colors'}`}
+                              style={{
+                                top: `${hourIdx * PIXELS_PER_HOUR}px`,
+                                height: `${PIXELS_PER_HOUR}px`,
+                                zIndex: 1 // Underneath actual bookings
+                              }}
+                              onClick={() => {
+                                if (!isPastDay) handleGridClick(day, START_HOUR + hourIdx);
+                              }}
+                            />
+                          )
+                        })}
+
+                        {/* Actual Bookings */}
                         {daySlots.map(({ booking, slot }) => {
                           const styles = calculateBlockStyles(slot.startTime, slot.endTime);
 
@@ -392,21 +466,31 @@ export default function InstructorBookingsPage() {
                             <div
                               key={booking.id + slot.startTime}
                               className={`rounded-md border p-2 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group
-                                    ${getStatusColor(booking.status)}`}
+                                    ${getStatusColor(booking)}`}
                               style={styles}
-                              title={`${booking.package} - ${booking.suburb.name}`}
+                              title={`${booking.isManualBooking ? (booking.note || 'Manual Booking') : booking.package}`}
                             >
                               <div className="text-xs font-semibold flex justify-between items-start mb-0.5">
                                 <span className="truncate">
                                   {format(parseISO(slot.startTime), 'h:mm')} - {format(parseISO(slot.endTime), 'h:mm a')}
                                 </span>
                               </div>
-                              <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
-                                {booking.package || 'Lesson'}
-                              </div>
-                              <div className="text-[10px] opacity-75 truncate mt-auto hidden sm:block">
-                                {booking.suburb.name} • {booking.transmission.substring(0, 4)}
-                              </div>
+                              {booking.isManualBooking ? (
+                                <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
+                                  {booking.note || 'Manual Booking'}
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
+                                    {booking.package || 'Lesson'}
+                                  </div>
+                                  {booking.suburb && (
+                                    <div className="text-[10px] opacity-75 truncate mt-auto hidden sm:block">
+                                      {booking.suburb.name} • {booking.transmission?.substring(0, 4)}
+                                    </div>
+                                  )}
+                                </>
+                              )}
                             </div>
                           );
                         })}
@@ -419,6 +503,73 @@ export default function InstructorBookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Manual Booking Modal */}
+      {isModalOpen && selectedDate && selectedTime !== null && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Add Manual Booking</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 flex items-center gap-2 border border-gray-100">
+                <CalendarIcon className="w-4 h-4 text-primary shrink-0" />
+                <span className="font-medium">
+                  {format(selectedDate, 'MMMM d, yyyy')} at {selectedTime === 12 ? '12 PM' : selectedTime > 12 ? `${selectedTime - 12} PM` : `${selectedTime} AM`}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Duration</label>
+                <select
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value={45}>45 Minutes</option>
+                  <option value={60}>1 Hour</option>
+                  <option value={90}>1.5 Hours</option>
+                  <option value={120}>2 Hours</option>
+                  <option value={150}>2.5 Hours</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Note (Optional)</label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. Blocking off for lunch, or manual student booking"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[80px]"
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitManualBooking}
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors flex items-center gap-2"
+              >
+                {isSubmitting ? <Spinner size="sm" /> : null}
+                Save Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
