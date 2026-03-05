@@ -3,12 +3,14 @@ import { getProfile, updateProfile, uploadProfileImage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Camera, Loader2, Save } from 'lucide-react';
 import ChangePasswordModal from '../components/profile/ChangePasswordModal';
+import { toast } from 'sonner';
 
 export default function ProfilePage() {
     const { user } = useAuth();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [imageUploading, setImageUploading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -40,21 +42,18 @@ export default function ProfilePage() {
         if (!file) return;
 
         try {
-            setSaving(true);
-            const { url } = await uploadProfileImage(file);
-            setProfile((prev: any) => ({ ...prev, [field]: url }));
-            // Instantly save the URL
-            await updateProfile({ [field]: url });
-            setSuccess('Image updated successfully');
+            setImageUploading(true);
+            setError('');
 
-            // Optionally refresh global auth context state if profileImage maps there
-            if (field === 'profileImage' && user) {
-                // If context user object holds the image, an auth refresh or manual patch could be done here
-            }
+            const response = await uploadProfileImage(file);
+            const url = typeof response === 'string' ? response : response.url;
+
+            setProfile((prev: any) => ({ ...prev, [field]: url }));
+
         } catch (err: any) {
             setError(err.response?.data?.message || 'Upload failed');
         } finally {
-            setSaving(false);
+            setImageUploading(false);
         }
     };
 
@@ -69,17 +68,12 @@ export default function ProfilePage() {
                 name: profile.name,
                 contactNumber: profile.contactNumber,
                 address: profile.address,
+                profileImage: profile.profileImage
             };
             const updated = await updateProfile(dataToUpdate);
             setProfile(updated);
-            setSuccess('Profile updated successfully');
+            toast.success('Profile updated successfully');
 
-            // If the name changed, refresh local user state partially since name is tracked in JWT
-            if (updated.name !== user?.name) {
-                // Notice: In a real system the JWT is generated on the server and returned on login. 
-                // Updating profile should ideally return a new JWT to persist changes cleanly natively.
-                // For now, we will just inform the user.
-            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to update profile');
         } finally {
@@ -122,10 +116,17 @@ export default function ProfilePage() {
                                         {profile.name?.charAt(0).toUpperCase()}
                                     </div>
                                 )}
-                                <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                    <Camera size={20} className="text-white" />
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                                </label>
+
+                                {imageUploading ? (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity">
+                                        <Loader2 size={24} className="text-white animate-spin" />
+                                    </div>
+                                ) : (
+                                    <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                        <Camera size={20} className="text-white" />
+                                        <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={imageUploading || saving} />
+                                    </label>
+                                )}
                             </div>
                         </div>
 
