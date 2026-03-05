@@ -50,7 +50,10 @@ export default function LoginPage() {
                     </div>
                     <div className="mb-6">
                         <div className='relative'>
-                            <label className="block text-gray-700">Password</label>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="block text-gray-700">Password</label>
+                                <Link to="/forgot-password" className="text-sm text-primary hover:underline font-medium">Forgot password?</Link>
+                            </div>
                             <input
                                 type={showConfirmPassword ? "text" : "password"}
                                 className="w-full border p-2 rounded block"
