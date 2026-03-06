@@ -80,13 +80,13 @@ export default function DashboardPage() {
               <MetricCard
                 title="My Total Bookings"
                 value={metrics.totalBookings || 0}
-                icon={<Calendar className="w-6 h-6 text-purple-600" />}
+                icon={<CarFront className="w-6 h-6 text-purple-600" />}
                 gradient="from-purple-50 to-purple-100/50"
               />
               <MetricCard
                 title="Unique Students Taught"
                 value={metrics.totalStudents || 0}
-                icon={<GraduationCap className="w-6 h-6 text-orange-600" />}
+                icon={<Users className="w-6 h-6 text-orange-600" />}
                 gradient="from-orange-50 to-orange-100/50"
               />
               <MetricCard

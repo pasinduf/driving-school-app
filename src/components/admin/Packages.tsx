@@ -18,7 +18,7 @@ interface Package {
     isActive: boolean;
 }
 
-export default function AdminPackagesTab() {
+export default function Packages() {
     const [packages, setPackages] = useState<Package[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 

@@ -7,7 +7,7 @@ import ConfirmationModal from '../ConfirmationModal';
 import Pagination from '../Pagination';
 import { useAuth } from '../../context/AuthContext';
 
-export default function AdminInstructorsTab() {
+export default function Instructors() {
   const { updateUser } = useAuth();
   const [instructors, setInstructors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
