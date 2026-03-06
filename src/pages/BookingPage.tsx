@@ -12,13 +12,16 @@ import DateDropdown from '../components/DateDropdown';
 import SearchableDropdown from '../components/SearchableDropdown';
 import BookingStepper from '../components/BookingStepper';
 import Spinner from '../components/Spinner';
+import { getDefaultPackages } from '../util/default-packages';
 
 interface Package {
   id: string;
   name: string;
   description: string;
+  duration: number;
   price: number;
   maximumSlotsCount: number;
+  margin: number;
 }
 
 interface BookingSlot {
@@ -70,41 +73,20 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<any | null>(null);
 
-  // Derived State
-  // Derived State
   const maxSlots = (() => {
-    if (!selectedPackage) return 1;
-    if (selectedPackage.name.includes('5 X 1HR')) return 5;
-    if (selectedPackage.name.includes('10 X 1HR')) return 10;
-    if (selectedPackage.name.includes('3 X 1HR')) return 3;
-    if (['45MIN LESSON', '1HR LESSON', '1.5HR LESSON', '2HR LESSON'].includes(selectedPackage.name)) {
-      return 10; // Allow multiple selection for single lessons
-    }
-    return 1;
+    // if (!selectedPackage) return 1;
+    // if (selectedPackage.name.includes('5 X 1HR')) return 5;
+    // if (selectedPackage.name.includes('10 X 1HR')) return 10;
+    // if (selectedPackage.name.includes('3 X 1HR')) return 3;
+    // if (['45MIN LESSON', '1HR LESSON', '1.5HR LESSON', '2HR LESSON'].includes(selectedPackage.name)) {
+    //   return 10;
+    // }
+    // return 1;
+    return selectedPackage?.maximumSlotsCount || 1;
   })();
 
-  const getMargin = (pkgName: string) => {
-    // Specific Single Lesson Rules
-    if (pkgName === '45MIN LESSON') return 15;
-    if (pkgName === '1HR LESSON') return 15;
-    if (pkgName === '1.5HR LESSON') return 15;
-    if (pkgName === '2HR LESSON') return 30;
-
-    // Packages usually default to 15 unless specified (e.g. 2HR package?)
-    // Assuming 15 for standard packages matches the component lesson margin.
-    if (pkgName.includes('2HR')) return 30;
-    return 15;
-  };
-
-  const getDuration = (pkgName: string) => {
-    if (pkgName.includes('45MIN')) return 45;
-    if (pkgName.includes('1.5HR')) return 90;
-    if (pkgName.includes('2HR')) return 120;
-    return 60; // Default 1HR
-  };
-
-  const margin = selectedPackage ? getMargin(selectedPackage.name) : 15;
-  const duration = selectedPackage ? getDuration(selectedPackage.name) : 60;
+  const margin = selectedPackage ? selectedPackage.margin : 15;
+  const duration = selectedPackage ? selectedPackage.duration : 60;
 
   // Fetch Slots
   const { data: rawSlots, isLoading: loadingSlots, refetch: refetchSlots } = useQuery({
@@ -230,7 +212,7 @@ export default function BookingPage() {
     } else {
       // Add
       if (selectedSlots.length >= maxSlots) {
-        toast.error(`You can only select ${maxSlots} slots for this package.`);
+        toast.warning(`You can only select ${maxSlots} slots for this package.`);
         return;
       }
       setSelectedSlots(prev => [...prev, { date: selectedDate, time: slot.startTime }]);
@@ -241,7 +223,7 @@ export default function BookingPage() {
   const getPrice = () => {
     if (!selectedPackage) return 0;
 
-    const isSingle = ['45MIN LESSON', '1HR LESSON', '1.5HR LESSON', '2HR LESSON'].includes(selectedPackage.name);
+    const isSingle = getDefaultPackages().includes(selectedPackage.name);
 
     if (isSingle) {
       return selectedPackage.price * (selectedSlots.length || 1);
@@ -292,7 +274,7 @@ export default function BookingPage() {
         lockToken: lockToken!,
         customerDetails: customerDetails,
         slots: selectedSlots,
-      }
+      };
       const result = await createBooking(payload);
       setSuccessData(result);
       setLockToken(null);

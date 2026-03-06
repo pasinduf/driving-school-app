@@ -42,6 +42,20 @@ interface Booking {
   bookingSlots: BookingSlot[];
   isManualBooking?: boolean;
   note?: string;
+  bookingDetails?: {
+    pickupAddress?: string;
+    isSelfBooking?: boolean;
+    customerFirstName?: string;
+    customerLastName?: string;
+    customerPhone?: string;
+    customerEmail?: string;
+    contactPersonFirstName?: string;
+    contactPersonLastName?: string;
+    contactPersonEmail?: string;
+    contactPersonPhone?: string;
+    relation?: string;
+    notes?: string;
+  };
 }
 
 interface BookingsResponse {
@@ -70,6 +84,9 @@ export default function InstructorBookingsPage() {
   const [duration, setDuration] = useState(60);
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Booking Details Modal State
+  const [selectedBookingForDetails, setSelectedBookingForDetails] = useState<Booking | null>(null);
 
   // Calculate fetch bounds based on the current view
   const { startDateStr, endDateStr } = useMemo(() => {
@@ -344,8 +361,14 @@ export default function InstructorBookingsPage() {
                         <div
                           key={booking.id + slot.startTime}
                           className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 
-                            ${getStatusColor(booking)} cursor-default hover:shadow transition-shadow`}
+                            ${getStatusColor(booking)} ${booking.isManualBooking ? 'cursor-default' : 'cursor-pointer'} hover:shadow transition-shadow`}
                           title={`${booking.package || 'Manual Lock'} - ${booking.isManualBooking ? 'Instructor booked' : booking.suburb?.name}`}
+                          onClick={(e) => {
+                            if (!booking.isManualBooking) {
+                              e.stopPropagation();
+                              setSelectedBookingForDetails(booking);
+                            }
+                          }}
                         >
                           {booking.isManualBooking ? (
                             <>
@@ -466,9 +489,15 @@ export default function InstructorBookingsPage() {
                             <div
                               key={booking.id + slot.startTime}
                               className={`rounded-md border p-2 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group
-                                    ${getStatusColor(booking)}`}
+                                    ${getStatusColor(booking)} ${booking.isManualBooking ? 'cursor-default' : 'cursor-pointer'}`}
                               style={styles}
                               title={`${booking.isManualBooking ? (booking.note || 'Manual Booking') : booking.package}`}
+                              onClick={(e) => {
+                                if (!booking.isManualBooking) {
+                                  e.stopPropagation();
+                                  setSelectedBookingForDetails(booking);
+                                }
+                              }}
                             >
                               <div className="text-xs font-semibold flex justify-between items-start mb-0.5">
                                 <span className="truncate">
@@ -536,7 +565,6 @@ export default function InstructorBookingsPage() {
                   <option value={60}>1 Hour</option>
                   <option value={90}>1.5 Hours</option>
                   <option value={120}>2 Hours</option>
-                  <option value={150}>2.5 Hours</option>
                 </select>
               </div>
 
@@ -566,6 +594,70 @@ export default function InstructorBookingsPage() {
                 {isSubmitting ? <Spinner size="sm" /> : null}
                 Save Booking
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Details Modal */}
+      {selectedBookingForDetails && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Booking Details</h2>
+              <button
+                onClick={() => setSelectedBookingForDetails(null)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="grid grid-cols-3 gap-y-2 gap-x-1 text-sm">
+                <div className="text-gray-500">Ref:</div>
+                <div className="col-span-2 font-medium">{selectedBookingForDetails.id.substring(0, 8).toUpperCase()}</div>
+
+                <div className="text-gray-500">Customer:</div>
+                <div className="col-span-2 font-medium">
+                  {selectedBookingForDetails.bookingDetails?.customerFirstName} {selectedBookingForDetails.bookingDetails?.customerLastName}
+                </div>
+
+                <div className="text-gray-500">Phone:</div>
+                <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.customerPhone}</div>
+
+                <div className="text-gray-500">Pickup Address:</div>
+                <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.pickupAddress}</div>
+
+                {selectedBookingForDetails.bookingDetails?.notes && (
+                  <>
+                    <div className="text-gray-500">Notes:</div>
+                    <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.notes}</div>
+                  </>
+                )}
+
+                <div className="text-gray-500">Self Booking:</div>
+                <div className="col-span-2 font-medium">
+                  {selectedBookingForDetails.bookingDetails?.isSelfBooking ? 'Yes' : 'No'}
+                </div>
+              </div>
+
+              {!selectedBookingForDetails.bookingDetails?.isSelfBooking && (
+                <div className="pt-3 border-t">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Contact Person Details</h3>
+                  <div className="grid grid-cols-3 gap-y-2 gap-x-1 text-sm">
+                    <div className="text-gray-500">Name:</div>
+                    <div className="col-span-2 font-medium">
+                      {selectedBookingForDetails.bookingDetails?.contactPersonFirstName} {selectedBookingForDetails.bookingDetails?.contactPersonLastName}
+                    </div>
+
+                    <div className="text-gray-500">Phone:</div>
+                    <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.contactPersonPhone}</div>
+
+                    <div className="text-gray-500">Relation:</div>
+                    <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.relation}</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -6,8 +6,10 @@ interface Package {
     id: string;
     name: string;
     description: string;
+    duration: number;
     price: number;
     maximumSlotsCount: number;
+    margin: number;
 }
 
 interface PackageSelectProps {
