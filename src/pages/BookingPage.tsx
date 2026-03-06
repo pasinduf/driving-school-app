@@ -30,7 +30,7 @@ interface BookingSlot {
 }
 
 export default function BookingPage() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(4);
 
   // Step 1: Location
   const [selectedSuburb, setSelectedSuburb] = useState<Suburb | null>(null);
@@ -332,13 +332,15 @@ export default function BookingPage() {
               <div className="flex flex-col md:flex-row items-end gap-4">
                 {/* Suburb Selection */}
                 <div className="flex-[2] w-full relative">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Pick-up Location <span className="text-yellow-500">*</span></label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">
+                    Pick-up Location <span className="text-yellow-500">*</span>
+                  </label>
                   <SearchableDropdown
                     placeholder="Enter your suburb..."
                     fetchOptions={loadSuburbsData}
                     onSelect={(opt) => {
                       if (opt) {
-                        setSelectedSuburb(fetchedSuburbs.find(s => s.id.toString() === opt.id) || null);
+                        setSelectedSuburb(fetchedSuburbs.find((s) => s.id.toString() === opt.id) || null);
                       } else {
                         setSelectedSuburb(null);
                       }
@@ -351,13 +353,15 @@ export default function BookingPage() {
                       setIsSearched(false);
                     }}
                     hasSelection={!!selectedSuburb}
-                    value={selectedSuburb ? `${selectedSuburb.name} (${selectedSuburb.postalcode})` : ''}
+                    value={selectedSuburb ? `${selectedSuburb.name} (${selectedSuburb.postalcode})` : ""}
                   />
                 </div>
 
                 {/* Transmission Selection */}
                 <div className="flex-1 w-full">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Transmission <span className="text-yellow-500">*</span></label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">
+                    Transmission <span className="text-yellow-500">*</span>
+                  </label>
                   <select
                     className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                     onChange={(e) => {
@@ -395,10 +399,10 @@ export default function BookingPage() {
                     </div>
                   ) : availableInstructors.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {availableInstructors.map(instructor => (
+                      {availableInstructors.map((instructor) => (
                         <label
                           key={instructor.id}
-                          className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md ${selectedInstructor?.id === instructor.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-gray-200 bg-white hover:border-primary/30'}`}
+                          className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md ${selectedInstructor?.id === instructor.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-gray-200 bg-white hover:border-primary/30"}`}
                         >
                           <input
                             type="radio"
@@ -412,7 +416,11 @@ export default function BookingPage() {
                           {/* Avatar */}
                           <div className="flex-shrink-0 mr-4">
                             {instructor.profileImage ? (
-                              <img src={instructor.profileImage} alt={instructor.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
+                              <img
+                                src={instructor.profileImage}
+                                alt={instructor.name}
+                                className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
+                              />
                             ) : (
                               <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm">
                                 {instructor.name.charAt(0).toUpperCase()}
@@ -431,13 +439,15 @@ export default function BookingPage() {
                               </p>
                               <p className="text-xs flex items-center truncate">
                                 <span className="inline-block w-4 text-center mr-1">🚗</span>
-                                {instructor.transmission === 'Both' ? 'Auto & Manual' : instructor.transmission}
+                                {instructor.transmission === "Both" ? "Auto & Manual" : instructor.transmission === "Automatic" && 'Auto'}
                               </p>
                             </div>
                           </div>
 
                           {/* Selection indicator */}
-                          <div className={`flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ml-2 ${selectedInstructor?.id === instructor.id ? 'border-primary bg-primary text-white' : 'border-gray-300'}`}>
+                          <div
+                            className={`flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ml-2 ${selectedInstructor?.id === instructor.id ? "border-primary bg-primary text-white" : "border-gray-300"}`}
+                          >
                             {selectedInstructor?.id === instructor.id && (
                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -457,7 +467,10 @@ export default function BookingPage() {
 
               {selectedInstructor && (
                 <div className="flex justify-end pt-4">
-                  <button onClick={handleStep1Next} className="gap-2 flex items-center px-6 py-2 bg-primary text-white font-medium rounded hover:bg-opacity-90 transition-colors">
+                  <button
+                    onClick={handleStep1Next}
+                    className="gap-2 flex items-center px-6 py-2 bg-primary text-white font-medium rounded hover:bg-opacity-90 transition-colors"
+                  >
                     Next <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -471,11 +484,18 @@ export default function BookingPage() {
           <div>
             <PackageSelect onSelect={setSelectedPackage} selectedPackage={selectedPackage} />
             <div className="flex justify-between items-center pt-6">
-              <button onClick={() => setStep(1)} className="gap-2 flex items-center px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-medium transition-colors">
+              <button
+                onClick={() => setStep(1)}
+                className="gap-2 flex items-center px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-medium transition-colors"
+              >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
 
-              <button onClick={handleStep2Next} disabled={!selectedPackage} className="gap-2 flex items-center px-6 py-2 bg-primary text-white rounded font-medium disabled:bg-gray-300 transition-colors">
+              <button
+                onClick={handleStep2Next}
+                disabled={!selectedPackage}
+                className="gap-2 flex items-center px-6 py-2 bg-primary text-white rounded font-medium disabled:bg-gray-300 transition-colors"
+              >
                 Next <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -553,12 +573,13 @@ export default function BookingPage() {
                           key={slot.startTime}
                           onClick={() => handleSlotClick(slot)}
                           disabled={!slot.available && !isSelected}
-                          className={`p-3 rounded border text-sm font-medium transition-colors ${isSelected
-                            ? "bg-primary text-white border-primary"
-                            : slot.available
-                              ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
-                              : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                            } `}
+                          className={`p-3 rounded border text-sm font-medium transition-colors ${
+                            isSelected
+                              ? "bg-primary text-white border-primary"
+                              : slot.available
+                                ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
+                                : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                          } `}
                         >
                           {format(parseISO(slot.startTime), "h:mm a")}
                           <span className="block text-xs font-normal opacity-75">to {format(parseISO(slot.endTime), "h:mm a")}</span>
@@ -602,17 +623,24 @@ export default function BookingPage() {
               <div className="text-red-600 font-medium bg-red-50 px-3 py-1 rounded">Time Remaining: {timeLeft}</div>
             </div>
 
-            <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-1">
+            <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-2">
+              <p>
+                <strong>Instructor:</strong> {selectedInstructor?.name}
+              </p>
               <p>
                 <strong>Package:</strong> {selectedPackage?.name}
               </p>
-              <p>
-                <strong>Date:</strong> {selectedDate}
-              </p>
-              <p>
-                <strong>Slots:</strong> {selectedSlotDetails.map((s) => format(parseISO(s.startTime), "h:mm a")).join(", ")}
-              </p>
-              <p className="font-bold pt-2">Total Amount: ${getPrice()}</p>
+              <div>
+                <strong>Selected Slots:</strong>
+                <ul className="list-disc list-inside mt-1 ml-1 space-y-1">
+                  {selectedSlotDetails.map((s, idx) => (
+                    <li key={idx}>
+                      {format(parseISO(s.startTime), "MMM dd, yyyy")} ({format(parseISO(s.startTime), "h:mm a")} - {format(parseISO(s.endTime), "h:mm a")})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <p className="font-bold pt-3 mt-2 border-t border-blue-200/50">Total Amount: ${getPrice()}</p>
             </div>
 
             <BookingForm
