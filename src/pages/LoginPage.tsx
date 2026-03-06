@@ -36,7 +36,7 @@ export default function LoginPage() {
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-6 text-center">Login to Portal</h2>
-                {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+                {error && <div className="bg-red-100 text-red-500 p-2 rounded mb-4 text-center">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label className="block text-gray-700 mb-2">Email</label>
@@ -50,7 +50,10 @@ export default function LoginPage() {
                     </div>
                     <div className="mb-6">
                         <div className='relative'>
-                            <label className="block text-gray-700">Password</label>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="block text-gray-700">Password</label>
+                                <Link to="/forgot-password" className="text-sm text-primary hover:underline font-medium">Forgot password?</Link>
+                            </div>
                             <input
                                 type={showConfirmPassword ? "text" : "password"}
                                 className="w-full border p-2 rounded block"

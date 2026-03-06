@@ -98,7 +98,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                             <div className="flex justify-between flex-row items-center mb-1">
                                 <label className="block text-sm font-medium text-gray-700">New Password <span className="text-red-500">*</span></label>
                                 <button type="button" onClick={generatePassword} className="text-xs text-primary hover:underline font-medium">
-                                    Generate Random
+                                    Auto-generate
                                 </button>
                             </div>
                             <div className="relative">

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-    baseURL: 'http://localhost:8020',
+    baseURL:   '/api',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -55,6 +55,7 @@ export interface TestingCenter {
 
 export interface Instructor {
     id: string;
+    name: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -62,6 +63,7 @@ export interface Instructor {
     address: string;
     transmission: 'Automatic' | 'Manual' | 'Both';
     isActive: boolean;
+    profileImage?: string;
 }
 
 export const fetchTestingCenters = async () => {
@@ -82,30 +84,34 @@ export const fetchSuburbs = async (search?: string) => {
     });
     return response.data;
 };
-export const getAvailableDates = async (startDate: string) => {
+export const getAvailableDates = async (startDate: string, instructorId?: string) => {
+    const params: any = { startDate };
+    if (instructorId) {
+        params.instructorId = instructorId;
+    }
     const response = await apiClient.get<{ date: string; isAvailable: boolean; reason?: string }[]>('/bookings/dates', {
-        params: { startDate },
+        params
     });
     return response.data;
 };
 
-export const fetchSlots = async (date: string, duration: number, margin?: number, step?: number) => {
+export const fetchSlots = async (date: string, instructorId: string, duration: number, margin?: number, step?: number) => {
     const response = await apiClient.get<Slot[]>('/bookings/availability', {
-        params: { date, duration, margin, step },
+        params: { date, instructorId, duration, margin, step },
     });
     return response.data;
 };
 
-export const lockSlots = async (slots: { date: string; time: string }[]) => {
+export const lockSlots = async (slots: { date: string; time: string }[], instructorId: string, duration: number, margin: number) => {
     const response = await apiClient.post<{ token: string; expiresAt: number, sessionDuration: number }>('/bookings/lock', {
-        slots
+        slots, instructorId, duration, margin
     });
     return response.data;
 };
 
-export const unlockSlots = async (slots: { date: string; time: string }[], token: string) => {
+export const unlockSlots = async (slots: { date: string; time: string }[], token: string, instructorId: string, duration: number, margin: number) => {
     const response = await apiClient.post('/bookings/unlock', {
-        token, slots
+        token, slots, instructorId, duration, margin
     });
     return response.data;
 };
@@ -140,6 +146,21 @@ export const createBooking = async (details: CreateBookingRequest) => {
     return response.data;
 };
 
+export const createManualBooking = async (details: {
+    date: string;
+    time: string;
+    duration: number;
+    note?: string;
+}) => {
+    const response = await apiClient.post('/bookings/manual', details);
+    return response.data;
+};
+
+export const cancelBooking = async (id: string) => {
+    const response = await apiClient.post(`/bookings/${id}/cancel`);
+    return response.data;
+};
+
 export const fetchPackages = async () => {
     const response = await apiClient.get<any[]>('/packages');
     return response.data;
@@ -147,6 +168,16 @@ export const fetchPackages = async () => {
 
 export const loginUser = async (email: string, password: string) => {
     const response = await apiClient.post<{ access_token: string }>('/auth/login', { email, password });
+    return response.data;
+};
+
+export const requestPasswordReset = async (email: string) => {
+    const response = await apiClient.post('/auth/forgot-password', { email });
+    return response.data;
+};
+
+export const resetPasswordWithToken = async (email: string, token: string, newPassword: string) => {
+    const response = await apiClient.post('/auth/reset-password', { email, token, newPassword });
     return response.data;
 };
 
@@ -184,6 +215,13 @@ export const cancelBookingAdmin = async (id: string): Promise<any> => {
 export const fetchMyBookings = async (page: number = 1, limit: number = 10) => {
     const response = await apiClient.get<{ data: any[]; total: number }>('/bookings/my-bookings', {
         params: { page, limit },
+    });
+    return response.data;
+};
+
+export const fetchInstructorBookings = async (page: number = 1, limit: number = 10, startDate?: string, endDate?: string) => {
+    const response = await apiClient.get<{ data: any[]; total: number }>("/bookings/instructor-bookings", {
+        params: { page, limit, startDate, endDate },
     });
     return response.data;
 };
@@ -253,5 +291,27 @@ export const uploadProfileImage = async (file: File) => {
 
 export const changePassword = async (data: any) => {
     const response = await apiClient.put('/users/profile/password', data);
+    return response.data;
+};
+
+// Packages Management
+
+export const fetchAdminPackages = async () => {
+    const response = await apiClient.get('/packages/admin');
+    return response.data;
+};
+
+export const createPackage = async (data: any) => {
+    const response = await apiClient.post('/packages', data);
+    return response.data;
+};
+
+export const updatePackage = async (id: number, data: any) => {
+    const response = await apiClient.put(`/packages/${id}`, data);
+    return response.data;
+};
+
+export const deactivatePackage = async (id: number) => {
+    const response = await apiClient.delete(`/packages/${id}`);
     return response.data;
 };

@@ -5,6 +5,7 @@ import Spinner from './Spinner';
 
 interface DateDropdownProps {
     suburbId: string;
+    instructorId?: string;
     onSelect: (date: string) => void;
     selectedDate: string;
 }
@@ -15,7 +16,7 @@ interface DateOption {
     reason?: string;
 }
 
-export default function DateDropdown({ suburbId, onSelect, selectedDate }: DateDropdownProps) {
+export default function DateDropdown({ suburbId, instructorId, onSelect, selectedDate }: DateDropdownProps) {
     const [dates, setDates] = useState<DateOption[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -26,7 +27,7 @@ export default function DateDropdown({ suburbId, onSelect, selectedDate }: DateD
             try {
                 const now = new Date();
                 const startDate = format(addDays(now, 1), 'yyyy-MM-dd');
-                const data = await getAvailableDates(startDate);
+                const data = await getAvailableDates(startDate, instructorId);
                 setDates(data);
             } catch (error) {
                 console.error("Failed to load dates", error);
@@ -35,7 +36,7 @@ export default function DateDropdown({ suburbId, onSelect, selectedDate }: DateD
             }
         };
         loadDates();
-    }, [suburbId]);
+    }, [suburbId, instructorId]);
 
     if (loading) {
         return <div className="flex items-center space-x-2">

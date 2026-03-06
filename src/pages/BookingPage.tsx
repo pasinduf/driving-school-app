@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchSlots, lockSlots, createBooking, unlockSlots, fetchAvailableInstructors, fetchSuburbs } from '../api/client';
 import type { Suburb, Slot } from '../api/client';
 import { format, parseISO } from 'date-fns';
-import { Loader2, Trash2, Calendar } from 'lucide-react';
+import { Loader2, Trash2, Calendar, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import BookingForm from '../components/BookingForm';
 import PackageSelect from '../components/PackageSelect';
@@ -12,13 +12,16 @@ import DateDropdown from '../components/DateDropdown';
 import SearchableDropdown from '../components/SearchableDropdown';
 import BookingStepper from '../components/BookingStepper';
 import Spinner from '../components/Spinner';
+import { getDefaultPackages } from '../util/default-packages';
 
 interface Package {
   id: string;
   name: string;
   description: string;
+  duration: number;
   price: number;
   maximumSlotsCount: number;
+  margin: number;
 }
 
 interface BookingSlot {
@@ -70,50 +73,29 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<any | null>(null);
 
-  // Derived State
-  // Derived State
   const maxSlots = (() => {
-    if (!selectedPackage) return 1;
-    if (selectedPackage.name.includes('5 X 1HR')) return 5;
-    if (selectedPackage.name.includes('10 X 1HR')) return 10;
-    if (selectedPackage.name.includes('3 X 1HR')) return 3;
-    if (['45MIN LESSON', '1HR LESSON', '1.5HR LESSON', '2HR LESSON'].includes(selectedPackage.name)) {
-      return 10; // Allow multiple selection for single lessons
-    }
-    return 1;
+    // if (!selectedPackage) return 1;
+    // if (selectedPackage.name.includes('5 X 1HR')) return 5;
+    // if (selectedPackage.name.includes('10 X 1HR')) return 10;
+    // if (selectedPackage.name.includes('3 X 1HR')) return 3;
+    // if (['45MIN LESSON', '1HR LESSON', '1.5HR LESSON', '2HR LESSON'].includes(selectedPackage.name)) {
+    //   return 10;
+    // }
+    // return 1;
+    return selectedPackage?.maximumSlotsCount || 1;
   })();
 
-  const getMargin = (pkgName: string) => {
-    // Specific Single Lesson Rules
-    if (pkgName === '45MIN LESSON') return 15;
-    if (pkgName === '1HR LESSON') return 15;
-    if (pkgName === '1.5HR LESSON') return 15;
-    if (pkgName === '2HR LESSON') return 30;
-
-    // Packages usually default to 15 unless specified (e.g. 2HR package?)
-    // Assuming 15 for standard packages matches the component lesson margin.
-    if (pkgName.includes('2HR')) return 30;
-    return 15;
-  };
-
-  const getDuration = (pkgName: string) => {
-    if (pkgName.includes('45MIN')) return 45;
-    if (pkgName.includes('1.5HR')) return 90;
-    if (pkgName.includes('2HR')) return 120;
-    return 60; // Default 1HR
-  };
-
-  const margin = selectedPackage ? getMargin(selectedPackage.name) : 15;
-  const duration = selectedPackage ? getDuration(selectedPackage.name) : 60;
+  const margin = selectedPackage ? selectedPackage.margin : 15;
+  const duration = selectedPackage ? selectedPackage.duration : 60;
 
   // Fetch Slots
   const { data: rawSlots, isLoading: loadingSlots, refetch: refetchSlots } = useQuery({
     queryKey: ['slots', selectedSuburb?.id, selectedDate, duration, margin],
     queryFn: () => {
-      if (!selectedSuburb || !selectedDate) return [];
-      return fetchSlots(selectedDate, duration, margin, 15);
+      if (!selectedSuburb || !selectedDate || !selectedInstructor) return [];
+      return fetchSlots(selectedDate, selectedInstructor.id, duration, margin, 15);
     },
-    enabled: !!selectedSuburb && !!selectedDate && step === 3,
+    enabled: !!selectedSuburb && !!selectedDate && !!selectedInstructor && step === 3,
   });
 
   // Process slots for display
@@ -207,8 +189,8 @@ export default function BookingPage() {
   })();
 
   const handleExpire = () => {
-    if (selectedSlots.length > 0) {
-      unlockSlots(selectedSlots, lockToken!);
+    if (selectedSlots.length > 0 && selectedInstructor?.id) {
+      unlockSlots(selectedSlots, lockToken!, selectedInstructor.id, duration, margin);
     }
     setTimeLeft('0:00');
     toast.error('Session expired. Please start over.');
@@ -230,7 +212,7 @@ export default function BookingPage() {
     } else {
       // Add
       if (selectedSlots.length >= maxSlots) {
-        toast.error(`You can only select ${maxSlots} slots for this package.`);
+        toast.warning(`You can only select ${maxSlots} slots for this package.`);
         return;
       }
       setSelectedSlots(prev => [...prev, { date: selectedDate, time: slot.startTime }]);
@@ -241,7 +223,7 @@ export default function BookingPage() {
   const getPrice = () => {
     if (!selectedPackage) return 0;
 
-    const isSingle = ['45MIN LESSON', '1HR LESSON', '1.5HR LESSON', '2HR LESSON'].includes(selectedPackage.name);
+    const isSingle = getDefaultPackages().includes(selectedPackage.name);
 
     if (isSingle) {
       return selectedPackage.price * (selectedSlots.length || 1);
@@ -267,7 +249,7 @@ export default function BookingPage() {
       // Lock slots
       try {
         // We use the first slot time for the "time" param if needed, but we should use lockSlots endpoint
-        const result = await lockSlots(selectedSlots);
+        const result = await lockSlots(selectedSlots, selectedInstructor!.id, duration, margin);
         setLockToken(result.token);
         setLockExpiry(result.expiresAt);
         setTimeLeft(`${result.sessionDuration}`);
@@ -292,7 +274,7 @@ export default function BookingPage() {
         lockToken: lockToken!,
         customerDetails: customerDetails,
         slots: selectedSlots,
-      }
+      };
       const result = await createBooking(payload);
       setSuccessData(result);
       setLockToken(null);
@@ -350,13 +332,15 @@ export default function BookingPage() {
               <div className="flex flex-col md:flex-row items-end gap-4">
                 {/* Suburb Selection */}
                 <div className="flex-[2] w-full relative">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Pick-up Location <span className="text-yellow-500">*</span></label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">
+                    Pick-up Location <span className="text-yellow-500">*</span>
+                  </label>
                   <SearchableDropdown
                     placeholder="Enter your suburb..."
                     fetchOptions={loadSuburbsData}
                     onSelect={(opt) => {
                       if (opt) {
-                        setSelectedSuburb(fetchedSuburbs.find(s => s.id.toString() === opt.id) || null);
+                        setSelectedSuburb(fetchedSuburbs.find((s) => s.id.toString() === opt.id) || null);
                       } else {
                         setSelectedSuburb(null);
                       }
@@ -369,13 +353,15 @@ export default function BookingPage() {
                       setIsSearched(false);
                     }}
                     hasSelection={!!selectedSuburb}
-                    value={selectedSuburb ? `${selectedSuburb.name} (${selectedSuburb.postalcode})` : ''}
+                    value={selectedSuburb ? `${selectedSuburb.name} (${selectedSuburb.postalcode})` : ""}
                   />
                 </div>
 
                 {/* Transmission Selection */}
                 <div className="flex-1 w-full">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Transmission <span className="text-yellow-500">*</span></label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">
+                    Transmission <span className="text-yellow-500">*</span>
+                  </label>
                   <select
                     className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                     onChange={(e) => {
@@ -412,23 +398,61 @@ export default function BookingPage() {
                       <Loader2 className="animate-spin w-4 h-4" /> <span>Finding instructors...</span>
                     </div>
                   ) : availableInstructors.length > 0 ? (
-                    <div className="space-y-3">
-                      {availableInstructors.map(instructor => (
-                        <label key={instructor.id} className={`flex items-start p-3 border rounded-lg cursor-pointer transition-colors ${selectedInstructor?.id === instructor.id ? 'border-primary bg-blue-50' : 'hover:bg-gray-50'}`}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {availableInstructors.map((instructor) => (
+                        <label
+                          key={instructor.id}
+                          className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md ${selectedInstructor?.id === instructor.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-gray-200 bg-white hover:border-primary/30"}`}
+                        >
                           <input
                             type="radio"
                             name="instructor"
                             value={instructor.id}
                             checked={selectedInstructor?.id === instructor.id}
                             onChange={() => setSelectedInstructor(instructor)}
-                            className="mt-1 text-primary focus:ring-primary"
+                            className="absolute opacity-0 w-0 h-0"
                           />
-                          <div className="ml-3">
-                            <p className="font-medium text-gray-900">{instructor.firstName} {instructor.lastName}</p>
-                            {instructor.transmission === 'Both' ?
-                              <p className="text-xs text-gray-500">Automatic & Manual | {instructor.contactNumber}</p> :
-                              <p className="text-xs text-gray-500">{instructor.transmission} | {instructor.contactNumber}</p>
-                            }
+
+                          {/* Avatar */}
+                          <div className="flex-shrink-0 mr-4">
+                            {instructor.profileImage ? (
+                              <img
+                                src={instructor.profileImage}
+                                alt={instructor.name}
+                                className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm">
+                                {instructor.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Details */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 truncate">{instructor.name}</p>
+
+                            <div className="flex flex-col gap-0.5 mt-1 text-gray-500">
+                              <p className="text-xs flex items-center truncate">
+                                <span className="inline-block w-4 text-center mr-1">📞</span>
+                                {instructor.contactNumber}
+                              </p>
+                              <p className="text-xs flex items-center truncate">
+                                <span className="inline-block w-4 text-center mr-1">🚗</span>
+                                {instructor.transmission === "Both" ? "Auto & Manual" : instructor.transmission === "Automatic" && 'Auto'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Selection indicator */}
+                          <div
+                            className={`flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ml-2 ${selectedInstructor?.id === instructor.id ? "border-primary bg-primary text-white" : "border-gray-300"}`}
+                          >
+                            {selectedInstructor?.id === instructor.id && (
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
                           </div>
                         </label>
                       ))}
@@ -443,8 +467,11 @@ export default function BookingPage() {
 
               {selectedInstructor && (
                 <div className="flex justify-end pt-4">
-                  <button onClick={handleStep1Next} className="px-6 py-2 bg-primary text-white font-medium rounded hover:bg-opacity-90 transition-colors">
-                    Next
+                  <button
+                    onClick={handleStep1Next}
+                    className="gap-2 flex items-center px-6 py-2 bg-primary text-white font-medium rounded hover:bg-opacity-90 transition-colors"
+                  >
+                    Next <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               )}
@@ -457,12 +484,19 @@ export default function BookingPage() {
           <div>
             <PackageSelect onSelect={setSelectedPackage} selectedPackage={selectedPackage} />
             <div className="flex justify-between items-center pt-6">
-              <button onClick={() => setStep(1)} className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:text-gray-700">
-                Back
+              <button
+                onClick={() => setStep(1)}
+                className="gap-2 flex items-center px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-medium transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
               </button>
 
-              <button onClick={handleStep2Next} disabled={!selectedPackage} className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300">
-                Next
+              <button
+                onClick={handleStep2Next}
+                disabled={!selectedPackage}
+                className="gap-2 flex items-center px-6 py-2 bg-primary text-white rounded font-medium disabled:bg-gray-300 transition-colors"
+              >
+                Next <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -479,7 +513,7 @@ export default function BookingPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Select Date</label>
-                <DateDropdown suburbId={selectedSuburb!.id} selectedDate={selectedDate} onSelect={setSelectedDate} />
+                <DateDropdown suburbId={selectedSuburb!.id} instructorId={selectedInstructor?.id} selectedDate={selectedDate} onSelect={setSelectedDate} />
               </div>
 
               {/* Selected Slots List */}
@@ -563,17 +597,17 @@ export default function BookingPage() {
                     setSelectedDate("");
                     setStep(2);
                   }}
-                  className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:text-gray-700 ml-2"
+                  className="gap-2 flex items-center px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-medium transition-colors ml-2"
                 >
-                  Back
+                  <ArrowLeft className="w-4 h-4" /> Back
                 </button>
 
                 <button
                   onClick={handleStep3Next}
                   disabled={selectedSlots.length === 0}
-                  className="px-6 py-2 bg-primary text-white rounded disabled:bg-gray-300"
+                  className="gap-2 flex items-center px-6 py-2 bg-primary text-white rounded font-medium disabled:bg-gray-300 transition-colors"
                 >
-                  Next
+                  Next <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -588,28 +622,35 @@ export default function BookingPage() {
               <div className="text-red-600 font-medium bg-red-50 px-3 py-1 rounded">Time Remaining: {timeLeft}</div>
             </div>
 
-            <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-1">
+            <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-2">
+              <p>
+                <strong>Instructor:</strong> {selectedInstructor?.name}
+              </p>
               <p>
                 <strong>Package:</strong> {selectedPackage?.name}
               </p>
-              <p>
-                <strong>Date:</strong> {selectedDate}
-              </p>
-              <p>
-                <strong>Slots:</strong> {selectedSlotDetails.map((s) => format(parseISO(s.startTime), "h:mm a")).join(", ")}
-              </p>
-              <p className="font-bold pt-2">Total Amount: ${getPrice()}</p>
+              <div>
+                <strong>Selected Slots:</strong>
+                <ul className="list-disc list-inside mt-1 ml-1 space-y-1">
+                  {selectedSlotDetails.map((s, idx) => (
+                    <li key={idx}>
+                      {format(parseISO(s.startTime), "MMM dd, yyyy")} ({format(parseISO(s.startTime), "h:mm a")} - {format(parseISO(s.endTime), "h:mm a")})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <p className="font-bold pt-3 mt-2 border-t border-blue-200/50">Total Amount: ${getPrice()}</p>
             </div>
 
             <BookingForm
               onSubmit={handleSubmitBooking}
               isSubmitting={isSubmitting}
               onCancel={async () => {
-                if (lockToken && selectedSuburb && selectedDate) {
+                if (lockToken && selectedSuburb && selectedDate && selectedInstructor?.id) {
                   try {
                     // Unlock all slots
                     if (selectedSlots.length > 0) {
-                      await unlockSlots(selectedSlots, lockToken);
+                      await unlockSlots(selectedSlots, lockToken, selectedInstructor.id, duration, margin);
                     }
                   } catch (e) {
                     console.error("Failed to unlock slots", e);
