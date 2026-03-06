@@ -20,10 +20,11 @@ import {
   startOfDay,
   endOfDay
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
-import { fetchInstructorBookings, createManualBooking } from '../api/client';
+import ConfirmationModal from '../components/ConfirmationModal';
+import { fetchInstructorBookings, createManualBooking, cancelBooking } from '../api/client';
 
 interface BookingSlot {
   startTime: string;
@@ -88,6 +89,11 @@ export default function InstructorBookingsPage() {
   // Booking Details Modal State
   const [selectedBookingForDetails, setSelectedBookingForDetails] = useState<Booking | null>(null);
 
+  // Cancellation Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [bookingToDelete, setBookingToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Calculate fetch bounds based on the current view
   const { startDateStr, endDateStr } = useMemo(() => {
     let start, end;
@@ -151,11 +157,13 @@ export default function InstructorBookingsPage() {
   }, [currentDate, view]);
 
   const getSlotsForDay = (day: Date) => {
-    return bookings.flatMap(booking =>
-      booking.bookingSlots
-        .filter(slot => isSameDay(parseISO(slot.startTime), day))
-        .map(slot => ({ booking, slot }))
-    );
+    return bookings
+      .filter(b => b.status === 'CONFIRMED')
+      .flatMap(booking =>
+        booking.bookingSlots
+          .filter(slot => isSameDay(parseISO(slot.startTime), day))
+          .map(slot => ({ booking, slot }))
+      );
   };
 
   const getStatusColor = (booking: Booking) => {
@@ -227,6 +235,23 @@ export default function InstructorBookingsPage() {
       toast.error(error.response?.data?.message || 'Failed to create manual booking.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteManualBooking = async () => {
+    if (!bookingToDelete) return;
+    setIsDeleting(true);
+
+    try {
+      await cancelBooking(bookingToDelete);
+      toast.success('Manual booking cancelled successfully.');
+      setIsDeleteModalOpen(false);
+      setBookingToDelete(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to cancel manual booking.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -360,7 +385,7 @@ export default function InstructorBookingsPage() {
                       {daySlots.map(({ booking, slot }) => (
                         <div
                           key={booking.id + slot.startTime}
-                          className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 
+                          className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group
                             ${getStatusColor(booking)} ${booking.isManualBooking ? 'cursor-default' : 'cursor-pointer'} hover:shadow transition-shadow`}
                           title={`${booking.package || 'Manual Lock'} - ${booking.isManualBooking ? 'Instructor booked' : booking.suburb?.name}`}
                           onClick={(e) => {
@@ -372,7 +397,19 @@ export default function InstructorBookingsPage() {
                         >
                           {booking.isManualBooking ? (
                             <>
-                              <div className="font-semibold">{format(parseISO(slot.startTime), 'h:mm a')}</div>
+                              <div className="flex justify-between items-start font-semibold">
+                                <span>{format(parseISO(slot.startTime), 'h:mm a')}</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setBookingToDelete(booking.id);
+                                    setIsDeleteModalOpen(true);
+                                  }}
+                                  className="text-yellow-600 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                               <div className="truncate opacity-90 font-medium">{booking.note || 'Manual Booking'}</div>
                             </>
                           ) : (
@@ -488,7 +525,7 @@ export default function InstructorBookingsPage() {
                           return (
                             <div
                               key={booking.id + slot.startTime}
-                              className={`rounded-md border p-2 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group
+                              className={`rounded-md border p-2 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
                                     ${getStatusColor(booking)} ${booking.isManualBooking ? 'cursor-default' : 'cursor-pointer'}`}
                               style={styles}
                               title={`${booking.isManualBooking ? (booking.note || 'Manual Booking') : booking.package}`}
@@ -503,9 +540,21 @@ export default function InstructorBookingsPage() {
                                 <span className="truncate">
                                   {format(parseISO(slot.startTime), 'h:mm')} - {format(parseISO(slot.endTime), 'h:mm a')}
                                 </span>
+                                {booking.isManualBooking && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setBookingToDelete(booking.id);
+                                      setIsDeleteModalOpen(true);
+                                    }}
+                                    className="text-yellow-600 hover:text-red-600 transition-colors bg-yellow-100 p-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                               {booking.isManualBooking ? (
-                                <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
+                                <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
                                   {booking.note || 'Manual Booking'}
                                 </div>
                               ) : (
@@ -573,7 +622,7 @@ export default function InstructorBookingsPage() {
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="e.g. Blocking off for lunch, or manual student booking"
+                  placeholder="e.g. manual student booking"
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[80px]"
                 />
               </div>
@@ -581,7 +630,7 @@ export default function InstructorBookingsPage() {
             <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors w-28"
                 disabled={isSubmitting}
               >
                 Cancel
@@ -589,9 +638,9 @@ export default function InstructorBookingsPage() {
               <button
                 onClick={submitManualBooking}
                 disabled={isSubmitting}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors flex justify-center items-center gap-2 w-36 disabled:opacity-70"
               >
-                {isSubmitting ? <Spinner size="sm" /> : null}
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 Save Booking
               </button>
             </div>
@@ -662,6 +711,22 @@ export default function InstructorBookingsPage() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setBookingToDelete(null);
+        }}
+        onConfirm={handleDeleteManualBooking}
+        isConfirming={isDeleting}
+        title="Delete Booking"
+        message="Are you sure you want to delete this manual booking?"
+        confirmText="Delete"
+        cancelText="Close"
+        variant="danger"
+      />
     </main>
   );
 }

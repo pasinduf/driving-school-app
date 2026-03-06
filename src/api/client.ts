@@ -155,6 +155,11 @@ export const createManualBooking = async (details: {
     return response.data;
 };
 
+export const cancelBooking = async (id: string) => {
+    const response = await apiClient.post(`/bookings/${id}/cancel`);
+    return response.data;
+};
+
 export const fetchPackages = async () => {
     const response = await apiClient.get<any[]>('/packages');
     return response.data;

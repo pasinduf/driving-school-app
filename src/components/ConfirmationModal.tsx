@@ -67,10 +67,14 @@ export default function ConfirmationModal({
                             }}
                             disabled={isConfirming}
                             className={
-                                `px-4 py-2 text-white rounded-md transition-colors font-medium text-sm w-24 ${variant === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-primary hover:bg-opacity-90 disabled:opacity-50'}`
+                                `px-4 py-2 text-white rounded-md transition-colors font-medium text-sm w-24 flex items-center justify-center ${variant === 'danger' ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-400' : 'bg-primary hover:bg-opacity-90 disabled:opacity-50'}`
                             }
                         >
-                            {confirmText}
+                            {isConfirming ? (
+                                <span className="animate-spin w-4 h-4 rounded-full border-2 border-white border-t-transparent" />
+                            ) : (
+                                confirmText
+                            )}
                         </button>
                     </div>
                 </div>

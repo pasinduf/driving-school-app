@@ -257,7 +257,6 @@ export default function AdminPage() {
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Package</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Amount</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Status</th>
-                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase tracking-wider">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
@@ -305,7 +304,7 @@ export default function AdminPage() {
                                                             {booking.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                                    {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                                         {booking.status === 'PENDING' && (
                                                             <button
                                                                 onClick={() => handleConfirmBooking(booking.id)}
@@ -324,7 +323,7 @@ export default function AdminPage() {
                                                                 <X className="w-5 h-5" />
                                                             </button>
                                                         )}
-                                                    </td>
+                                                    </td> */}
                                                 </tr>
                                             ))}
                                             {bookings.length === 0 && (
