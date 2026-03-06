@@ -20,7 +20,7 @@ import {
   startOfDay,
   endOfDay
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -262,12 +262,13 @@ export default function InstructorBookingsPage() {
 
   if (isError) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-red-500 font-medium bg-red-50 px-6 py-4 rounded-lg flex items-center space-x-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          <span>Failed to load bookings. Please try again later.</span>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="bg-red-50 border border-red-100 rounded-xl p-8 max-w-md w-full shadow-sm flex flex-col items-center">
+          <div className="flex justify-center mb-4 bg-red-100 p-3 rounded-full">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-red-800 mb-2">Failed to Load Bookings</h3>
+          <p className="text-red-600 text-sm">Please try again later.</p>
         </div>
       </div>
     );

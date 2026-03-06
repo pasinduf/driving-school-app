@@ -63,6 +63,7 @@ export interface Instructor {
     address: string;
     transmission: 'Automatic' | 'Manual' | 'Both';
     isActive: boolean;
+    profileImage?: string;
 }
 
 export const fetchTestingCenters = async () => {
