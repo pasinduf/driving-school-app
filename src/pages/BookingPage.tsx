@@ -30,7 +30,7 @@ interface BookingSlot {
 }
 
 export default function BookingPage() {
-  const [step, setStep] = useState(4);
+  const [step, setStep] = useState(1);
 
   // Step 1: Location
   const [selectedSuburb, setSelectedSuburb] = useState<Suburb | null>(null);
