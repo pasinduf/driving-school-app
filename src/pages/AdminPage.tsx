@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { fetchBookings, fetchHolidays, createHoliday, deleteHoliday, confirmBookingAdmin, cancelBookingAdmin, searchInstructorsDropdown } from '../api/client';
 import { format } from 'date-fns';
-import { Plus, Trash2, Check, X } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import AdminInstructorsTab from '../components/admin/AdminInstructorsTab';
 import ConfirmationModal from '../components/ConfirmationModal';
 import Spinner from '../components/Spinner';
@@ -176,10 +176,7 @@ export default function AdminPage() {
         }
     };
 
-    // Kept for prop drilling compatibility if needed, but updated to use modal
     const handleDeleteHoliday = (id: string) => openModal('DELETE_HOLIDAY', id);
-    const handleConfirmBooking = (id: string) => openModal('CONFIRM_BOOKING', id);
-    const handleCancelBooking = (id: string) => openModal('CANCEL_BOOKING', id);
 
     const resetFilters = () => {
         setFilterDate('');

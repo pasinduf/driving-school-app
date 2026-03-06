@@ -50,6 +50,8 @@ export default function StudentBookingsPage() {
     const totalPages = Math.ceil(total / limit);
 
     return (
+      <>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Bookings</h1>
       <main className="w-full">
         {isLoading ? (
           <div>
@@ -118,5 +120,6 @@ export default function StudentBookingsPage() {
           </div>
         )}
       </main>
+      </>
     );
 }

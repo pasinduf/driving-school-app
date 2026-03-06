@@ -18,7 +18,6 @@ export default function MyBookingsPage() {
 
   return (
     <div className="w-full">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Bookings</h1>
       {role === 'Student' ? <StudentBookingsPage/> : <InstructorBookingsPage/>}
     </div>
   );

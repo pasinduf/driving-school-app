@@ -206,7 +206,11 @@ export default function InstructorBookingsPage() {
   };
 
   const handleGridClick = (day: Date, hour: number) => {
-    if (day < startOfDay(new Date())) return; // Prevent past bookings if needed
+    const slotTime = new Date(day);
+    slotTime.setHours(hour, 0, 0, 0);
+    if (slotTime < new Date()) {
+      return; // Prevent past bookings
+    }
     setSelectedDate(day);
     setSelectedTime(hour);
     setIsModalOpen(true);
@@ -381,11 +385,11 @@ export default function InstructorBookingsPage() {
                       )}
                     </div>
 
-                    <div className="space-y-1.5 overflow-y-auto flex-1 min-h-0 scrollbar-thin scrollbar-thumb-gray-200 pr-1">
+                    <div className="space-y-1.5 overflow-y-auto overflow-x-hidden flex-1 min-h-0 scrollbar-thin scrollbar-thumb-gray-200 pr-1.5 pl-0.5 pb-1">
                       {daySlots.map(({ booking, slot }) => (
                         <div
                           key={booking.id + slot.startTime}
-                          className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group
+                          className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group mr-[1px]
                             ${getStatusColor(booking)} ${booking.isManualBooking ? 'cursor-default' : 'cursor-pointer'} hover:shadow transition-shadow`}
                           title={`${booking.package || 'Manual Lock'} - ${booking.isManualBooking ? 'Instructor booked' : booking.suburb?.name}`}
                           onClick={(e) => {
@@ -414,7 +418,7 @@ export default function InstructorBookingsPage() {
                             </>
                           ) : (
                             <>
-                              <div className="flex items-center justify-between font-semibold">
+                              <div className="flex items-center justify-between font-semibold pr-1">
                                 <span>{format(parseISO(slot.startTime), 'h:mm a')}</span>
                                 <span className="truncate max-w-[50px] ml-1 opacity-70 font-normal">{booking.transmission?.substring(0, 4)}</span>
                               </div>
@@ -501,18 +505,21 @@ export default function InstructorBookingsPage() {
                       <div key={day.toISOString()} className={`relative border-gray-100 ${idx !== 0 ? 'border-l' : ''}`}>
                         {/* Clickable Empty Slots */}
                         {Array.from({ length: HOURS_IN_GRID }).map((_, hourIdx) => {
-                          const isPastDay = day < startOfDay(new Date());
+                          const slotTime = new Date(day);
+                          slotTime.setHours(START_HOUR + hourIdx, 0, 0, 0);
+                          const isPastSlot = slotTime < new Date();
+
                           return (
                             <div
                               key={`empty-${hourIdx}`}
-                              className={`w-full absolute ${isPastDay ? 'cursor-not-allowed bg-gray-50/40' : 'cursor-pointer hover:bg-primary/5 transition-colors'}`}
+                              className={`w-full absolute ${isPastSlot ? 'cursor-not-allowed bg-gray-50/40' : 'cursor-pointer hover:bg-primary/5 transition-colors'}`}
                               style={{
                                 top: `${hourIdx * PIXELS_PER_HOUR}px`,
                                 height: `${PIXELS_PER_HOUR}px`,
                                 zIndex: 1 // Underneath actual bookings
                               }}
                               onClick={() => {
-                                if (!isPastDay) handleGridClick(day, START_HOUR + hourIdx);
+                                if (!isPastSlot) handleGridClick(day, START_HOUR + hourIdx);
                               }}
                             />
                           )
