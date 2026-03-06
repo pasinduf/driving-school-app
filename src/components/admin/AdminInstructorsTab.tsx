@@ -148,6 +148,7 @@ export default function AdminInstructorsTab() {
                       onClick={() => handleDeleteClick(inst.id)}
                       className="text-red-600 hover:text-red-900"
                       title={inst.isActive ? "Deactivate Instructor" : "Delete"}
+                      disabled={!inst.isActive}
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -163,20 +164,11 @@ export default function AdminInstructorsTab() {
               )}
             </tbody>
           </table>
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
 
-      <InstructorModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveInstructor}
-        instructor={selectedInstructor}
-      />
+      <InstructorModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveInstructor} instructor={selectedInstructor} />
 
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
