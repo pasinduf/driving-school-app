@@ -39,6 +39,7 @@ function App() {
                   <Route path="my-bookings" element={<MyBookingsPage />} />
                   <Route path="instructors" element={<AdminPage />} />
                   <Route path="holidays" element={<AdminPage />} />
+                  <Route path="packages" element={<AdminPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                 </Route>
               </Route>

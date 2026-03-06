@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CalendarDays, CarFront, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, CarFront, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Archive } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
@@ -111,6 +111,11 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
               <NavLink to="/portal/instructors" className={navLinkClass} onClick={handleMobileDismiss}>
                 <Users size={20} className={collapsed ? "mx-auto" : ""} />
                 {!collapsed && <span>Instructors</span>}
+              </NavLink>
+
+              <NavLink to="/portal/packages" className={navLinkClass} onClick={handleMobileDismiss}>
+                <Archive size={20} className={collapsed ? "mx-auto" : ""} />
+                {!collapsed && <span>Packages</span>}
               </NavLink>
             </>
           )}

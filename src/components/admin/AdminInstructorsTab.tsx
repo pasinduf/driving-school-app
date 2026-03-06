@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchAdminInstructors, createInstructor, updateInstructor, deleteInstructor } from '../../api/client';
 import { toast } from 'sonner';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users } from 'lucide-react';
 import InstructorModal from './InstructorModal';
 import ConfirmationModal from '../ConfirmationModal';
 import Pagination from '../Pagination';
@@ -92,78 +92,95 @@ export default function AdminInstructorsTab() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Manage Instructors</h2>
-          <p className="text-gray-500 text-sm">Create, update and deactivate instructors.</p>
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Users className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Manage Instructors</h2>
+            <p className="text-sm text-gray-500">Create, update and deactivate instructors.</p>
+          </div>
         </div>
-        <button onClick={handleAddClick} className="bg-primary text-white px-4 py-2 rounded shadow hover:bg-red-700 flex items-center">
-          <Plus className="w-5 h-5 mr-1" /> Add Instructor
+        <button
+          onClick={handleAddClick}
+          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add Instructor
         </button>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center p-8 text-gray-500">Loading instructors...</div>
+        <div className="flex justify-center p-12 text-gray-500">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary opacity-50"></div>
+        </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">Instructor</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase">Contact</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-900 uppercase">Transmission</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-900 uppercase">Suburbs</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-900 uppercase">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {instructors.map((inst: any) => (
-                <tr key={inst.id} className={!inst.isActive ? "bg-gray-50 opacity-75" : ""}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{inst.name}</div>
-                    <div className="text-sm text-gray-500">{inst.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{inst.contactNumber || "-"}</div>
-                    <div className="text-sm text-gray-500">{inst.address}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">{inst.transmission || "Automatic"}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">{inst.suburbs?.length || 0} assigned</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${inst.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                    >
-                      {inst.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                    <button onClick={() => handleEditClick(inst)} className="text-blue-600 hover:text-blue-900" title="Edit Instructor">
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(inst.id)}
-                      className="text-red-600 hover:text-red-900"
-                      title={inst.isActive ? "Deactivate Instructor" : "Delete"}
-                      disabled={!inst.isActive}
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {instructors.length === 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 text-gray-500 border-b">
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    No instructors found. Click "Add Instructor" to create one.
-                  </td>
+                  <th className="px-6 py-4 font-medium">Instructor</th>
+                  <th className="px-6 py-4 font-medium">Contact</th>
+                  <th className="px-6 py-4 font-medium text-center">Transmission</th>
+                  <th className="px-6 py-4 font-medium text-center">Suburbs</th>
+                  <th className="px-6 py-4 font-medium text-center">Status</th>
+                  <th className="px-6 py-4 font-medium text-right">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {instructors.map((inst: any) => (
+                  <tr key={inst.id} className={`hover:bg-gray-50 transition-colors ${!inst.isActive ? 'opacity-75 bg-gray-50/50' : ''}`}>
+                    <td className="px-6 py-4 font-medium text-gray-900">
+                      {inst.name}
+                      <p className="text-xs text-gray-400 font-normal mt-0.5 truncate max-w-[200px]">{inst.email}</p>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      {inst.contactNumber || "-"}
+                      <div className="text-xs text-gray-400 mt-0.5">{inst.address}</div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {inst.transmission || "Automatic"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center text-gray-600">{inst.suburbs?.length || 0} assigned</td>
+                    <td className="px-6 py-4 text-center">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${inst.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                      >
+                        {inst.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => handleEditClick(inst)} className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-md transition-colors" title="Edit Instructor">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(inst.id)}
+                          className={`p-1.5 rounded-md transition-colors ${!inst.isActive ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
+                          title={inst.isActive ? "Deactivate Instructor" : "Delete"}
+                          disabled={!inst.isActive}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {instructors.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      No instructors found. Click "Add Instructor" to create one.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}

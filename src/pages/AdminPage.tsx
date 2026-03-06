@@ -5,6 +5,7 @@ import { fetchBookings, fetchHolidays, createHoliday, deleteHoliday, confirmBook
 import { format } from 'date-fns';
 import { Plus, Trash2 } from 'lucide-react';
 import AdminInstructorsTab from '../components/admin/AdminInstructorsTab';
+import AdminPackagesTab from '../components/admin/AdminPackagesTab';
 import ConfirmationModal from '../components/ConfirmationModal';
 import Spinner from '../components/Spinner';
 import Pagination from '../components/Pagination';
@@ -21,7 +22,9 @@ export default function AdminPage() {
         ? 'holidays'
         : location.pathname.includes('instructors')
             ? 'instructors'
-            : 'bookings';
+            : location.pathname.includes('packages')
+                ? 'packages'
+                : 'bookings';
     const [bookings, setBookings] = useState<any[]>([]);
     const [holidays, setHolidays] = useState<any[]>([]);
 
@@ -63,7 +66,7 @@ export default function AdminPage() {
     }, [user, loading, navigate]);
 
     useEffect(() => {
-        if (user) {
+        if (user && (activeTab === 'bookings' || activeTab === 'holidays')) {
             loadData();
         }
     }, [user, activeTab]);
@@ -235,7 +238,7 @@ export default function AdminPage() {
                     </div>
                 )}
 
-                {isLoadingData ? (
+                {isLoadingData && (activeTab === 'bookings' || activeTab === 'holidays') ? (
                     <div className="flex justify-center items-center py-12">
                         <Spinner size="lg" text="Loading data..." />
                     </div>
@@ -435,6 +438,9 @@ export default function AdminPage() {
                 )}
                 {activeTab === 'instructors' && (
                     <AdminInstructorsTab />
+                )}
+                {activeTab === 'packages' && (
+                    <AdminPackagesTab />
                 )}
             </main>
 
