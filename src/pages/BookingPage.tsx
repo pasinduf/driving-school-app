@@ -333,7 +333,7 @@ export default function BookingPage() {
                 {/* Suburb Selection */}
                 <div className="flex-[2] w-full relative">
                   <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Pick-up Location <span className="text-yellow-500">*</span>
+                    Pick-up Location
                   </label>
                   <SearchableDropdown
                     placeholder="Enter your suburb..."
@@ -360,7 +360,7 @@ export default function BookingPage() {
                 {/* Transmission Selection */}
                 <div className="flex-1 w-full">
                   <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Transmission <span className="text-yellow-500">*</span>
+                    Transmission
                   </label>
                   <select
                     className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
@@ -390,7 +390,7 @@ export default function BookingPage() {
               </div>
 
               {/* Instructor Selection */}
-              {isSearched && selectedSuburb && selectedTransmission && (
+              {isSearched && selectedSuburb && selectedTransmission ? (
                 <div className="pt-2">
                   <label className="block text-sm font-medium mb-2">Available Instructors</label>
                   {loadingInstructors ? (
@@ -462,6 +462,21 @@ export default function BookingPage() {
                       No available instructors found for the selected suburb and transmission.
                     </div>
                   )}
+                </div>
+              ) : (
+                <div className="pt-8">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 text-center text-blue-800 flex flex-col items-center">
+                    <div className="bg-white p-4 rounded-full mb-4 shadow-sm text-blue-500">
+                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Find Your Instructor</h3>
+                    <p className="text-blue-600/80 max-w-sm">
+                      Please select your suburb and preferred transmission, to see available driving instructors.
+                    </p>
+                  </div>
                 </div>
               )}
 
