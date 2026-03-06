@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-    baseURL: 'http://localhost:8020',
+    baseURL:   '/api',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -102,16 +102,16 @@ export const fetchSlots = async (date: string, instructorId: string, duration: n
     return response.data;
 };
 
-export const lockSlots = async (slots: { date: string; time: string }[], instructorId: string) => {
+export const lockSlots = async (slots: { date: string; time: string }[], instructorId: string, duration: number, margin: number) => {
     const response = await apiClient.post<{ token: string; expiresAt: number, sessionDuration: number }>('/bookings/lock', {
-        slots, instructorId
+        slots, instructorId, duration, margin
     });
     return response.data;
 };
 
-export const unlockSlots = async (slots: { date: string; time: string }[], token: string, instructorId: string) => {
+export const unlockSlots = async (slots: { date: string; time: string }[], token: string, instructorId: string, duration: number, margin: number) => {
     const response = await apiClient.post('/bookings/unlock', {
-        token, slots, instructorId
+        token, slots, instructorId, duration, margin
     });
     return response.data;
 };

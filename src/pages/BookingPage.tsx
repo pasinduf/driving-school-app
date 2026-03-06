@@ -190,7 +190,7 @@ export default function BookingPage() {
 
   const handleExpire = () => {
     if (selectedSlots.length > 0 && selectedInstructor?.id) {
-      unlockSlots(selectedSlots, lockToken!, selectedInstructor.id);
+      unlockSlots(selectedSlots, lockToken!, selectedInstructor.id, duration, margin);
     }
     setTimeLeft('0:00');
     toast.error('Session expired. Please start over.');
@@ -249,7 +249,7 @@ export default function BookingPage() {
       // Lock slots
       try {
         // We use the first slot time for the "time" param if needed, but we should use lockSlots endpoint
-        const result = await lockSlots(selectedSlots, selectedInstructor!.id);
+        const result = await lockSlots(selectedSlots, selectedInstructor!.id, duration, margin);
         setLockToken(result.token);
         setLockExpiry(result.expiresAt);
         setTimeLeft(`${result.sessionDuration}`);
@@ -573,13 +573,12 @@ export default function BookingPage() {
                           key={slot.startTime}
                           onClick={() => handleSlotClick(slot)}
                           disabled={!slot.available && !isSelected}
-                          className={`p-3 rounded border text-sm font-medium transition-colors ${
-                            isSelected
-                              ? "bg-primary text-white border-primary"
-                              : slot.available
-                                ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
-                                : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                          } `}
+                          className={`p-3 rounded border text-sm font-medium transition-colors ${isSelected
+                            ? "bg-primary text-white border-primary"
+                            : slot.available
+                              ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
+                              : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                            } `}
                         >
                           {format(parseISO(slot.startTime), "h:mm a")}
                           <span className="block text-xs font-normal opacity-75">to {format(parseISO(slot.endTime), "h:mm a")}</span>
@@ -651,7 +650,7 @@ export default function BookingPage() {
                   try {
                     // Unlock all slots
                     if (selectedSlots.length > 0) {
-                      await unlockSlots(selectedSlots, lockToken, selectedInstructor.id);
+                      await unlockSlots(selectedSlots, lockToken, selectedInstructor.id, duration, margin);
                     }
                   } catch (e) {
                     console.error("Failed to unlock slots", e);
