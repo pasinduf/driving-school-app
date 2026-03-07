@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Linkedin, Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Phone, Mail, MapPin } from 'lucide-react';
 
 export default function Footer() {
     return (
         <footer id="contact" className="bg-gray-900 text-white pt-10 pb-4">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-8">
+                <div className="flex flex-col md:flex-row justify-between md:items-start gap-12 mb-8">
                     {/* Brand Column */}
-                    <div>
+                    <div className="max-w-sm">
                         <Link to="/" className="text-3xl font-bold text-white tracking-tight inline-block mb-6">
                             DRIVING<span className="text-primary">SCHOOL</span>
                         </Link>
@@ -30,7 +30,8 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* Quick Links */}
+                    {/* Quick Links (Hidden) */}
+                    {/* 
                     <div>
                         <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wider border-l-4 border-primary pl-4">Quick Links</h3>
                         <ul className="space-y-3">
@@ -46,6 +47,7 @@ export default function Footer() {
                             </li>
                         </ul>
                     </div>
+                    */}
 
                     {/* Contact */}
                     <div>
