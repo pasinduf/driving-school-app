@@ -1,4 +1,4 @@
-import  { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { fetchBookings, searchInstructorsDropdown } from '../../api/client';
 import { format } from 'date-fns';
@@ -121,7 +121,7 @@ export default function Bookings() {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {bookings.map((booking: any) => (
-                                    <tr key={booking.id}>
+                                    <tr key={booking.id} className={booking.isManualBooking ? 'bg-yellow-100' : ''}>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-500">
                                                 {booking.bookingSlots.map((slot: any, idx: number) => (
@@ -151,7 +151,7 @@ export default function Bookings() {
                                             {booking.package}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {booking.price}$
+                                            {!booking.isManualBooking ? `${booking.price}$` : ''}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${booking.status === 'CONFIRMED'
@@ -160,7 +160,7 @@ export default function Bookings() {
                                                     ? 'bg-yellow-100 text-yellow-800'
                                                     : 'bg-red-100 text-red-800'
                                                 }`}>
-                                                {booking.status}
+                                                {booking.isManualBooking ? 'Manual' : booking.status}
                                             </span>
                                         </td>
                                     </tr>
