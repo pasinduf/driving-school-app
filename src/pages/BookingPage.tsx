@@ -285,7 +285,7 @@ export default function BookingPage() {
     } catch (error: any) {
       const raw = error.response?.data?.message;
       const errorMessage = Array.isArray(raw) ? raw[0] : raw;
-      toast.error(errorMessage?.replace(/^.*?\./, '') || 'Booking failed.');
+      toast.error(errorMessage || 'Booking failed.');
     } finally {
       setIsSubmitting(false);
     }
@@ -332,9 +332,7 @@ export default function BookingPage() {
               <div className="flex flex-col md:flex-row items-end gap-4">
                 {/* Suburb Selection */}
                 <div className="flex-[2] w-full relative">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Pick-up Location
-                  </label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Pick-up Location</label>
                   <SearchableDropdown
                     placeholder="Enter your suburb..."
                     fetchOptions={loadSuburbsData}
@@ -359,9 +357,7 @@ export default function BookingPage() {
 
                 {/* Transmission Selection */}
                 <div className="flex-1 w-full">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Transmission
-                  </label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Transmission</label>
                   <select
                     className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                     onChange={(e) => {
@@ -402,7 +398,7 @@ export default function BookingPage() {
                       {availableInstructors.map((instructor) => (
                         <label
                           key={instructor.id}
-                          className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md ${selectedInstructor?.id === instructor.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-gray-200 bg-white hover:border-primary/30"}`}
+                          className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md ${selectedInstructor?.id === instructor.id ? "border-primary bg-primary/5  ring-primary" : "border-gray-200 bg-white hover:border-primary/30"}`}
                         >
                           <input
                             type="radio"
@@ -422,7 +418,7 @@ export default function BookingPage() {
                                 className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
                               />
                             ) : (
-                              <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm">
+                              <div className="w-14 h-14 rounded-full bg-red-400 text-white flex items-center justify-center font-bold text-lg border-1 border-white shadow-sm">
                                 {instructor.name.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -439,7 +435,7 @@ export default function BookingPage() {
                               </p>
                               <p className="text-xs flex items-center truncate">
                                 <span className="inline-block w-4 text-center mr-1">🚗</span>
-                                {instructor.transmission === "Both" ? "Auto & Manual" : instructor.transmission === "Automatic" && 'Auto'}
+                                {instructor.transmission === "Both" ? "Auto & Manual" : instructor.transmission === "Automatic" && "Auto"}
                               </p>
                             </div>
                           </div>
@@ -468,14 +464,17 @@ export default function BookingPage() {
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 text-center text-blue-800 flex flex-col items-center">
                     <div className="bg-white p-4 rounded-full mb-4 shadow-sm text-blue-500">
                       <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Find Your Instructor</h3>
-                    <p className="text-blue-600/80 max-w-sm">
-                      Please select your suburb and preferred transmission, to see available driving instructors.
-                    </p>
+                    <p className="text-blue-600/80 max-w-sm">Please select your suburb and preferred transmission, to see available driving instructors.</p>
                   </div>
                 </div>
               )}
@@ -574,8 +573,8 @@ export default function BookingPage() {
                   <p className="text-lg font-medium text-gray-600">Select a date to find available slots</p>
                 </div>
               ) : loadingSlots ? (
-                <div className="p-8 text-center">
-                  <Spinner size="lg" text="Loading slots..." />
+                <div className="flex justify-center p-8">
+                  <Spinner text="Loading slots..." />
                 </div>
               ) : (
                 <>
@@ -588,12 +587,13 @@ export default function BookingPage() {
                           key={slot.startTime}
                           onClick={() => handleSlotClick(slot)}
                           disabled={!slot.available && !isSelected}
-                          className={`p-3 rounded border text-sm font-medium transition-colors ${isSelected
-                            ? "bg-primary text-white border-primary"
-                            : slot.available
-                              ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
-                              : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                            } `}
+                          className={`p-3 rounded border text-sm font-medium transition-colors ${
+                            isSelected
+                              ? "bg-primary text-white border-primary"
+                              : slot.available
+                                ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
+                                : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                          } `}
                         >
                           {format(parseISO(slot.startTime), "h:mm a")}
                           <span className="block text-xs font-normal opacity-75">to {format(parseISO(slot.endTime), "h:mm a")}</span>

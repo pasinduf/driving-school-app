@@ -39,9 +39,9 @@ export default function DateDropdown({ suburbId, instructorId, onSelect, selecte
     }, [suburbId, instructorId]);
 
     if (loading) {
-        return <div className="flex items-center space-x-2">
-            <Spinner size="lg" text="Loading dates..." />
-        </div>;
+        return (
+         <div className="flex justify-center"><Spinner /></div>
+        )
     }
 
     return (

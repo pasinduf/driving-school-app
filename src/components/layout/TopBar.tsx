@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useContext } from 'react';
-import { CompanyContext } from '../../context/CompanyContext';
+import { useCompany } from '../../context/CompanyContext';
 
 interface TopBarProps {
     linkTo?: string;
@@ -8,8 +7,8 @@ interface TopBarProps {
 }
 
 export default function TopBar({ linkTo = '/', linkLabel = 'Home' }: TopBarProps) {
-    const companyCtx = useContext(CompanyContext);
-    const company = companyCtx?.company ?? null;
+
+    const { company } = useCompany() ?? null;
 
     const phone = company?.contactNumber || '';
     const email = company?.contactEmail || '';

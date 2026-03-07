@@ -71,14 +71,15 @@ export interface Instructor {
 }
 
 export interface CompanyDetails {
-    id: string;
-    name: string;
-    slug: string;
-    themeColor: string;
-    contactNumber: string;
-    contactEmail: string;
-    address: string;
-    logoUrl?: string;
+  id: string;
+  name: string;
+  slug: string;
+  themeColor: string;
+  contactNumber: string;
+  contactEmail: string;
+  address: string;
+  terms?:string;
+  logoUrl?: string;
 }
 
 export const fetchCompanyBySlug = async (slug: string) => {

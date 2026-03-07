@@ -137,7 +137,7 @@ export default function Bookings() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                                            {booking.instructor?.name || '-'}
+                                            {booking.instructor || '-'}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-gray-900">{booking?.bookingDetails.customerFirstName} {booking?.bookingDetails.customerLastName}</div>
