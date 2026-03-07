@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchPackages } from '../api/client'; // value: Package[]
-import { Loader2, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import Spinner from './Spinner';
 
 interface Package {

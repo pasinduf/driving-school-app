@@ -5,3 +5,7 @@
 html {
     scroll-behavior: smooth;
 }
+
+input[type="checkbox"] {
+    accent-color: var(--color-primary);
+}

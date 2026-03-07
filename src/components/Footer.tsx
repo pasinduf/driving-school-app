@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Phone, Mail, MapPin } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
 
