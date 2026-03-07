@@ -469,7 +469,7 @@ export default function BookingPage() {
                               />
                             ) : (
                               <div className="w-14 h-14 rounded-full bg-red-400 text-white flex items-center justify-center font-bold text-lg border-1 border-white shadow-sm">
-                                {instructor.name.charAt(0).toUpperCase()}
+                                {instructor.name.split(' ').map((n: string) => n.charAt(0).toUpperCase()).join('')}
                               </div>
                             )}
                           </div>
@@ -533,7 +533,7 @@ export default function BookingPage() {
                 <div className="flex justify-end pt-4">
                   <button
                     onClick={handleStep1Next}
-                    className="gap-2 flex items-center px-6 py-2 bg-primary text-white font-medium rounded hover:bg-opacity-90 transition-colors"
+                    className="gap-2 flex items-center px-6 py-2 border-2 border-primary text-primary font-medium rounded hover:opacity-80 transition-colors"
                   >
                     Next <ArrowRight className="w-4 h-4" />
                   </button>
@@ -558,7 +558,7 @@ export default function BookingPage() {
               <button
                 onClick={handleStep2Next}
                 disabled={!selectedPackage}
-                className="gap-2 flex items-center px-6 py-2 bg-primary text-white rounded font-medium disabled:bg-gray-300 transition-colors"
+                className="gap-2 flex items-center px-6 py-2 border-2 border-primary text-primary rounded font-medium disabled:border-gray-300 disabled:text-gray-400 hover:opacity-80 transition-colors"
               >
                 Next <ArrowRight className="w-4 h-4" />
               </button>
@@ -669,7 +669,7 @@ export default function BookingPage() {
                 <button
                   onClick={handleStep3Next}
                   disabled={selectedSlots.length === 0}
-                  className="gap-2 flex items-center px-6 py-2 bg-primary text-white rounded font-medium disabled:bg-gray-300 transition-colors"
+                  className="gap-2 flex items-center px-6 py-2 border-2 border-primary text-primary rounded font-medium disabled:border-gray-300 disabled:text-gray-400 hover:opacity-80 transition-colors"
                 >
                   Next <ArrowRight className="w-4 h-4" />
                 </button>
