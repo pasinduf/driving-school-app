@@ -33,9 +33,6 @@ export default function ForgotPasswordPage() {
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg border border-gray-100">
                 <div className="text-center mb-8">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="text-primary font-bold text-xl">D</span>
-                    </div>
                     <h2 className="text-2xl font-bold text-gray-900">Reset your password</h2>
                     <p className="mt-2 text-sm text-gray-600">
                         {isSubmitted

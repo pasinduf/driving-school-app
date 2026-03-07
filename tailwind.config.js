@@ -7,7 +7,7 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#d2232a',
+                primary: 'var(--color-primary, #d2232a)',
             },
             animation: {
                 'fade-in-up': 'fadeInUp 1s ease-out forwards',

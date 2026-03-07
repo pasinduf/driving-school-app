@@ -2,16 +2,18 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCompany } from '../context/CompanyContext';
 import { loginUser } from '../api/client';
 import { jwtDecode } from 'jwt-decode';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
+    const { login } = useAuth();
+    const navigate = useNavigate();
+    const { company } = useCompany();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login } = useAuth();
-    const navigate = useNavigate();
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -35,7 +37,7 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-6 text-center">Login to Portal</h2>
+                <h2 className="text-2xl font-bold mb-6 text-center">Login to {company?.name || 'Portal'}</h2>
                 {error && <div className="bg-red-100 text-red-500 p-2 rounded mb-4 text-center">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
