@@ -36,7 +36,7 @@ export default function HeroCarousel() {
                 >
                     <img
                         src={img}
-                        alt={`Driving School Slide ${index + 1}`}
+                        alt={`Slide ${index + 1}`}
                         className="w-full h-full object-cover opacity-60"
                     />
                 </div>

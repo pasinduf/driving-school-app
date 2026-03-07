@@ -12,6 +12,10 @@ apiClient.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    const companyId = localStorage.getItem('companyId');
+    if (companyId) {
+        config.headers['x-company-id'] = companyId;
+    }
     return config;
 });
 
@@ -65,6 +69,28 @@ export interface Instructor {
     isActive: boolean;
     profileImage?: string;
 }
+
+export interface CompanyDetails {
+  id: string;
+  name: string;
+  slug: string;
+  themeColor: string;
+  contactNumber: string;
+  contactEmail: string;
+  address: string;
+  terms?:string;
+  logoUrl?: string;
+}
+
+export const fetchCompanyBySlug = async (slug: string) => {
+    const response = await apiClient.get<CompanyDetails>(`/companies/slug/${slug}`);
+    return response.data;
+};
+
+export const fetchCompanyById = async (id: string) => {
+    const response = await apiClient.get<CompanyDetails>(`/companies/${id}`);
+    return response.data;
+};
 
 export const fetchTestingCenters = async () => {
     const response = await apiClient.get<TestingCenter[]>('/testing-centers');

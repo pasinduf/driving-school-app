@@ -8,9 +8,10 @@ interface SidebarProps {
   setCollapsed: (c: boolean) => void;
   mobileMenuOpen?: boolean;
   setMobileMenuOpen?: (c: boolean) => void;
+  companyDetails?: { name: string; logoUrl?: string } | null;
 }
 
-export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMobileMenuOpen }: SidebarProps) {
+export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMobileMenuOpen, companyDetails }: SidebarProps) {
   const { user } = useAuth();
   const [bookingsOpen, setBookingsOpen] = useState(true);
 
@@ -51,11 +52,15 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
           {!collapsed && (
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="font-bold text-lg">D</span>
-              </div>
-              <span className="font-bold text-lg tracking-tight">DRIVING SCHOOL</span>
+            <div className="flex items-center space-x-2 overflow-hidden">
+              {companyDetails?.logoUrl ? (
+                <img src={companyDetails.logoUrl} alt="Logo" className="w-8 h-8 object-contain shrink-0" />
+              ) : (
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
+                  <span className="font-bold text-lg">{companyDetails?.name ? companyDetails.name.charAt(0) : 'D'}</span>
+                </div>
+              )}
+              <span className="font-bold text-lg tracking-tight truncate">{companyDetails?.name || ''}</span>
             </div>
           )}
           <button

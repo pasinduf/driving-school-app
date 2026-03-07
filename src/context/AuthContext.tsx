@@ -7,7 +7,9 @@ interface User {
     email: string;
     role: string;
     name: string;
+    companyId: string;
     existMultipleInstructors: boolean;
+    profileImage?:string
 }
 
 interface AuthContextType {

@@ -140,7 +140,8 @@ export default function BookingPage() {
       lastEndMinutes = maxEnd;
     }
 
-    return rawSlots.filter(slot => {
+    // Pass 1: Filter out unavailable and overlapping slots
+    const candidateSlots = rawSlots.filter(slot => {
       // 1. Is Selected? Always show.
       if (selectedSlots.some(s => s.time === slot.startTime)) return true;
 
@@ -150,42 +151,91 @@ export default function BookingPage() {
       const slotStart = getMinutes(slot.startTime);
       const slotEnd = getMinutes(slot.endTime);
 
-      // 3. Overlap Check
+      // 3. Overlap Check with selected slots
       if (currentSelectedSlots.length > 0) {
         const isOverlapping = currentSelectedSlots.some(selected => {
           const selStart = getMinutes(selected.startTime);
           const selEnd = getMinutes(selected.endTime);
-          // Standard overlap
           return slotStart < selEnd && slotEnd > selStart;
         });
         if (isOverlapping) return false;
       }
 
-      // 4. Re-anchoring Logic (Consecutive)
-      if (lastEndMinutes !== null) {
-        if (slotStart >= lastEndMinutes) {
-          const diff = slotStart - lastEndMinutes;
-          return diff % totalStep === 0;
+      return true;
+    });
+
+    // Pass 2: Filter to ensure proper spacing (duration + margin) between displayed available slots
+    // This prevents showing 2:00, 2:15, 2:30 etc. — only shows 2:00, 3:15, 4:30...
+    // IMPORTANT: Selected slots don't create margin requirements — consecutive slots after
+    // a selected slot are allowed without margin (e.g., select 8-9 → next shows 9-10, not 9:15-10:15)
+    const result: typeof candidateSlots = [];
+    let lastShownEnd: number | null = null; // tracks end of last displayed NON-SELECTED slot
+
+    for (const slot of candidateSlots) {
+      // Always include selected slots — don't update lastShownEnd
+      if (selectedSlots.some(s => s.time === slot.startTime)) {
+        result.push(slot);
+        continue;
+      }
+
+      const slotStart = getMinutes(slot.startTime);
+
+      // Enforce margin only from previously displayed NON-SELECTED slots
+      if (lastShownEnd !== null && slotStart < lastShownEnd + margin) {
+        continue;
+      }
+
+      // Check if slot falls on a valid grid position
+      let isOnGrid = false;
+
+      // Re-anchoring from selected slots (allows consecutive without margin)
+      // e.g., selected 8-9 (end=540): slot 9-10 (540) → diff=0, 0%75=0 ✅
+      //        slot 10:15-11:15 (615) → diff=75, 75%75=0 ✅
+      if (lastEndMinutes !== null && slotStart >= lastEndMinutes) {
+        const diff = slotStart - lastEndMinutes;
+        if (diff % totalStep === 0) {
+          isOnGrid = true;
         }
       }
 
-      // 5. Standard Grid Check (With Gap / Margin)
-      // Ensure slots align with the start of the day + multiples of (duration + margin)
-      const onStandardGrid = (slotStart - 480) % totalStep === 0;
-
-      if (onStandardGrid) return true;
-
-      // 6. Post-Booking Availability Check (Edge Detection)
-      const step = 15;
-      const prevTime = slotStart - step;
-      const prevSlot = rawSlots.find(s => getMinutes(s.startTime) === prevTime);
-
-      if (!prevSlot || !prevSlot.available) {
-        return true;
+      if (!isOnGrid) {
+        // Anchored from last displayed available slot's end + margin
+        if (lastShownEnd !== null) {
+          const firstValidStart = lastShownEnd + margin;
+          if (slotStart >= firstValidStart) {
+            const diff = slotStart - firstValidStart;
+            if (diff % totalStep === 0 || diff === 0) {
+              isOnGrid = true;
+            }
+          }
+        }
       }
 
-      return false;
-    });
+      if (!isOnGrid) {
+        // Standard grid from day start (8:00 AM = 480 min)
+        const fromDayStart = (slotStart - 480) % totalStep === 0;
+        if (fromDayStart && (lastShownEnd === null || slotStart >= lastShownEnd + margin)) {
+          isOnGrid = true;
+        }
+      }
+
+      if (!isOnGrid) {
+        // Edge detection: first available slot after a booking gap
+        const step = 15;
+        const prevTime = slotStart - step;
+        const prevSlot = rawSlots.find(s => getMinutes(s.startTime) === prevTime);
+        if (!prevSlot || !prevSlot.available) {
+          isOnGrid = true;
+        }
+      }
+
+      if (isOnGrid) {
+        result.push(slot);
+        lastShownEnd = getMinutes(slot.endTime);
+      }
+    }
+
+    return result;
   })();
 
   const handleExpire = () => {
@@ -285,7 +335,7 @@ export default function BookingPage() {
     } catch (error: any) {
       const raw = error.response?.data?.message;
       const errorMessage = Array.isArray(raw) ? raw[0] : raw;
-      toast.error(errorMessage?.replace(/^.*?\./, '') || 'Booking failed.');
+      toast.error(errorMessage || 'Booking failed.');
     } finally {
       setIsSubmitting(false);
     }
@@ -332,9 +382,7 @@ export default function BookingPage() {
               <div className="flex flex-col md:flex-row items-end gap-4">
                 {/* Suburb Selection */}
                 <div className="flex-[2] w-full relative">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Pick-up Location
-                  </label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Pick-up Location</label>
                   <SearchableDropdown
                     placeholder="Enter your suburb..."
                     fetchOptions={loadSuburbsData}
@@ -359,9 +407,7 @@ export default function BookingPage() {
 
                 {/* Transmission Selection */}
                 <div className="flex-1 w-full">
-                  <label className="block text-sm font-medium mb-1 text-gray-700">
-                    Transmission
-                  </label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Transmission</label>
                   <select
                     className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                     onChange={(e) => {
@@ -402,7 +448,7 @@ export default function BookingPage() {
                       {availableInstructors.map((instructor) => (
                         <label
                           key={instructor.id}
-                          className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md ${selectedInstructor?.id === instructor.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-gray-200 bg-white hover:border-primary/30"}`}
+                          className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md ${selectedInstructor?.id === instructor.id ? "border-primary bg-primary/5  ring-primary" : "border-gray-200 bg-white hover:border-primary/30"}`}
                         >
                           <input
                             type="radio"
@@ -422,7 +468,7 @@ export default function BookingPage() {
                                 className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
                               />
                             ) : (
-                              <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm">
+                              <div className="w-14 h-14 rounded-full bg-red-400 text-white flex items-center justify-center font-bold text-lg border-1 border-white shadow-sm">
                                 {instructor.name.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -439,7 +485,7 @@ export default function BookingPage() {
                               </p>
                               <p className="text-xs flex items-center truncate">
                                 <span className="inline-block w-4 text-center mr-1">🚗</span>
-                                {instructor.transmission === "Both" ? "Auto & Manual" : instructor.transmission === "Automatic" && 'Auto'}
+                                {instructor.transmission === "Both" ? "Auto & Manual" : instructor.transmission === "Automatic" && "Auto"}
                               </p>
                             </div>
                           </div>
@@ -468,14 +514,17 @@ export default function BookingPage() {
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 text-center text-blue-800 flex flex-col items-center">
                     <div className="bg-white p-4 rounded-full mb-4 shadow-sm text-blue-500">
                       <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </div>
                     <h3 className="text-lg font-semibold mb-2">Find Your Instructor</h3>
-                    <p className="text-blue-600/80 max-w-sm">
-                      Please select your suburb and preferred transmission, to see available driving instructors.
-                    </p>
+                    <p className="text-blue-600/80 max-w-sm">Please select your suburb and preferred transmission, to see available driving instructors.</p>
                   </div>
                 </div>
               )}
@@ -574,8 +623,8 @@ export default function BookingPage() {
                   <p className="text-lg font-medium text-gray-600">Select a date to find available slots</p>
                 </div>
               ) : loadingSlots ? (
-                <div className="p-8 text-center">
-                  <Spinner size="lg" text="Loading slots..." />
+                <div className="flex justify-center p-8">
+                  <Spinner text="Loading slots..." />
                 </div>
               ) : (
                 <>

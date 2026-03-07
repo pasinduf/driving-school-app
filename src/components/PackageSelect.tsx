@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchPackages } from '../api/client'; // value: Package[]
 import { Loader2, Check } from 'lucide-react';
+import Spinner from './Spinner';
 
 interface Package {
     id: string;
@@ -36,7 +37,7 @@ export default function PackageSelect({ onSelect, selectedPackage }: PackageSele
     }, []);
 
     if (loading) {
-        return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
+        return <div className="flex justify-center p-8"><Spinner /></div>;
     }
 
     return (
