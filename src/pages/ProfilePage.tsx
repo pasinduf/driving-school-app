@@ -247,36 +247,71 @@ export default function ProfilePage() {
                         </p>
                       </div>
 
-                      {profile.showAsInstructor !== false && (
-                        <div className="pt-2 w-1/3">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Transmission</label>
-                          <select
-                            name="transmission"
-                            value={profile.transmission || "Automatic"}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                          >
-                            <option value="Automatic">Automatic</option>
-                            <option value="Manual">Manual</option>
-                            <option value="Both">Both (Auto & Manual)</option>
-                          </select>
-                          <p className="mt-1 text-xs text-gray-500">Select the transmission type you teach.</p>
-                        </div>
-                      )}
+                      {(profile.showAsInstructor !== false && (
+                          <div className="pt-2 w-1/3">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Transmission</label>
+                            <select
+                              name="transmission"
+                              value={profile.transmission || "Automatic"}
+                              onChange={handleChange}
+                              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                            >
+                              <option value="Automatic">Automatic</option>
+                              <option value="Manual">Manual</option>
+                              <option value="Both">Both (Auto & Manual)</option>
+                            </select>
+                            <p className="mt-1 text-xs text-gray-500">Select the transmission type you teach.</p>
+                          </div>
+                      ))}
 
-                      {profile.showAsInstructor === true &&
+                      {profile.showAsInstructor === true && (
                         <div className="pt-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Suburbs</label>
-                            <SearchableMultiSelect
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Suburbs</label>
+                          <SearchableMultiSelect
                             placeholder="Search and select suburbs..."
                             fetchOptions={loadSuburbsData}
                             selectedOptions={selectedSuburbs}
                             onAdd={handleAddSuburb}
                             onRemove={handleRemoveSuburb}
-                            />
-                            <p className="mt-2 text-xs text-gray-500">Select the suburbs where you are available.</p>
+                          />
+                          <p className="mt-2 text-xs text-gray-500">Select the suburbs where you are available.</p>
                         </div>
-                      }
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {user?.role === "Instructor" && (
+                  <div className="md:col-span-2 pt-6 border-t border-gray-100">
+                    <h3 className="text-lg font-medium text-gray-900 mb-6">Instructor Settings</h3>
+                    <div className="space-y-6">
+                      <div className="pt-2 w-1/3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Transmission</label>
+                        <select
+                          name="transmission"
+                          value={profile.transmission || "Automatic"}
+                          onChange={handleChange}
+                          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                        >
+                          <option value="Automatic">Automatic</option>
+                          <option value="Manual">Manual</option>
+                          <option value="Both">Both (Auto & Manual)</option>
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">Select the transmission type you teach.</p>
+                      </div>
+
+                      {selectedSuburbs.length >0 && (
+                        <div className="pt-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Suburbs</label>
+                          <SearchableMultiSelect
+                            placeholder="Search and select suburbs..."
+                            fetchOptions={loadSuburbsData}
+                            selectedOptions={selectedSuburbs}
+                            onAdd={handleAddSuburb}
+                            onRemove={handleRemoveSuburb}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
