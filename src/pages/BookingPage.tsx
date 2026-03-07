@@ -140,7 +140,8 @@ export default function BookingPage() {
       lastEndMinutes = maxEnd;
     }
 
-    return rawSlots.filter(slot => {
+    // Pass 1: Filter out unavailable and overlapping slots
+    const candidateSlots = rawSlots.filter(slot => {
       // 1. Is Selected? Always show.
       if (selectedSlots.some(s => s.time === slot.startTime)) return true;
 
@@ -150,42 +151,91 @@ export default function BookingPage() {
       const slotStart = getMinutes(slot.startTime);
       const slotEnd = getMinutes(slot.endTime);
 
-      // 3. Overlap Check
+      // 3. Overlap Check with selected slots
       if (currentSelectedSlots.length > 0) {
         const isOverlapping = currentSelectedSlots.some(selected => {
           const selStart = getMinutes(selected.startTime);
           const selEnd = getMinutes(selected.endTime);
-          // Standard overlap
           return slotStart < selEnd && slotEnd > selStart;
         });
         if (isOverlapping) return false;
       }
 
-      // 4. Re-anchoring Logic (Consecutive)
-      if (lastEndMinutes !== null) {
-        if (slotStart >= lastEndMinutes) {
-          const diff = slotStart - lastEndMinutes;
-          return diff % totalStep === 0;
+      return true;
+    });
+
+    // Pass 2: Filter to ensure proper spacing (duration + margin) between displayed available slots
+    // This prevents showing 2:00, 2:15, 2:30 etc. — only shows 2:00, 3:15, 4:30...
+    // IMPORTANT: Selected slots don't create margin requirements — consecutive slots after
+    // a selected slot are allowed without margin (e.g., select 8-9 → next shows 9-10, not 9:15-10:15)
+    const result: typeof candidateSlots = [];
+    let lastShownEnd: number | null = null; // tracks end of last displayed NON-SELECTED slot
+
+    for (const slot of candidateSlots) {
+      // Always include selected slots — don't update lastShownEnd
+      if (selectedSlots.some(s => s.time === slot.startTime)) {
+        result.push(slot);
+        continue;
+      }
+
+      const slotStart = getMinutes(slot.startTime);
+
+      // Enforce margin only from previously displayed NON-SELECTED slots
+      if (lastShownEnd !== null && slotStart < lastShownEnd + margin) {
+        continue;
+      }
+
+      // Check if slot falls on a valid grid position
+      let isOnGrid = false;
+
+      // Re-anchoring from selected slots (allows consecutive without margin)
+      // e.g., selected 8-9 (end=540): slot 9-10 (540) → diff=0, 0%75=0 ✅
+      //        slot 10:15-11:15 (615) → diff=75, 75%75=0 ✅
+      if (lastEndMinutes !== null && slotStart >= lastEndMinutes) {
+        const diff = slotStart - lastEndMinutes;
+        if (diff % totalStep === 0) {
+          isOnGrid = true;
         }
       }
 
-      // 5. Standard Grid Check (With Gap / Margin)
-      // Ensure slots align with the start of the day + multiples of (duration + margin)
-      const onStandardGrid = (slotStart - 480) % totalStep === 0;
-
-      if (onStandardGrid) return true;
-
-      // 6. Post-Booking Availability Check (Edge Detection)
-      const step = 15;
-      const prevTime = slotStart - step;
-      const prevSlot = rawSlots.find(s => getMinutes(s.startTime) === prevTime);
-
-      if (!prevSlot || !prevSlot.available) {
-        return true;
+      if (!isOnGrid) {
+        // Anchored from last displayed available slot's end + margin
+        if (lastShownEnd !== null) {
+          const firstValidStart = lastShownEnd + margin;
+          if (slotStart >= firstValidStart) {
+            const diff = slotStart - firstValidStart;
+            if (diff % totalStep === 0 || diff === 0) {
+              isOnGrid = true;
+            }
+          }
+        }
       }
 
-      return false;
-    });
+      if (!isOnGrid) {
+        // Standard grid from day start (8:00 AM = 480 min)
+        const fromDayStart = (slotStart - 480) % totalStep === 0;
+        if (fromDayStart && (lastShownEnd === null || slotStart >= lastShownEnd + margin)) {
+          isOnGrid = true;
+        }
+      }
+
+      if (!isOnGrid) {
+        // Edge detection: first available slot after a booking gap
+        const step = 15;
+        const prevTime = slotStart - step;
+        const prevSlot = rawSlots.find(s => getMinutes(s.startTime) === prevTime);
+        if (!prevSlot || !prevSlot.available) {
+          isOnGrid = true;
+        }
+      }
+
+      if (isOnGrid) {
+        result.push(slot);
+        lastShownEnd = getMinutes(slot.endTime);
+      }
+    }
+
+    return result;
   })();
 
   const handleExpire = () => {
@@ -587,13 +637,12 @@ export default function BookingPage() {
                           key={slot.startTime}
                           onClick={() => handleSlotClick(slot)}
                           disabled={!slot.available && !isSelected}
-                          className={`p-3 rounded border text-sm font-medium transition-colors ${
-                            isSelected
-                              ? "bg-primary text-white border-primary"
-                              : slot.available
-                                ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
-                                : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                          } `}
+                          className={`p-3 rounded border text-sm font-medium transition-colors ${isSelected
+                            ? "bg-primary text-white border-primary"
+                            : slot.available
+                              ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
+                              : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                            } `}
                         >
                           {format(parseISO(slot.startTime), "h:mm a")}
                           <span className="block text-xs font-normal opacity-75">to {format(parseISO(slot.endTime), "h:mm a")}</span>
