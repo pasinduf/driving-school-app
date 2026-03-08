@@ -58,6 +58,7 @@ function App() {
                   <Route path="instructors" element={<AdminPage />} />
                   <Route path="holidays" element={<AdminPage />} />
                   <Route path="packages" element={<AdminPage />} />
+                  <Route path="reviews" element={<AdminPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                 </Route>
               </Route>

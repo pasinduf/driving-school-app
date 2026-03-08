@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CalendarDays, CarFront, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Archive } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarOff, CarFront, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ListChecks, MessageSquare } from "lucide-react";
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
@@ -46,8 +46,9 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
       )}
 
       <aside
-        className={`${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} ${collapsed ? "md:w-20 w-64" : "w-64"
-          } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-900 text-white border-r border-gray-800 top-0 h-full overflow-y-auto flex flex-col z-50`}
+        className={`${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} ${
+          collapsed ? "md:w-20 w-64" : "w-64"
+        } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-900 text-white border-r border-gray-800 top-0 h-full overflow-y-auto flex flex-col z-50`}
       >
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
@@ -57,10 +58,10 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
                 <img src={companyDetails.logoUrl} alt="Logo" className="w-8 h-8 object-contain shrink-0" />
               ) : (
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                  <span className="font-bold text-lg">{companyDetails?.name ? companyDetails.name.charAt(0) : 'D'}</span>
+                  <span className="font-bold text-lg">{companyDetails?.name ? companyDetails.name.charAt(0) : "D"}</span>
                 </div>
               )}
-              <span className="font-bold text-lg tracking-tight truncate">{companyDetails?.name || ''}</span>
+              <span className="font-bold text-lg tracking-tight truncate">{companyDetails?.name || ""}</span>
             </div>
           )}
           <button
@@ -119,8 +120,13 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
               </NavLink>
 
               <NavLink to="/portal/packages" className={navLinkClass} onClick={handleMobileDismiss}>
-                <Archive size={20} className={collapsed ? "mx-auto" : ""} />
+                <ListChecks size={20} className={collapsed ? "mx-auto" : ""} />
                 {!collapsed && <span>Packages</span>}
+              </NavLink>
+
+              <NavLink to="/portal/reviews" className={navLinkClass} onClick={handleMobileDismiss}>
+                <MessageSquare size={20} className={collapsed ? "mx-auto" : ""} />
+                {!collapsed && <span>Reviews</span>}
               </NavLink>
             </>
           )}
@@ -128,7 +134,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
           {/* Holidays */}
           {(isAdmin || isInstructor) && (
             <NavLink to="/portal/holidays" className={navLinkClass} onClick={handleMobileDismiss}>
-              <CalendarDays size={20} className={collapsed ? "mx-auto" : ""} />
+              <CalendarOff size={20} className={collapsed ? "mx-auto" : ""} />
               {!collapsed && <span>Leave / Blocks</span>}
             </NavLink>
           )}

@@ -28,7 +28,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex-1 flex justify-center items-center min-h-[50vh]">
-        <Spinner text="Loading dashboard metrics..." size="lg" />
+        <Spinner text="Loading dashboard metrics..." />
       </div>
     );
   }

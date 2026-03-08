@@ -19,6 +19,7 @@ export default function ReviewForm() {
             setName('');
             setRating(0);
             setComment('');
+            setTimeout(() => setStatus(null), 5000);
         },
         onError: () => {
             setStatus({ type: 'error', message: 'Failed to submit review. Please try again.' });
@@ -42,15 +43,6 @@ export default function ReviewForm() {
             <h3 className="text-2xl font-bold text-gray-900 mb-6 uppercase tracking-tight text-center">
                 Leave a Review
             </h3>
-
-            {status && (
-                <div className={`mb-6 p-4 rounded-lg text-sm font-medium ${status.type === 'success'
-                    ? 'bg-green-50 text-green-800 border border-green-200'
-                    : 'bg-red-50 text-red-800 border border-red-200'
-                    }`}>
-                    {status.message}
-                </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -111,6 +103,15 @@ export default function ReviewForm() {
                     </button>
                 </div>
             </form>
+
+            {status && (
+                <div className={`mt-6 p-4 rounded-lg text-sm font-medium ${status.type === 'success'
+                    ? 'bg-green-50 text-green-800 border border-green-200'
+                    : 'bg-red-50 text-red-800 border border-red-200'
+                    }`}>
+                    {status.message}
+                </div>
+            )}
         </div>
     );
 }

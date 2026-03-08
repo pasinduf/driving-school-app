@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { fetchCompanyBySlug } from '../api/client';
 import type { CompanyDetails } from '../api/client';
 import { Loader2 } from 'lucide-react';
+import Spinner from '../components/Spinner';
 
 interface CompanyContextType {
     company: CompanyDetails | null;
@@ -58,7 +59,7 @@ export const CompanyProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+                <Spinner size="lg" />
             </div>
         );
     }
