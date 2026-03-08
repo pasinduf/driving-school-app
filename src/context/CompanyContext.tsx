@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { fetchCompanyBySlug } from '../api/client';
 import type { CompanyDetails } from '../api/client';
-import { Loader2 } from 'lucide-react';
 import Spinner from '../components/Spinner';
 
 interface CompanyContextType {
