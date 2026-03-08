@@ -21,11 +21,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
     }
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-        // Redirect based on role to avoid infinite loops or confusing UX
-        if (user.role === 'Student') {
-            return <Navigate to="/my-bookings" replace />;
-        }
-        return <Navigate to="/" replace />;
+        return <Navigate to="/portal/dashboard" replace />;
     }
 
     return <Outlet />;
