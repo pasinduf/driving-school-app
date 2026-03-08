@@ -53,12 +53,21 @@ function App() {
                 <Route path="/portal" element={<DashboardLayout />}>
                   <Route index element={<Navigate to="dashboard" replace />} />
                   <Route path="dashboard" element={<DashboardPage />} />
-                  <Route path="bookings" element={<AdminPage />} />
                   <Route path="my-bookings" element={<MyBookingsPage />} />
-                  <Route path="instructors" element={<AdminPage />} />
-                  <Route path="holidays" element={<AdminPage />} />
-                  <Route path="packages" element={<AdminPage />} />
                   <Route path="profile" element={<ProfilePage />} />
+
+                  {/* Admin & Instructor only */}
+                  <Route element={<ProtectedRoute allowedRoles={['Admin', 'Instructor']} />}>
+                    <Route path="holidays" element={<AdminPage />} />
+                  </Route>
+
+                  {/* Admin-only routes */}
+                  <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+                    <Route path="bookings" element={<AdminPage />} />
+                    <Route path="instructors" element={<AdminPage />} />
+                    <Route path="packages" element={<AdminPage />} />
+                    <Route path="reviews" element={<AdminPage />} />
+                  </Route>
                 </Route>
               </Route>
             </Route>

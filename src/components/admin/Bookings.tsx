@@ -102,7 +102,7 @@ export default function Bookings() {
 
             {isLoadingData ? (
                 <div className="flex justify-center items-center py-12">
-                    <Spinner size="lg" text="Loading data..." />
+                    <Spinner text="Loading bookings..." />
                 </div>
             ) : (
                 <>

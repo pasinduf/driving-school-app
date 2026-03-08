@@ -6,6 +6,7 @@ import InstructorModal from './InstructorModal';
 import ConfirmationModal from '../ConfirmationModal';
 import Pagination from '../Pagination';
 import { useAuth } from '../../context/AuthContext';
+import Spinner from '../Spinner';
 
 export default function Instructors() {
   const { updateUser } = useAuth();
@@ -113,8 +114,8 @@ export default function Instructors() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center p-12 text-gray-500">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary opacity-50"></div>
+        <div className="flex justify-center p-12">
+          <Spinner text="Loading data..." />
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

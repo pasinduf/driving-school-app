@@ -62,7 +62,7 @@ export default function StudentBookingsPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">My Bookings</h1>
       <main className="w-full">
         {isLoading ? (
-          <div>
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <Spinner size="lg" text="Loading bookings..." />
           </div>
         ) : bookings.length === 0 ? (
@@ -79,12 +79,13 @@ export default function StudentBookingsPage() {
                   <div className="mt-2 md:mt-0">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium 
-                                            ${booking.status === "CONFIRMED"
-                          ? "bg-green-100 text-green-800"
-                          : booking.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                                            ${
+                                              booking.status === "CONFIRMED"
+                                                ? "bg-green-100 text-green-800"
+                                                : booking.status === "PENDING"
+                                                  ? "bg-yellow-100 text-yellow-800"
+                                                  : "bg-red-100 text-red-800"
+                                            }`}
                     >
                       {booking.status}
                     </span>

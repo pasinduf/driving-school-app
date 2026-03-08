@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-    baseURL: '/api', 
+    baseURL: '/api',  // 'http://217.216.109.188:8020'
     headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
     },
 });
 
@@ -71,15 +71,15 @@ export interface Instructor {
 }
 
 export interface CompanyDetails {
-  id: string;
-  name: string;
-  slug: string;
-  themeColor: string;
-  contactNumber: string;
-  contactEmail: string;
-  address: string;
-  terms?:string;
-  logoUrl?: string;
+    id: string;
+    name: string;
+    slug: string;
+    themeColor: string;
+    contactNumber: string;
+    contactEmail: string;
+    address: string;
+    terms?: string;
+    logoUrl?: string;
 }
 
 export const fetchCompanyBySlug = async (slug: string) => {
@@ -339,5 +339,16 @@ export const updatePackage = async (id: number, data: any) => {
 
 export const deactivatePackage = async (id: number) => {
     const response = await apiClient.delete(`/packages/${id}`);
+    return response.data;
+};
+
+// Reviews
+export const fetchAllReviews = async () => {
+    const response = await apiClient.get('/reviews/all');
+    return response.data;
+};
+
+export const updateReviewStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
+    const response = await apiClient.patch(`/reviews/${id}/status`, { status });
     return response.data;
 };

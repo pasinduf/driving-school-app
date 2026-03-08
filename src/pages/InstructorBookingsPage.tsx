@@ -289,14 +289,13 @@ export default function InstructorBookingsPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           {/* View Toggle */}
           <div className="flex bg-gray-100 p-1 rounded-lg border border-gray-200">
-            {(['Day', 'Week', 'Month'] as ViewType[]).map(v => (
+            {(["Day", "Week", "Month"] as ViewType[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium transition-all rounded-md ${view === v
-                  ? 'bg-white text-primary shadow-sm ring-1 ring-gray-900/5'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
-                  }`}
+                className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium transition-all rounded-md ${
+                  view === v ? "bg-white text-primary shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
+                }`}
               >
                 {v}
               </button>
@@ -304,30 +303,19 @@ export default function InstructorBookingsPage() {
           </div>
 
           <div className="flex items-center space-x-2 bg-white p-1 rounded-lg border shadow-sm">
-            <button
-              onClick={handleToday}
-              className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
-            >
+            <button onClick={handleToday} className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
               Today
             </button>
             <div className="flex items-center space-x-1 border-l pl-2">
-              <button
-                onClick={handlePrev}
-                className="p-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-600"
-                aria-label="Previous"
-              >
+              <button onClick={handlePrev} className="p-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-600" aria-label="Previous">
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <h2 className="text-sm font-semibold text-gray-800 min-w-[140px] text-center select-none">
-                {view === 'Month' && format(currentDate, 'MMMM yyyy')}
-                {view === 'Week' && `${format(daysInGrid[0], 'MMM d')} - ${format(daysInGrid[6], 'MMM d, yyyy')}`}
-                {view === 'Day' && format(currentDate, 'EEEE, MMM d, yyyy')}
+                {view === "Month" && format(currentDate, "MMMM yyyy")}
+                {view === "Week" && `${format(daysInGrid[0], "MMM d")} - ${format(daysInGrid[6], "MMM d, yyyy")}`}
+                {view === "Day" && format(currentDate, "EEEE, MMM d, yyyy")}
               </h2>
-              <button
-                onClick={handleNext}
-                className="p-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-600"
-                aria-label="Next"
-              >
+              <button onClick={handleNext} className="p-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-600" aria-label="Next">
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
@@ -335,260 +323,254 @@ export default function InstructorBookingsPage() {
         </div>
       </div>
 
-      <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col relative min-h-0">
-        {isLoading && (
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center">
-            <Spinner size="lg" text="Loading calendar..." />
-          </div>
-        )}
+      {isLoading ? 
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <Spinner text="Loading calendar..." />
+        </div> :
 
-        {/* 
-          =============================================
-          MONTH VIEW 
-          =============================================
-        */}
-        {view === 'Month' && (
-          <>
-            <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50/80 shrink-0">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                <div key={day} className="py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {day}
-                </div>
-              ))}
-            </div>
-            <div className="flex-1 grid grid-cols-7 auto-rows-fr relative overflow-y-auto">
-              {daysInGrid.map((day, idx) => {
-                const isCurrentMonth = isSameMonth(day, currentDate);
-                const isToday = isSameDay(day, new Date());
-                const daySlots = getSlotsForDay(day);
-
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={`
-                      min-h-[120px] border-b border-r border-gray-100 p-2 transition-colors flex flex-col
-                      ${!isCurrentMonth ? 'bg-gray-50/50' : 'bg-white hover:bg-gray-50/30'}
-                      ${idx % 7 === 6 ? 'border-r-0' : ''}
-                    `}
-                  >
-                    <div className="flex justify-between items-start mb-2 shrink-0">
-                      <span className={`
-                        text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
-                        ${isToday ? 'bg-primary text-white shadow-sm ring-2 ring-primary/20' :
-                          isCurrentMonth ? 'text-gray-700' : 'text-gray-400'}
-                      `}>
-                        {format(day, 'd')}
-                      </span>
-                      {daySlots.length > 0 && (
-                        <span className="text-[10px] font-medium text-gray-500 bg-gray-100 border px-1.5 py-0.5 rounded-full">
-                          {daySlots.length}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="space-y-1.5 overflow-y-auto overflow-x-hidden flex-1 min-h-0 scrollbar-thin scrollbar-thumb-gray-200 pr-1.5 pl-0.5 pb-1">
-                      {daySlots.map(({ booking, slot }) => (
-                        <div
-                          key={booking.id + slot.startTime}
-                          className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group mr-[1px]
-                            ${getStatusColor(booking)} ${booking.isManualBooking ? 'cursor-default' : 'cursor-pointer'} hover:shadow transition-shadow`}
-                          title={`${booking.package || 'Manual Lock'} - ${booking.isManualBooking ? 'Instructor booked' : booking.suburb?.name}`}
-                          onClick={(e) => {
-                            if (!booking.isManualBooking) {
-                              e.stopPropagation();
-                              setSelectedBookingForDetails(booking);
-                            }
-                          }}
-                        >
-                          {booking.isManualBooking ? (
-                            <>
-                              <div className="flex justify-between items-start font-semibold">
-                                <span>{format(parseISO(slot.startTime), 'h:mm a')}</span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setBookingToDelete(booking.id);
-                                    setIsDeleteModalOpen(true);
-                                  }}
-                                  className="text-yellow-600 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block"
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                              <div className="truncate opacity-90 font-medium">{booking.note || 'Manual Booking'}</div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex items-center justify-between font-semibold pr-1">
-                                <span>{format(parseISO(slot.startTime), 'h:mm a')}</span>
-                                <span className="truncate max-w-[50px] ml-1 opacity-70 font-normal">{booking.transmission?.substring(0, 4)}</span>
-                              </div>
-                              <div className="truncate opacity-90 font-medium">{booking.package || 'Lesson'}</div>
-                              {booking.suburb && (
-                                <div className="truncate text-[10px] opacity-75">{booking.suburb.name}</div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+        <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col relative min-h-0">
+          {/* 
+            =============================================
+            MONTH VIEW 
+            =============================================
+          */}
+          {view === "Month" && (
+            <>
+              <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50/80 shrink-0">
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+                  <div key={day} className="py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    {day}
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        {/* 
-          =============================================
-          DAY & WEEK VIEW
-          =============================================
-        */}
-        {(view === 'Day' || view === 'Week') && (
-          <div className="flex flex-col h-full overflow-hidden">
-            {/* Header Row */}
-            <div className="flex border-b border-gray-200 bg-gray-50/80 shrink-0 pr-[14px]">
-              {/* Time Gutter Header */}
-              <div className="w-16 border-r border-gray-200 shrink-0 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-gray-400" />
+                ))}
               </div>
-              {/* Days Headers */}
-              <div className={`flex-1 grid ${view === 'Week' ? 'grid-cols-7' : 'grid-cols-1'}`}>
+              <div className="flex-1 grid grid-cols-7 auto-rows-fr relative overflow-y-auto">
                 {daysInGrid.map((day, idx) => {
+                  const isCurrentMonth = isSameMonth(day, currentDate);
                   const isToday = isSameDay(day, new Date());
+                  const daySlots = getSlotsForDay(day);
+
                   return (
-                    <div key={day.toISOString()} className={`py-3 text-center border-gray-200 ${idx !== 0 ? 'border-l' : ''}`}>
-                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                        {format(day, 'EEE')}
-                      </div>
-                      <div className={`
-                            inline-flex items-center justify-center w-8 h-8 rounded-full text-lg font-medium
-                            ${isToday ? 'bg-primary text-white shadow-sm ring-2 ring-primary/20' : 'text-gray-900'}
-                         `}>
-                        {format(day, 'd')}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Scrollable Time Grid */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-50">
-              <div className="flex min-h-full" style={{ height: `${HOURS_IN_GRID * PIXELS_PER_HOUR}px` }}>
-                {/* Time Gutter Columns */}
-                <div className="w-16 border-r border-gray-200 bg-white shrink-0 relative">
-                  {Array.from({ length: HOURS_IN_GRID }).map((_, i) => (
                     <div
-                      key={i}
-                      className="absolute w-full text-right pr-2 text-xs text-gray-400 font-medium"
-                      style={{ top: `${(i * PIXELS_PER_HOUR) - 8}px` }}
+                      key={day.toISOString()}
+                      className={`
+                        min-h-[120px] border-b border-r border-gray-100 p-2 transition-colors flex flex-col
+                        ${!isCurrentMonth ? "bg-gray-50/50" : "bg-white hover:bg-gray-50/30"}
+                        ${idx % 7 === 6 ? "border-r-0" : ""}
+                      `}
                     >
-                      {format(new Date().setHours(START_HOUR + i, 0, 0, 0), 'h a')}
-                    </div>
-                  ))}
-                </div>
+                      <div className="flex justify-between items-start mb-2 shrink-0">
+                        <span
+                          className={`
+                          text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
+                          ${isToday ? "bg-primary text-white shadow-sm ring-2 ring-primary/20" : isCurrentMonth ? "text-gray-700" : "text-gray-400"}
+                        `}
+                        >
+                          {format(day, "d")}
+                        </span>
+                        {daySlots.length > 0 && (
+                          <span className="text-[10px] font-medium text-gray-500 bg-gray-100 border px-1.5 py-0.5 rounded-full">{daySlots.length}</span>
+                        )}
+                      </div>
 
-                {/* Days/Grid Content */}
-                <div className={`flex-1 grid ${view === 'Week' ? 'grid-cols-7' : 'grid-cols-1'} relative`}>
-                  {/* Horizontal Grid Lines */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    {Array.from({ length: HOURS_IN_GRID }).map((_, i) => (
-                      <div key={i} className="border-b border-gray-100 w-full" style={{ height: `${PIXELS_PER_HOUR}px` }} />
-                    ))}
-                  </div>
-
-                  {/* Day Columns (Grid Interactions & Events) */}
-                  {daysInGrid.map((day, idx) => {
-                    const daySlots = getSlotsForDay(day);
-
-                    return (
-                      <div key={day.toISOString()} className={`relative border-gray-100 ${idx !== 0 ? 'border-l' : ''}`}>
-                        {/* Clickable Empty Slots */}
-                        {Array.from({ length: HOURS_IN_GRID }).map((_, hourIdx) => {
-                          const slotTime = new Date(day);
-                          slotTime.setHours(START_HOUR + hourIdx, 0, 0, 0);
-                          const isPastSlot = slotTime < new Date();
-
-                          return (
-                            <div
-                              key={`empty-${hourIdx}`}
-                              className={`w-full absolute ${isPastSlot ? 'cursor-not-allowed bg-gray-50/40' : 'cursor-pointer hover:bg-primary/5 transition-colors'}`}
-                              style={{
-                                top: `${hourIdx * PIXELS_PER_HOUR}px`,
-                                height: `${PIXELS_PER_HOUR}px`,
-                                zIndex: 1 // Underneath actual bookings
-                              }}
-                              onClick={() => {
-                                if (!isPastSlot) handleGridClick(day, START_HOUR + hourIdx);
-                              }}
-                            />
-                          )
-                        })}
-
-                        {/* Actual Bookings */}
-                        {daySlots.map(({ booking, slot }) => {
-                          const styles = calculateBlockStyles(slot.startTime, slot.endTime);
-
-                          return (
-                            <div
-                              key={booking.id + slot.startTime}
-                              className={`rounded-md border p-2 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
-                                    ${getStatusColor(booking)} ${booking.isManualBooking ? 'cursor-default' : 'cursor-pointer'}`}
-                              style={styles}
-                              title={`${booking.isManualBooking ? (booking.note || 'Manual Booking') : booking.package}`}
-                              onClick={(e) => {
-                                if (!booking.isManualBooking) {
-                                  e.stopPropagation();
-                                  setSelectedBookingForDetails(booking);
-                                }
-                              }}
-                            >
-                              <div className="text-xs font-semibold flex justify-between items-start mb-0.5">
-                                <span className="truncate">
-                                  {format(parseISO(slot.startTime), 'h:mm')} - {format(parseISO(slot.endTime), 'h:mm a')}
-                                </span>
-                                {booking.isManualBooking && (
+                      <div className="space-y-1.5 overflow-y-auto overflow-x-hidden flex-1 min-h-0 scrollbar-thin scrollbar-thumb-gray-200 pr-1.5 pl-0.5 pb-1">
+                        {daySlots.map(({ booking, slot }) => (
+                          <div
+                            key={booking.id + slot.startTime}
+                            className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group mr-[1px]
+                              ${getStatusColor(booking)} ${booking.isManualBooking ? "cursor-default" : "cursor-pointer"} hover:shadow transition-shadow`}
+                            title={`${booking.package || "Manual Lock"} - ${booking.isManualBooking ? "Instructor booked" : booking.suburb?.name}`}
+                            onClick={(e) => {
+                              if (!booking.isManualBooking) {
+                                e.stopPropagation();
+                                setSelectedBookingForDetails(booking);
+                              }
+                            }}
+                          >
+                            {booking.isManualBooking ? (
+                              <>
+                                <div className="flex justify-between items-start font-semibold">
+                                  <span>{format(parseISO(slot.startTime), "h:mm a")}</span>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setBookingToDelete(booking.id);
                                       setIsDeleteModalOpen(true);
                                     }}
-                                    className="text-yellow-600 hover:text-red-600 transition-colors bg-yellow-100 p-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30"
+                                    className="text-yellow-600 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block"
                                   >
                                     <X className="w-3.5 h-3.5" />
                                   </button>
-                                )}
-                              </div>
-                              {booking.isManualBooking ? (
-                                <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
-                                  {booking.note || 'Manual Booking'}
                                 </div>
-                              ) : (
-                                <>
-                                  <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
-                                    {booking.package || 'Lesson'}
-                                  </div>
-                                  {booking.suburb && (
-                                    <div className="text-[10px] opacity-75 truncate mt-auto hidden sm:block">
-                                      {booking.suburb.name} • {booking.transmission?.substring(0, 4)}
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          );
-                        })}
+                                <div className="truncate opacity-90 font-medium">{booking.note || "Manual Booking"}</div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex items-center justify-between font-semibold pr-1">
+                                  <span>{format(parseISO(slot.startTime), "h:mm a")}</span>
+                                  <span className="truncate max-w-[50px] ml-1 opacity-70 font-normal">{booking.transmission?.substring(0, 4)}</span>
+                                </div>
+                                <div className="truncate opacity-90 font-medium">{booking.package || "Lesson"}</div>
+                                {booking.suburb && <div className="truncate text-[10px] opacity-75">{booking.suburb.name}</div>}
+                              </>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    )
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* 
+            =============================================
+            DAY & WEEK VIEW
+            =============================================
+          */}
+          {(view === "Day" || view === "Week") && (
+            <div className="flex flex-col h-full overflow-hidden">
+              {/* Header Row */}
+              <div className="flex border-b border-gray-200 bg-gray-50/80 shrink-0 pr-[14px]">
+                {/* Time Gutter Header */}
+                <div className="w-16 border-r border-gray-200 shrink-0 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                </div>
+                {/* Days Headers */}
+                <div className={`flex-1 grid ${view === "Week" ? "grid-cols-7" : "grid-cols-1"}`}>
+                  {daysInGrid.map((day, idx) => {
+                    const isToday = isSameDay(day, new Date());
+                    return (
+                      <div key={day.toISOString()} className={`py-3 text-center border-gray-200 ${idx !== 0 ? "border-l" : ""}`}>
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{format(day, "EEE")}</div>
+                        <div
+                          className={`
+                              inline-flex items-center justify-center w-8 h-8 rounded-full text-lg font-medium
+                              ${isToday ? "bg-primary text-white shadow-sm ring-2 ring-primary/20" : "text-gray-900"}
+                          `}
+                        >
+                          {format(day, "d")}
+                        </div>
+                      </div>
+                    );
                   })}
                 </div>
               </div>
+
+              {/* Scrollable Time Grid */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-50">
+                <div className="flex min-h-full" style={{ height: `${HOURS_IN_GRID * PIXELS_PER_HOUR}px` }}>
+                  {/* Time Gutter Columns */}
+                  <div className="w-16 border-r border-gray-200 bg-white shrink-0 relative">
+                    {Array.from({ length: HOURS_IN_GRID }).map((_, i) => (
+                      <div key={i} className="absolute w-full text-right pr-2 text-xs text-gray-400 font-medium" style={{ top: `${i * PIXELS_PER_HOUR - 8}px` }}>
+                        {format(new Date().setHours(START_HOUR + i, 0, 0, 0), "h a")}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Days/Grid Content */}
+                  <div className={`flex-1 grid ${view === "Week" ? "grid-cols-7" : "grid-cols-1"} relative`}>
+                    {/* Horizontal Grid Lines */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      {Array.from({ length: HOURS_IN_GRID }).map((_, i) => (
+                        <div key={i} className="border-b border-gray-100 w-full" style={{ height: `${PIXELS_PER_HOUR}px` }} />
+                      ))}
+                    </div>
+
+                    {/* Day Columns (Grid Interactions & Events) */}
+                    {daysInGrid.map((day, idx) => {
+                      const daySlots = getSlotsForDay(day);
+
+                      return (
+                        <div key={day.toISOString()} className={`relative border-gray-100 ${idx !== 0 ? "border-l" : ""}`}>
+                          {/* Clickable Empty Slots */}
+                          {Array.from({ length: HOURS_IN_GRID }).map((_, hourIdx) => {
+                            const slotTime = new Date(day);
+                            slotTime.setHours(START_HOUR + hourIdx, 0, 0, 0);
+                            const isPastSlot = slotTime < new Date();
+
+                            return (
+                              <div
+                                key={`empty-${hourIdx}`}
+                                className={`w-full absolute ${isPastSlot ? "cursor-not-allowed bg-gray-50/40" : "cursor-pointer hover:bg-primary/5 transition-colors"}`}
+                                style={{
+                                  top: `${hourIdx * PIXELS_PER_HOUR}px`,
+                                  height: `${PIXELS_PER_HOUR}px`,
+                                  zIndex: 1, // Underneath actual bookings
+                                }}
+                                onClick={() => {
+                                  if (!isPastSlot) handleGridClick(day, START_HOUR + hourIdx);
+                                }}
+                              />
+                            );
+                          })}
+
+                          {/* Actual Bookings */}
+                          {daySlots.map(({ booking, slot }) => {
+                            const styles = calculateBlockStyles(slot.startTime, slot.endTime);
+
+                            return (
+                              <div
+                                key={booking.id + slot.startTime}
+                                className={`rounded-md border p-2 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
+                                      ${getStatusColor(booking)} ${booking.isManualBooking ? "cursor-default" : "cursor-pointer"}`}
+                                style={styles}
+                                title={`${booking.isManualBooking ? booking.note || "Manual Booking" : booking.package}`}
+                                onClick={(e) => {
+                                  if (!booking.isManualBooking) {
+                                    e.stopPropagation();
+                                    setSelectedBookingForDetails(booking);
+                                  }
+                                }}
+                              >
+                                <div className="text-xs font-semibold flex justify-between items-start mb-0.5">
+                                  <span className="truncate">
+                                    {format(parseISO(slot.startTime), "h:mm")} - {format(parseISO(slot.endTime), "h:mm a")}
+                                  </span>
+                                  {booking.isManualBooking && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setBookingToDelete(booking.id);
+                                        setIsDeleteModalOpen(true);
+                                      }}
+                                      className="text-yellow-600 hover:text-red-600 transition-colors bg-yellow-100 p-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                                {booking.isManualBooking ? (
+                                  <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
+                                    {booking.note || "Manual Booking"}
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
+                                      {booking.package || "Lesson"}
+                                    </div>
+                                    {booking.suburb && (
+                                      <div className="text-[10px] opacity-75 truncate mt-auto hidden sm:block">
+                                        {booking.suburb.name} • {booking.transmission?.substring(0, 4)}
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      }
+
 
       {/* Manual Booking Modal */}
       {isModalOpen && selectedDate && selectedTime !== null && (
@@ -596,10 +578,7 @@ export default function InstructorBookingsPage() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold text-gray-900">Add Manual Booking</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-              >
+              <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
@@ -607,7 +586,8 @@ export default function InstructorBookingsPage() {
               <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 flex items-center gap-2 border border-gray-100">
                 <CalendarIcon className="w-4 h-4 text-primary shrink-0" />
                 <span className="font-medium">
-                  {format(selectedDate, 'MMMM d, yyyy')} at {selectedTime === 12 ? '12 PM' : selectedTime > 12 ? `${selectedTime - 12} PM` : `${selectedTime} AM`}
+                  {format(selectedDate, "MMMM d, yyyy")} at{" "}
+                  {selectedTime === 12 ? "12 PM" : selectedTime > 12 ? `${selectedTime - 12} PM` : `${selectedTime} AM`}
                 </span>
               </div>
 
@@ -662,10 +642,7 @@ export default function InstructorBookingsPage() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold text-gray-900">Booking Details</h2>
-              <button
-                onClick={() => setSelectedBookingForDetails(null)}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-              >
+              <button onClick={() => setSelectedBookingForDetails(null)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
@@ -693,9 +670,7 @@ export default function InstructorBookingsPage() {
                 )}
 
                 <div className="text-gray-500">Self Booking:</div>
-                <div className="col-span-2 font-medium">
-                  {selectedBookingForDetails.bookingDetails?.isSelfBooking ? 'Yes' : 'No'}
-                </div>
+                <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.isSelfBooking ? "Yes" : "No"}</div>
               </div>
 
               {!selectedBookingForDetails.bookingDetails?.isSelfBooking && (
