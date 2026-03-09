@@ -24,7 +24,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, Loader2,
 import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { fetchInstructorBookings, createManualBooking, cancelBooking } from '../api/client';
+import { fetchInstructorBookings, createManualBooking, cancelBooking } from '../api/booking-api';
 
 interface BookingSlot {
   startTime: string;
@@ -293,9 +293,8 @@ export default function InstructorBookingsPage() {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium transition-all rounded-md ${
-                  view === v ? "bg-white text-primary shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
-                }`}
+                className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium transition-all rounded-md ${view === v ? "bg-white text-primary shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
+                  }`}
               >
                 {v}
               </button>
@@ -323,7 +322,7 @@ export default function InstructorBookingsPage() {
         </div>
       </div>
 
-      {isLoading ? 
+      {isLoading ?
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <Spinner text="Loading calendar..." />
         </div> :

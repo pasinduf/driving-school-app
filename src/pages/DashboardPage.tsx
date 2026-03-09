@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { fetchDashboardMetrics } from '../api/client';
+import { fetchDashboardMetrics } from '../api/misc-api';
 import { Users, CarFront, DollarSign, Calendar } from 'lucide-react';
 import Spinner from '../components/Spinner';
 

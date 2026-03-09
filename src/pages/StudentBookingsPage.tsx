@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { fetchMyBookings } from '../api/client';
+import { fetchMyBookings } from '../api/booking-api';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { AlertCircle } from 'lucide-react';
@@ -79,13 +79,12 @@ export default function StudentBookingsPage() {
                   <div className="mt-2 md:mt-0">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium 
-                                            ${
-                                              booking.status === "CONFIRMED"
-                                                ? "bg-green-100 text-green-800"
-                                                : booking.status === "PENDING"
-                                                  ? "bg-yellow-100 text-yellow-800"
-                                                  : "bg-red-100 text-red-800"
-                                            }`}
+                                            ${booking.status === "CONFIRMED"
+                          ? "bg-green-100 text-green-800"
+                          : booking.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
                     >
                       {booking.status}
                     </span>

@@ -1,6 +1,6 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { changePassword } from '../../api/client';
+import { changePassword } from '../../api/user-api';
 import { Loader2, X, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { generateRandomPassword } from '../../util/generateRandomPassword';
 import { toast } from 'sonner';

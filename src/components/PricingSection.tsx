@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { fetchPackages } from '../api/client';
+import { fetchPackages } from '../api/package-api';
 import Spinner from './Spinner';
 
 interface PackageData {
-  id: number;
-  name: string;
-  description: string;
-  price: string | number;
-  isHighlight: boolean;
+    id: number;
+    name: string;
+    description: string;
+    price: string | number;
+    isHighlight: boolean;
 }
 
 const PACKAGE_IMAGES = [
@@ -25,33 +25,32 @@ const PACKAGE_IMAGES = [
 const PricingCard = ({ pkg, index }: { pkg: PackageData, index: number }) => {
     const image = PACKAGE_IMAGES[index % PACKAGE_IMAGES.length];
     return (
-      <div className="flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
-        <div className={`py-6 text-center ${pkg.isHighlight ? "bg-primary" : "bg-gray-800"}`}>
-          <h3 className="text-white font-bold text-xl uppercase tracking-wider">{pkg.name}</h3>
-        </div>
+        <div className="flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+            <div className={`py-6 text-center ${pkg.isHighlight ? "bg-primary" : "bg-gray-800"}`}>
+                <h3 className="text-white font-bold text-xl uppercase tracking-wider">{pkg.name}</h3>
+            </div>
 
-        <div className="h-48 overflow-hidden relative group">
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
-          <img src={image} alt={pkg.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-        </div>
+            <div className="h-48 overflow-hidden relative group">
+                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
+                <img src={image} alt={pkg.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+            </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-8 py-4 bg-white">
-          <p className="text-gray-500 font-medium text-xs uppercase tracking-widest mb-4 text-center">{pkg.description}</p>
-          <div className="text-4xl font-extrabold text-gray-900">${pkg.price}</div>
-          <div className="w-12 h-1 bg-gray-100 rounded-full"></div>
-        </div>
+            <div className="flex-1 flex flex-col items-center justify-center px-8 py-4 bg-white">
+                <p className="text-gray-500 font-medium text-xs uppercase tracking-widest mb-4 text-center">{pkg.description}</p>
+                <div className="text-4xl font-extrabold text-gray-900">${pkg.price}</div>
+                <div className="w-12 h-1 bg-gray-100 rounded-full"></div>
+            </div>
 
-        <div className="p-6 bg-white border-t border-gray-100">
-          <Link
-            to="/booking"
-            className={`block w-full py-3 text-center rounded-lg font-bold uppercase tracking-wider transition-all duration-300 ${
-              pkg.isHighlight ? "bg-primary text-white hover:bg-red-700 shadow-md hover:shadow-lg" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-            }`}
-          >
-            Choose Plan
-          </Link>
+            <div className="p-6 bg-white border-t border-gray-100">
+                <Link
+                    to="/booking"
+                    className={`block w-full py-3 text-center rounded-lg font-bold uppercase tracking-wider transition-all duration-300 ${pkg.isHighlight ? "bg-primary text-white hover:bg-red-700 shadow-md hover:shadow-lg" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                        }`}
+                >
+                    Choose Plan
+                </Link>
+            </div>
         </div>
-      </div>
     );
 };
 

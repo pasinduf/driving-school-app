@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getProfile, updateProfile, uploadProfileImage, fetchSuburbs } from '../api/client';
-import type { Suburb } from '../api/client';
+import { getProfile, updateProfile, uploadProfileImage } from '../api/user-api';
+import { fetchSuburbs } from '../api/misc-api';
+import type { Suburb } from '../api/booking-api';
 import SearchableMultiSelect, { type DropdownOption } from '../components/SearchableMultiSelect';
 import { useAuth } from '../context/AuthContext';
 import { Camera, Loader2, Save } from 'lucide-react';

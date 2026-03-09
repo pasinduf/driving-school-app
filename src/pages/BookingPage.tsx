@@ -1,8 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchSlots, lockSlots, createBooking, unlockSlots, fetchAvailableInstructors, fetchSuburbs } from '../api/client';
-import type { Suburb, Slot } from '../api/client';
+import { fetchSlots, lockSlots, createBooking, unlockSlots } from '../api/booking-api';
+import { fetchAvailableInstructors, type Instructor } from '../api/instructor-api';
+import { fetchSuburbs } from '../api/misc-api';
+import type { Suburb, Slot } from '../api/booking-api';
 import { format, parseISO } from 'date-fns';
 import { Loader2, Trash2, Calendar, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,7 +38,7 @@ export default function BookingPage() {
   const [selectedSuburb, setSelectedSuburb] = useState<Suburb | null>(null);
   const [fetchedSuburbs, setFetchedSuburbs] = useState<Suburb[]>([]);
   const [selectedTransmission, setSelectedTransmission] = useState<string>("Automatic");
-  const [selectedInstructor, setSelectedInstructor] = useState<any | null>(null);
+  const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
   const [isSearched, setIsSearched] = useState<boolean>(false);
 
   // Fetch Instructors based on Suburb & Transmission
@@ -49,7 +51,7 @@ export default function BookingPage() {
     }));
   }, []);
 
-  const { data: availableInstructors = [], isLoading: loadingInstructors, isFetching } = useQuery({
+  const { data: availableInstructors = [], isLoading: loadingInstructors, isFetching } = useQuery<Instructor[]>({
     queryKey: ['instructors', selectedSuburb?.id, selectedTransmission],
     queryFn: () => {
       if (!selectedSuburb || !selectedTransmission) return [];

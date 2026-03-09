@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { fetchCompanyBySlug } from '../api/client';
-import type { CompanyDetails } from '../api/client';
+import { fetchCompanyBySlug } from '../api/company-api';
+import type { CompanyDetails } from '../api/company-api';
 import Spinner from '../components/Spinner';
 
 interface CompanyContextType {

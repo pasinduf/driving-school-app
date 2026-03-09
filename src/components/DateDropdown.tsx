@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAvailableDates } from '../api/client';
+import { getAvailableDates } from '../api/booking-api';
 import { format, addDays } from 'date-fns';
 import Spinner from './Spinner';
 
@@ -40,7 +40,7 @@ export default function DateDropdown({ suburbId, instructorId, onSelect, selecte
 
     if (loading) {
         return (
-         <div className="flex justify-center"><Spinner /></div>
+            <div className="flex justify-center"><Spinner /></div>
         )
     }
 

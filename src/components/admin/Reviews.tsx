@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchAllReviews, updateReviewStatus } from '../../api/client';
+import { fetchAllReviews, updateReviewStatus } from '../../api/review-api';
 import { toast } from 'sonner';
 import { Star, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
 import ConfirmationModal from '../ConfirmationModal';

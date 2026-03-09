@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { submitReview } from '../api/client';
+import { submitReview } from '../api/review-api';
 
 export default function ReviewForm() {
     const [name, setName] = useState('');

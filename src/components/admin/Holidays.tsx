@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchHolidays, createHoliday, deleteHoliday } from '../../api/client';
+import { fetchHolidays, createHoliday, deleteHoliday } from '../../api/misc-api';
 import { format } from 'date-fns';
 import { Plus, Trash2, CalendarOff } from 'lucide-react';
 import ConfirmationModal from '../ConfirmationModal';
@@ -133,7 +133,7 @@ export default function Holidays() {
 
             {isLoadingData ? (
                 <div className="flex justify-center p-12">
-                 <Spinner text="Loading data..." />
+                    <Spinner text="Loading data..." />
                 </div>
             ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
