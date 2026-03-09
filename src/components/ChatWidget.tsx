@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { sendMessage } from '../api/client';
+import { sendMessage } from '../api/misc-api';
 
 interface Message {
     role: 'user' | 'assistant';

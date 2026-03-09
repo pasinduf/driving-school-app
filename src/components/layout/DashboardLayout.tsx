@@ -5,8 +5,8 @@ import Header from './Header';
 import TopBar from './TopBar';
 import { useAuth } from '../../context/AuthContext';
 import Spinner from '../Spinner';
-import { fetchCompanyBySlug } from '../../api/client';
-import type { CompanyDetails } from '../../api/client';
+import { fetchCompanyBySlug } from '../../api/company-api';
+import type { CompanyDetails } from '../../api/company-api';
 
 export default function DashboardLayout() {
     const { user, loading } = useAuth();
@@ -19,10 +19,10 @@ export default function DashboardLayout() {
             try {
                 let data: CompanyDetails | null = null;
                 if (user) {
-                     const slug = import.meta.env.VITE_COMPANY_SLUG;
-                     if (slug) {
-                       data = await fetchCompanyBySlug(slug);
-                     }
+                    const slug = import.meta.env.VITE_COMPANY_SLUG;
+                    if (slug) {
+                        data = await fetchCompanyBySlug(slug);
+                    }
                 }
                 if (data) {
                     setCompanyDetails(data);

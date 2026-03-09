@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { fetchTestingCenters, type TestingCenter } from '../api/client';
+import { fetchTestingCenters, type TestingCenter } from '../api/instructor-api';
 
 interface MasterDataContextType {
     testingCenters: TestingCenter[];

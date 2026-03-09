@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import type { Suburb } from '../api/client';
+import type { Suburb } from '../api/booking-api';
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { generateRandomPassword } from '../util/generateRandomPassword';

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchAdminInstructors, createInstructor, updateInstructor, deleteInstructor } from '../../api/client';
+import { fetchAdminInstructors, createInstructor, updateInstructor, deleteInstructor } from '../../api/instructor-api';
 import { toast } from 'sonner';
 import { Plus, Edit2, Trash2, Users } from 'lucide-react';
 import InstructorModal from './InstructorModal';

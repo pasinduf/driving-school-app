@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { fetchBookings, searchInstructorsDropdown } from '../../api/client';
+import { fetchBookings } from '../../api/booking-api';
+import { searchInstructorsDropdown } from '../../api/instructor-api';
 import { format } from 'date-fns';
 import Spinner from '../Spinner';
 import Pagination from '../Pagination';

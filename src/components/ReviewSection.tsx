@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
-import { submitReview } from '../api/client';
+import { submitReview } from '../api/review-api';
 import { toast } from 'sonner';
 
 export default function ReviewSection() {
