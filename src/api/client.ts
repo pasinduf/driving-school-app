@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-    baseURL: '/api',  // 'http://217.216.109.188:8020'
+    baseURL: '/api',
     headers: {
         "Content-Type": "application/json",
     },
@@ -18,6 +18,15 @@ apiClient.interceptors.request.use((config) => {
     }
     return config;
 });
+
+export interface Review {
+    id: string;
+    userName: string;
+    rating: number;
+    comment: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    createdAt: string;
+}
 
 export interface Suburb {
     id: string;
@@ -350,5 +359,10 @@ export const fetchAllReviews = async () => {
 
 export const updateReviewStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     const response = await apiClient.patch(`/reviews/${id}/status`, { status });
+    return response.data;
+};
+
+export const fetchApprovedReviews = async () => {
+    const response = await apiClient.get<Review[]>('/reviews');
     return response.data;
 };

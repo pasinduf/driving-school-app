@@ -50,22 +50,28 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
           } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-900 text-white border-r border-gray-800 top-0 h-full overflow-y-auto flex flex-col z-50`}
       >
         {/* Brand Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
+        <div className={`${collapsed ? "h-16" : "h-20"} flex items-center justify-between px-4 border-b border-gray-800 transition-all duration-300`}>
           {!collapsed && (
-            <div className="flex items-center space-x-2 overflow-hidden">
+            <div className="flex-1 flex items-center justify-center overflow-hidden h-full py-3">
               {companyDetails?.logoUrl ? (
-                <img src={companyDetails.logoUrl} alt="Logo" className="w-8 h-8 object-contain shrink-0" />
+                <img
+                  src={companyDetails.logoUrl}
+                  alt="Logo"
+                  className="w-full h-full object-contain"
+                />
               ) : (
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                  <span className="font-bold text-lg">{companyDetails?.name ? companyDetails.name.charAt(0) : "D"}</span>
+                <div className="flex items-center space-x-2">
+                  {/* <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shrink-0">
+                    <span className="font-bold text-xl">{companyDetails?.name ? companyDetails.name.charAt(0) : "D"}</span>
+                  </div> */}
+                  <span className="font-bold text-xl tracking-tight truncate">{companyDetails?.name || ""}</span>
                 </div>
               )}
-              <span className="font-bold text-lg tracking-tight truncate">{companyDetails?.name || ""}</span>
             </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`p-1.5 rounded-md hover:bg-gray-800 text-gray-400 hover:text-white transition-colors ${collapsed ? "mx-auto" : ""}`}
+            className={`p-1.5 rounded-md hover:bg-gray-800 text-gray-400 hover:text-white transition-colors ${collapsed ? "mx-auto" : "ml-2"}`}
           >
             {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
