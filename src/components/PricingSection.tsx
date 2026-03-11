@@ -61,7 +61,7 @@ const PricingCard = ({ pkg }: { pkg: PackageData, index: number }) => {
                 <Link
                     to="/booking"
                     className={`mt-auto w-full py-4 text-center rounded-2xl font-bold uppercase tracking-widest text-xs transition-all duration-300 ${pkg.isHighlight
-                            ? "bg-primary text-white hover:bg-primary-700 shadow-lg shadow-primary/30 active:scale-95"
+                            ? "bg-primary text-white hover:bg-red-700 shadow-lg shadow-primary/30 active:scale-95"
                             : "bg-gray-900 text-white hover:bg-black active:scale-95"
                         }`}
                 >

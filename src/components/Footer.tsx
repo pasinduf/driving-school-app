@@ -86,7 +86,7 @@ export default function Footer() {
                                 placeholder="Your Email Address"
                                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-primary text-gray-300 placeholder-gray-500"
                             />
-                            <button className="w-full px-4 py-3 bg-primary text-white font-bold rounded hover:bg-primary-700 transition-colors uppercase tracking-widest">
+                            <button className="w-full px-4 py-3 bg-primary text-white font-bold rounded hover:bg-red-700 transition-colors uppercase tracking-widest">
                                 Subscribe
                             </button>
                         </form>

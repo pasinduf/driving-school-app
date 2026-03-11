@@ -292,7 +292,7 @@ export default function InstructorModal({ isOpen, onClose, onSave, instructor }:
             <button
               type="submit"
               disabled={isSaving}
-              className="bg-primary text-white px-6 py-2 rounded hover:bg-primary-700 flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="bg-primary text-white px-6 py-2 rounded hover:bg-red-700 flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               {isSaving ? "Saving..." : "Save Instructor"}
             </button>

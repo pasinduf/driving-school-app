@@ -38,7 +38,7 @@ export default function ImageCarousel() {
           </p>
           <Link
             to="/booking"
-            className="inline-block bg-primary text-white font-bold py-4 px-10 rounded-full text-lg shadow-xl hover:bg-primary-700 transition-all transform hover:scale-105 hover:shadow-2xl"
+            className="inline-block bg-primary text-white font-bold py-4 px-10 rounded-full text-lg shadow-xl hover:bg-red-700 transition-all transform hover:scale-105 hover:shadow-2xl"
           >
             Book Your Lesson
           </Link>

@@ -9,6 +9,7 @@ interface CompanyContextType {
     company: CompanyDetails | null;
     isLoading: boolean;
     error: any;
+    themeColor?: string;
 }
 
 export const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
@@ -29,8 +30,8 @@ export const CompanyProvider: React.FC<{ children: ReactNode }> = ({ children })
             localStorage.setItem('companyId', company.id);
 
             // Apply dynamic theme color
-            if (company.themeColor) {
-                document.documentElement.style.setProperty('--color-primary', company.themeColor);
+            if (company?.settings?.themeColor) {
+                document.documentElement.style.setProperty('--color-primary', company.settings?.themeColor);
             }
 
             // Set page title
@@ -96,7 +97,7 @@ export const CompanyProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
 
     return (
-        <CompanyContext.Provider value={{ company, isLoading, error }}>
+        <CompanyContext.Provider value={{ company, isLoading, error, themeColor: company?.settings?.themeColor }}>
             {children}
         </CompanyContext.Provider>
     );

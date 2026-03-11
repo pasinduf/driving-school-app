@@ -218,7 +218,7 @@ export default function Packages() {
                           title="Deactivate"
                           onClick={() => handleDeactivateClick(pkg.id)}
                           disabled={!pkg.isActive}
-                          className={`p-1.5 rounded-md transition-colors ${!pkg.isActive ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-red-500 hover:bg-primary-50"}`}
+                          className={`p-1.5 rounded-md transition-colors ${!pkg.isActive ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

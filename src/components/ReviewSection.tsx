@@ -100,7 +100,7 @@ export default function ReviewSection() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className={`px-8 py-3 bg-primary text-white font-bold rounded-lg shadow-lg hover:bg-primary-700 transition-all transform hover:scale-105 active:scale-95 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                                className={`px-8 py-3 bg-primary text-white font-bold rounded-lg shadow-lg hover:bg-red-700 transition-all transform hover:scale-105 active:scale-95 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
                                     }`}
                             >
                                 {isSubmitting ? 'Submitting...' : 'Submit Review'}

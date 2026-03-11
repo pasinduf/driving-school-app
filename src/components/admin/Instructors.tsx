@@ -150,7 +150,7 @@ export default function Instructors() {
                         </button>
                         <button
                           onClick={() => handleDeleteClick(inst.id)}
-                          className={`p-1.5 rounded-md transition-colors ${!inst.isActive ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 hover:bg-primary-50'}`}
+                          className={`p-1.5 rounded-md transition-colors ${!inst.isActive ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
                           title={inst.isActive ? "Deactivate Instructor" : "Delete"}
                           disabled={!inst.isActive}
                         >

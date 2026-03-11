@@ -7,17 +7,27 @@ export interface CarouselImage {
 }
 
 export interface CompanyDetails {
-    id: string;
-    name: string;
-    slug: string;
+  id: string;
+  name: string;
+  slug: string;
+  contactNumber: string;
+  contactEmail: string;
+  address: string;
+  terms?: string;
+  logoUrl?: string;
+  settings: {
     themeColor: string;
-    contactNumber: string;
-    contactEmail: string;
-    address: string;
-    terms?: string;
-    logoUrl?: string;
-    carouselImages?: CarouselImage[];
+    bookingSessionDuration: number;
+  };
+  carouselImages?: CarouselImage[];
 }
+
+export interface CompanySettings {
+  themeColor: string;
+  bookingSessionDuration: number;
+}
+
+
 
 export const fetchCompanyBySlug = async (slug: string) => {
     const response = await apiClient.get<CompanyDetails>(`/companies/slug/${slug}`);
@@ -29,9 +39,14 @@ export const fetchCompanyById = async (id: string) => {
     return response.data;
 };
 
-export const updateCompanySettings = async (data: Partial<CompanyDetails>) => {
-    const response = await apiClient.post('/companies/settings', data);
+export const updateCompanyGeneral = async (data: Partial<CompanyDetails>) => {
+    const response = await apiClient.put('/companies/general', data);
     return response.data;
+};
+
+export const updateCompanySettings = async (data: Partial<CompanySettings>) => {
+  const response = await apiClient.put("/companies/settings", data);
+  return response.data;
 };
 
 export const fetchCarouselImages = async () => {

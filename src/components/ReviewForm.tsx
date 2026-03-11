@@ -96,7 +96,7 @@ export default function ReviewForm() {
                     <button
                         type="submit"
                         disabled={mutation.isPending}
-                        className={`w-full sm:w-auto px-8 py-3 bg-primary text-white font-bold rounded-lg shadow-lg hover:bg-primary-700 transition-all transform hover:scale-105 active:scale-95 ${mutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
+                        className={`w-full sm:w-auto px-8 py-3 bg-primary text-white font-bold rounded-lg shadow-lg hover:bg-red-700 transition-all transform hover:scale-105 active:scale-95 ${mutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
                             }`}
                     >
                         {mutation.isPending ? 'Submitting...' : 'Submit Review'}

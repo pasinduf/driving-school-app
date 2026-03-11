@@ -53,7 +53,7 @@ export default function Layout() {
                 {showFullNav && (
                   <Link
                     to="/booking"
-                    className="px-6 py-3 bg-primary text-white font-bold rounded shadow-lg hover:bg-primary-700 transition-transform transform hover:scale-105"
+                    className="px-6 py-3 bg-primary text-white font-bold rounded shadow-lg hover:bg-red-700 transition-transform transform hover:scale-105"
                   >
                     BOOK LESSON
                   </Link>
