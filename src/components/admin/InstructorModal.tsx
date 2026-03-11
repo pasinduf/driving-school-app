@@ -22,6 +22,8 @@ interface InstructorFormData {
   transmission: string;
   isActive: boolean;
   address: string;
+  about?: string;
+  qualifications?: string;
 }
 
 export default function InstructorModal({ isOpen, onClose, onSave, instructor }: InstructorModalProps) {
@@ -39,7 +41,9 @@ export default function InstructorModal({ isOpen, onClose, onSave, instructor }:
       contactNumber: '',
       transmission: 'Automatic',
       isActive: true,
-      address: ''
+      address: '',
+      about: '',
+      qualifications: ''
     }
   });
 
@@ -97,15 +101,14 @@ export default function InstructorModal({ isOpen, onClose, onSave, instructor }:
         suburbIds: selectedSuburbs.map(s => Number(s.id)),
       };
 
-      if (instructor) {
-        data.isActive = formData.isActive === true || String(formData.isActive) === 'true';
+      if (!instructor) {
+        data.about = formData.about;
+        data.qualifications = formData.qualifications;
         if (formData.password) {
           data.password = formData.password;
         }
       } else {
-        if (formData.password) {
-          data.password = formData.password;
-        }
+        data.isActive = formData.isActive === true || String(formData.isActive) === 'true';
       }
 
       await onSave(data);
@@ -183,43 +186,68 @@ export default function InstructorModal({ isOpen, onClose, onSave, instructor }:
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message as string}</p>}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {instructor ? "New Password (leave blank to keep current)" : "Password *"}
-              </label>
-              <div className="relative border rounded focus-within:ring-1 focus-within:ring-primary focus-within:border-primary bg-white">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  {...register("password", {
-                    required: instructor ? false : "Password is required",
-                    minLength: { value: 8, message: "Password must be at least 8 characters" },
-                  })}
-                  className="w-full outline-none bg-transparent p-2 pr-28 appearance-none"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setValue("password", generateRandomPassword(), { shouldValidate: true });
-                      setShowPassword(true);
-                    }}
-                    className="text-xs text-primary hover:underline font-medium focus:outline-none"
-                    tabIndex={-1}
-                  >
-                    Auto-generate
-                  </button>
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+            {!instructor && (
+              <>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">About Me</label>
+                  <textarea
+                    rows={3}
+                    {...register("about")}
+                    className="w-full border rounded p-2 resize-y focus:ring-primary focus:border-primary"
+                    placeholder="Brief bio about the instructor..."
+                  />
                 </div>
-              </div>
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message as string}</p>}
-            </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Qualifications (Separated by | )</label>
+                  <textarea
+                    rows={2}
+                    {...register("qualifications", {
+                      validate: (value) => !value?.includes("|") || "Commas are not allowed. Please use | as separator.",
+                    })}
+                    className="w-full border rounded p-2 focus:ring-primary focus:border-primary"
+                    placeholder="e.g. Cert IV | 10+ Years Experience"
+                  />
+                  {errors.qualifications && <p className="text-red-500 text-sm mt-1">{errors.qualifications.message as string}</p>}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                  <div className="relative border rounded focus-within:ring-1 focus-within:ring-primary focus-within:border-primary bg-white">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      {...register("password", {
+                        required: "Password is required",
+                        minLength: { value: 8, message: "Password must be at least 8 characters" },
+                      })}
+                      className="w-full outline-none bg-transparent p-2 pr-28 appearance-none"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue("password", generateRandomPassword(), { shouldValidate: true });
+                          setShowPassword(true);
+                        }}
+                        className="text-xs text-primary hover:underline font-medium focus:outline-none"
+                        tabIndex={-1}
+                      >
+                        Auto-generate
+                      </button>
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+                  {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message as string}</p>}
+                </div>
+              </>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Transmission</label>
@@ -258,12 +286,7 @@ export default function InstructorModal({ isOpen, onClose, onSave, instructor }:
           </div>
 
           <div className="mt-8 flex justify-end space-x-4 border-t pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 focus:outline-none"
-              disabled={isSaving}
-            >
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 focus:outline-none" disabled={isSaving}>
               Cancel
             </button>
             <button

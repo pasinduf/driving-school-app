@@ -95,6 +95,8 @@ export default function ProfilePage() {
         showAsInstructor: profile.showAsInstructor,
         transmission: profile.transmission || 'Automatic',
         suburbIds: selectedSuburbs.map(s => Number(s.id)),
+        about: profile.about,
+        qualifications: profile.qualifications
       };
       const updated = await updateProfile(dataToUpdate);
       setProfile(updated);
@@ -297,6 +299,37 @@ export default function ProfilePage() {
                           />
                         </div>
                       )}
+
+                      <div className="md:col-span-2 pt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">About Me</label>
+                        <textarea
+                          name="about"
+                          value={profile.about || ""}
+                          onChange={handleChange}
+                          rows={4}
+                          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm resize-none"
+                          placeholder="Tell students about your teaching experience and style..."
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 pt-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualifications (Separated by |)</label>
+                        <textarea
+                         rows={2}
+                          name="qualifications"
+                          value={profile.qualifications || ""}
+                          onChange={(e) => {
+                            if (e.target.value.includes(",")) {
+                              toast.warning("Commas are not allowed. Please use | as separator.");
+                              return;
+                            }
+                            handleChange(e);
+                          }}
+                          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                          placeholder="e.g. Cert IV in Transport & Logistics, 10+ Years Experience (no commas allowed)"
+                        />
+                        <p className="mt-1 text-xs text-gray-500 italic">Example: Cert IV in Transport & Logistics | 10+ Years Experience | Fluent in English</p>
+                      </div>
                     </div>
                   </div>
                 )}
