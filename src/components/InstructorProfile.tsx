@@ -1,27 +1,16 @@
 import { CheckCircle, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { fetchAllInstructors, type Instructor } from '../api/instructor-api';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAllInstructors } from '../api/instructor-api';
 import Spinner from './Spinner';
 import instructorPlaceholder from '../assets/instructor_placeholder.png';
 
 export default function InstructorProfile() {
-    const [instructors, setInstructors] = useState<Instructor[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: instructors = [], isLoading: loading } = useQuery({
+        queryKey: ['instructors', 'all'],
+        queryFn: fetchAllInstructors
+    });
     const [currentIndex, setCurrentIndex] = useState(0);
-
-    useEffect(() => {
-        const loadInstructors = async () => {
-            try {
-                const data = await fetchAllInstructors();
-                setInstructors(data);
-            } catch (error) {
-                console.error("Failed to fetch instructors", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadInstructors();
-    }, []);
 
     useEffect(() => {
         if (instructors.length <= 1) return;
@@ -86,7 +75,7 @@ export default function InstructorProfile() {
                     )}
 
                     {qualificationsList.length > 0 && (
-                        <div className="mb-8">
+                        <div>
                             <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
                                 <Award className="w-5 h-5 text-primary" /> Qualifications
                             </h4>
