@@ -1,43 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import TopBar from './TopBar';
 import { useAuth } from '../../context/AuthContext';
+import { useCompany } from '../../context/CompanyContext';
 import Spinner from '../Spinner';
-import { fetchCompanyBySlug } from '../../api/company-api';
-import type { CompanyDetails } from '../../api/company-api';
 
 export default function DashboardLayout() {
-    const { user, loading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
+    const { company: companyDetails, isLoading: companyLoading } = useCompany();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
 
-    useEffect(() => {
-        const loadCompany = async () => {
-            try {
-                let data: CompanyDetails | null = null;
-                if (user) {
-                    const slug = import.meta.env.VITE_COMPANY_SLUG;
-                    if (slug) {
-                        data = await fetchCompanyBySlug(slug);
-                    }
-                }
-                if (data) {
-                    setCompanyDetails(data);
-                    if (data.themeColor) {
-                        document.documentElement.style.setProperty('--color-primary', data.themeColor);
-                    }
-                }
-            } catch (err) {
-                console.error('Failed to load company details:', err);
-            }
-        };
-        loadCompany();
-    }, [user]);
-
-    if (loading) {
+    if (authLoading || companyLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <Spinner size="lg" text="Loading dashboard..." />

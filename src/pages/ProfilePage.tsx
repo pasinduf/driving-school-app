@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getProfile, updateProfile, uploadProfileImage } from '../api/user-api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchSuburbs } from '../api/misc-api';
 import type { Suburb } from '../api/booking-api';
 import SearchableMultiSelect, { type DropdownOption } from '../components/SearchableMultiSelect';
@@ -18,23 +19,25 @@ export default function ProfilePage() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [selectedSuburbs, setSelectedSuburbs] = useState<DropdownOption[]>([]);
 
+  const queryClient = useQueryClient();
+
+  const { data: profileData } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: getProfile,
+  });
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile();
-        setProfile(data);
-        if (data.suburbs) {
-          setSelectedSuburbs(data.suburbs.map((s: any) => ({
-            id: s.id.toString(),
-            label: `${s.name}, ${s.stateCode} (${s.postalcode})`
-          })));
-        }
-      } finally {
-        setLoading(false);
+    if (profileData) {
+      setProfile(profileData);
+      if (profileData.suburbs) {
+        setSelectedSuburbs(profileData.suburbs.map((s: any) => ({
+          id: s.id.toString(),
+          label: `${s.name}, ${s.stateCode} (${s.postalcode})`
+        })));
       }
-    };
-    fetchProfile();
-  }, []);
+      setLoading(false);
+    }
+  }, [profileData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -74,6 +77,7 @@ export default function ProfilePage() {
       const url = typeof response === 'string' ? response : response.url;
 
       setProfile((prev: any) => ({ ...prev, [field]: url }));
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
 
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Upload failed");
@@ -100,6 +104,7 @@ export default function ProfilePage() {
       };
       const updated = await updateProfile(dataToUpdate);
       setProfile(updated);
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
       toast.success('Profile updated successfully');
 
     } catch (err: any) {

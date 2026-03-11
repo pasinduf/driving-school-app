@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, CalendarOff, CarFront, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ListChecks, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Users, CalendarOff, CarFront, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ListChecks, MessageSquare, Settings } from "lucide-react";
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
@@ -46,19 +46,16 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
       )}
 
       <aside
-        className={`${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} ${collapsed ? "md:w-20 w-64" : "w-64"
-          } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-900 text-white border-r border-gray-800 top-0 h-full overflow-y-auto flex flex-col z-50`}
+        className={`${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} ${
+          collapsed ? "md:w-20 w-64" : "w-64"
+        } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-900 text-white border-r border-gray-800 top-0 h-full overflow-y-auto flex flex-col z-50`}
       >
         {/* Brand Header */}
         <div className={`${collapsed ? "h-16" : "h-20"} flex items-center justify-between px-4 border-b border-gray-800 transition-all duration-300`}>
           {!collapsed && (
             <div className="flex-1 flex items-center justify-center overflow-hidden h-full py-3">
               {companyDetails?.logoUrl ? (
-                <img
-                  src={companyDetails.logoUrl}
-                  alt="Logo"
-                  className="w-full h-full object-contain"
-                />
+                <img src={companyDetails.logoUrl} alt="Logo" className="w-full h-full object-contain" />
               ) : (
                 <div className="flex items-center space-x-2">
                   {/* <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shrink-0">
@@ -141,6 +138,13 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
             <NavLink to="/portal/holidays" className={navLinkClass} onClick={handleMobileDismiss}>
               <CalendarOff size={20} className={collapsed ? "mx-auto" : ""} />
               {!collapsed && <span>Leave / Blocks</span>}
+            </NavLink>
+          )}
+
+          {isAdmin && (
+            <NavLink to="/portal/settings" className={navLinkClass} onClick={handleMobileDismiss}>
+              <Settings size={20} className={collapsed ? "mx-auto" : ""} />
+              {!collapsed && <span>Settings</span>}
             </NavLink>
           )}
         </nav>

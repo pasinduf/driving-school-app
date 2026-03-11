@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { generateRandomPassword } from '../util/generateRandomPassword';
 import { EMAIL_REGEX } from '../util/const';
+import { useCompany } from '../context/CompanyContext';
 
 interface BookingFormProps {
   onSubmit: (data: any) => void;
@@ -19,9 +20,11 @@ export default function BookingForm({
   selectedSuburb
 }: BookingFormProps) {
 
+  const { company } = useCompany() ?? null;
   const relations = ['Parent', 'Guardian', 'Grandparent', 'Partner', 'Other']
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const { register, handleSubmit, setValue, watch, resetField, formState: { errors } } = useForm({
     defaultValues: {
@@ -417,12 +420,39 @@ export default function BookingForm({
           />
           <span className="text-sm">
             I agree to the{" "}
-            <a href="#" className="text-primary hover:underline">
-              Learner Driver Terms & Conditions
-            </a>
+            {company?.terms ? (
+              <button type="button" onClick={() => setShowTermsModal(true)} className="text-primary hover:underline font-medium">
+                {company.name} Terms & Conditions
+              </button>
+            ) : (
+              <span className="text-primary italic">{company?.name} Terms & Conditions</span>
+            )}
           </span>
         </label>
       </div>
+
+      {showTermsModal && company?.terms && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+              <h3 className="text-lg font-bold text-gray-900">Terms & Conditions</h3>
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-wrap leading-relaxed">{company.terms}</div>
+            </div>
+          
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-end space-x-3 pt-6 border-t">
         <button type="button" onClick={onCancel} className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50" disabled={isSubmitting}>

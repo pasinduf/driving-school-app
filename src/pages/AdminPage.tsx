@@ -7,13 +7,13 @@ import Holidays from "../components/admin/Holidays";
 import Spinner from '../components/Spinner';
 import Bookings from '../components/admin/Bookings';
 import Reviews from '../components/admin/Reviews';
+import Settings from '../components/admin/Settings';
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Bind active tab state natively checking URL parameters directly matching nested route schema
   const activeTab = location.pathname.includes('holidays')
     ? 'holidays'
     : location.pathname.includes('instructors')
@@ -22,7 +22,9 @@ export default function AdminPage() {
         ? 'packages'
         : location.pathname.includes('reviews')
           ? 'reviews'
-          : 'bookings';
+          : location.pathname.includes('settings')
+            ? 'settings'
+            : 'bookings';
 
   useEffect(() => {
     if (!loading && !user) {
@@ -40,6 +42,7 @@ export default function AdminPage() {
         {activeTab === "instructors" && <Instructors />}
         {activeTab === "packages" && <Packages />}
         {activeTab === "reviews" && <Reviews />}
+        {activeTab === "settings" && <Settings />}
       </main>
     </div>
   );

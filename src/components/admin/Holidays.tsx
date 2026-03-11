@@ -145,7 +145,7 @@ export default function Holidays() {
                                         <td className="px-6 py-4 text-right">
                                             <button
                                                 onClick={() => handleDeleteHoliday(holiday.id)}
-                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-primary-50 rounded-md transition-colors"
                                                 title="Delete"
                                             >
                                                 <Trash2 className="w-4 h-4" />

@@ -83,7 +83,7 @@ export default function Header({ setMobileMenuOpen }: { setMobileMenuOpen?: (v: 
               Profile
             </button>
             <div className="border-t border-gray-100 mt-1"></div>
-            <button onClick={handleLogoutClick} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center">
+            <button onClick={handleLogoutClick} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-primary-50 flex items-center">
               <LogOut size={16} className="mr-2 text-red-500" />
               Logout
             </button>

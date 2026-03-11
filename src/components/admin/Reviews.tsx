@@ -136,7 +136,7 @@ export default function Reviews() {
                                                         </button>
                                                         <button
                                                             onClick={() => handleAction(review.id, 'REJECTED')}
-                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-primary-50 rounded-md transition-colors"
                                                             title="Reject"
                                                         >
                                                             <XCircle className="w-4 h-4" />
