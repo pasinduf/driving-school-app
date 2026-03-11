@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchAdminInstructors, createInstructor, updateInstructor, deleteInstructor } from '../../api/instructor-api';
 import { toast } from 'sonner';
 import { Plus, Edit2, Trash2, Users } from 'lucide-react';
@@ -9,12 +10,19 @@ import { useAuth } from '../../context/AuthContext';
 import Spinner from '../Spinner';
 
 export default function Instructors() {
+  const queryClient = useQueryClient();
   const { updateUser } = useAuth();
-  const [instructors, setInstructors] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
+
+  // Data Fetching
+  const { data, isLoading } = useQuery({
+    queryKey: ['adminInstructors', page],
+    queryFn: () => fetchAdminInstructors(page, limit),
+  });
+
+  const instructors = data?.data || [];
+  const totalPages = data?.totalPages || 1;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInstructor, setSelectedInstructor] = useState<any>(null);
@@ -22,23 +30,6 @@ export default function Instructors() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [instructorToDelete, setInstructorToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    loadInstructors();
-  }, [page]);
-
-  const loadInstructors = async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchAdminInstructors(page, 10);
-      setInstructors(data.data);
-      setTotalPages(data.totalPages);
-    } catch (error) {
-      console.error("Failed to load instructors", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleAddClick = () => {
     setSelectedInstructor(null);
@@ -65,14 +56,11 @@ export default function Instructors() {
         toast.success('Instructor added successfully');
         updateUser({ existMultipleInstructors: true });
       }
-      if (page === 1) {
-        loadInstructors();
-      } else {
-        setPage(1); // Reset to first page to see the new/updated entry clearly
-      }
+      queryClient.invalidateQueries({ queryKey: ['adminInstructors'] });
+      setIsModalOpen(false);
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Failed to save instructor');
-      throw error; // Re-throw to keep modal open on failure if needed
+      throw error;
     }
   };
 
@@ -82,7 +70,7 @@ export default function Instructors() {
     try {
       await deleteInstructor(instructorToDelete);
       toast.success('Instructor deactivated successfully');
-      loadInstructors();
+      queryClient.invalidateQueries({ queryKey: ['adminInstructors'] });
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Failed to delete instructor');
     } finally {

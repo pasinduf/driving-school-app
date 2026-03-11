@@ -1,40 +1,24 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchTestingCenters, type TestingCenter } from '../api/instructor-api';
 
 interface MasterDataContextType {
     testingCenters: TestingCenter[];
     loading: boolean;
     error: any;
-    refreshData: () => Promise<void>;
+    refreshData: () => Promise<any>;
 }
 
 const MasterDataContext = createContext<MasterDataContextType | undefined>(undefined);
 
 export const MasterDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [testingCenters, setTestingCenters] = useState<TestingCenter[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<any>(null);
-
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const [centersData] = await Promise.all([fetchTestingCenters()]);
-            setTestingCenters(centersData);
-            setError(null);
-        } catch (err) {
-            console.error("Failed to load master data", err);
-            setError(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadData();
-    }, []);
+    const { data: testingCenters = [], isLoading: loading, error, refetch: refreshData } = useQuery({
+        queryKey: ['testingCenters'],
+        queryFn: fetchTestingCenters,
+    });
 
     return (
-        <MasterDataContext.Provider value={{ testingCenters, loading, error, refreshData: loadData }}>
+        <MasterDataContext.Provider value={{ testingCenters, loading, error, refreshData }}>
             {children}
         </MasterDataContext.Provider>
     );

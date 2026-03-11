@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchAdminPackages, createPackage, updatePackage, deactivatePackage } from '../../api/package-api';
 import { ListChecks, Plus, Edit2, Trash2 } from "lucide-react";
 import { toast } from 'sonner';
@@ -19,8 +20,13 @@ interface Package {
 }
 
 export default function Packages() {
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Data Fetching
+  const { data: packages = [], isLoading } = useQuery<Package[]>({
+    queryKey: ['adminPackages'],
+    queryFn: fetchAdminPackages,
+  });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,20 +57,6 @@ export default function Packages() {
       isActive: true,
     }
   });
-
-  const loadPackages = async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchAdminPackages();
-      setPackages(data);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPackages();
-  }, []);
 
   const formatDuration = (val: number) => {
     if (val === 45) return '45MIN';
@@ -115,7 +107,7 @@ export default function Packages() {
         toast.success("Package updated successfully");
       }
       setIsModalOpen(false);
-      loadPackages();
+      queryClient.invalidateQueries({ queryKey: ['adminPackages'] });
     } catch (error: any) {
       toast.error(error.response?.data?.message || `Failed to ${modalMode} package`);
     } finally {
@@ -134,7 +126,7 @@ export default function Packages() {
     try {
       await deactivatePackage(packageToDelete);
       toast.success("Package deactivated successfully");
-      loadPackages();
+      queryClient.invalidateQueries({ queryKey: ['adminPackages'] });
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to deactivate package");
     } finally {

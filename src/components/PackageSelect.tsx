@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchPackages } from '../api/package-api'; // value: Package[]
 import { Check } from 'lucide-react';
 import Spinner from './Spinner';
@@ -19,22 +19,10 @@ interface PackageSelectProps {
 }
 
 export default function PackageSelect({ onSelect, selectedPackage }: PackageSelectProps) {
-    const [packages, setPackages] = useState<Package[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const loadPackages = async () => {
-            try {
-                const data = await fetchPackages();
-                setPackages(data);
-            } catch (error) {
-                console.error("Failed to load packages", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadPackages();
-    }, []);
+    const { data: packages = [], isLoading: loading } = useQuery<Package[]>({
+        queryKey: ['packages'],
+        queryFn: fetchPackages,
+    });
 
     if (loading) {
         return <div className="flex justify-center p-8"><Spinner /></div>;

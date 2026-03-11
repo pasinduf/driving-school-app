@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { fetchDashboardMetrics } from '../api/misc-api';
 import { Users, CarFront, DollarSign, Calendar } from 'lucide-react';
@@ -6,26 +6,14 @@ import Spinner from '../components/Spinner';
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [metrics, setMetrics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadMetrics();
-  }, []);
+  const { data: metrics, isLoading } = useQuery({
+    queryKey: ['dashboardMetrics'],
+    queryFn: fetchDashboardMetrics,
+    enabled: !!user
+  });
 
-  const loadMetrics = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchDashboardMetrics();
-      setMetrics(data);
-    } catch (error) {
-      console.error("Failed to load metrics", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex-1 flex justify-center items-center min-h-[50vh]">
         <Spinner text="Loading dashboard metrics..." />

@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import { fetchBookings } from '../../api/booking-api';
 import { searchInstructorsDropdown } from '../../api/instructor-api';
@@ -9,16 +10,13 @@ import SearchableDropdown from '../SearchableDropdown';
 
 export default function Bookings() {
     const { user } = useAuth();
-    const [bookings, setBookings] = useState<any[]>([]);
-    const [isLoadingData, setIsLoadingData] = useState(false);
 
     // Filters & Pagination
     const [filterDate, setFilterDate] = useState('');
     const [filterInstructorId, setFilterInstructorId] = useState('');
     const [searchInstructorText, setSearchInstructorText] = useState('');
     const [page, setPage] = useState(1);
-    const [limit] = useState(10);
-    const [totalBookings, setTotalBookings] = useState(0);
+    const limit = 10;
 
     const loadInstructorOptions = useCallback(async (query: string) => {
         try {
@@ -29,29 +27,20 @@ export default function Bookings() {
         }
     }, []);
 
-    const loadBookingsOnly = async () => {
-        setIsLoadingData(true);
-        try {
-            const bResponse = await fetchBookings({
-                date: filterDate || undefined,
-                instructorId: filterInstructorId || undefined,
-                page,
-                limit
-            });
-            setBookings(bResponse.data);
-            setTotalBookings(bResponse.total);
-        } catch (error) {
-            console.error("Failed to load bookings", error);
-        } finally {
-            setIsLoadingData(false);
-        }
-    };
+    // Data Fetching
+    const { data, isLoading: isLoadingData } = useQuery({
+        queryKey: ['adminBookings', page, filterDate, filterInstructorId],
+        queryFn: () => fetchBookings({
+            date: filterDate || undefined,
+            instructorId: filterInstructorId || undefined,
+            page,
+            limit
+        }),
+        enabled: !!user,
+    });
 
-    useEffect(() => {
-        if (user) {
-            loadBookingsOnly();
-        }
-    }, [user, page, filterDate, filterInstructorId]);
+    const bookings = data?.data || [];
+    const totalBookings = data?.total || 0;
 
     const resetFilters = () => {
         setFilterDate('');

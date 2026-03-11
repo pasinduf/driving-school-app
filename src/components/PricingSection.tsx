@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchPackages } from '../api/package-api';
 import Spinner from './Spinner';
 
@@ -55,31 +55,16 @@ const PricingCard = ({ pkg, index }: { pkg: PackageData, index: number }) => {
 };
 
 export default function PricingSection() {
-    const [packages, setPackages] = useState<PackageData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        let mounted = true;
-        const loadPackages = async () => {
-            try {
-                const data = await fetchPackages();
-                if (mounted) {
-                    const formatted = data.map((p: any, i: number) => ({
-                        ...p,
-                        highlight: i === 2 // highlight the 3rd one
-                    }));
-                    setPackages(formatted);
-                }
-            } catch (error) {
-                console.error("Failed to load packages", error);
-            } finally {
-                if (mounted) setIsLoading(false);
-            }
-        };
-
-        loadPackages();
-        return () => { mounted = false; };
-    }, []);
+    const { data: packages = [], isLoading } = useQuery({
+        queryKey: ['packages'],
+        queryFn: async () => {
+            const data = await fetchPackages();
+            return data.map((p: any, i: number) => ({
+                ...p,
+                isHighlight: i === 2 // highlight the 3rd one
+            }));
+        },
+    });
     return (
         <section className="bg-gray-50 pb-20">
             {/* CTA Banner */}
