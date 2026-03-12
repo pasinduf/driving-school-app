@@ -95,8 +95,24 @@ export const createManualBooking = async (details: {
     time: string;
     duration: number;
     note?: string;
+    customerName?: string;
+    suburbId?: number | null;
+    packageId?: number;
 }) => {
     const response = await apiClient.post('/bookings/manual', details);
+    return response.data;
+};
+
+export const updateManualBooking = async (id: string, details: {
+    date?: string;
+    time?: string;
+    duration?: number;
+    note?: string;
+    customerName?: string;
+    suburbId?: number | null;
+    packageId?: number;
+}) => {
+    const response = await apiClient.put(`/bookings/${id}/manual-update`, details);
     return response.data;
 };
 

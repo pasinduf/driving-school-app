@@ -20,11 +20,16 @@ import {
   startOfDay,
   endOfDay
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, Loader2, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, Loader2, AlertCircle, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { fetchInstructorBookings, createManualBooking, cancelBooking } from '../api/booking-api';
+import { fetchInstructorBookings, createManualBooking, cancelBooking, updateManualBooking } from '../api/booking-api';
+import SearchableDropdown from '../components/SearchableDropdown';
+import { fetchSuburbs } from '../api/misc-api';
+import { fetchPackages } from '../api/package-api';
+import type { Suburb as SuburbType } from '../api/booking-api';
+import { useCallback } from 'react';
 
 interface BookingSlot {
   startTime: string;
@@ -34,7 +39,7 @@ interface BookingSlot {
 interface Booking {
   id: string;
   testingCenter: string | null;
-  suburb: { name: string; postalcode: string };
+  suburb: { id: string; name: string; stateCode: string; postalcode: string };
   package: string;
   transmission: string;
   createdAt: string;
@@ -43,6 +48,8 @@ interface Booking {
   bookingSlots: BookingSlot[];
   isManualBooking?: boolean;
   note?: string;
+  customerName?: string;
+  suburbId?: number | null;
   bookingDetails?: {
     pickupAddress?: string;
     isSelfBooking?: boolean;
@@ -84,6 +91,10 @@ export default function InstructorBookingsPage() {
   const [selectedTime, setSelectedTime] = useState<number | null>(null);
   const [duration, setDuration] = useState(60);
   const [note, setNote] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [selectedSuburb, setSelectedSuburb] = useState<SuburbType | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
+  const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Booking Details Modal State
@@ -125,7 +136,20 @@ export default function InstructorBookingsPage() {
     enabled: !!user,
   });
 
+  const { data: packages = [] } = useQuery({
+    queryKey: ['packages'],
+    queryFn: fetchPackages,
+  });
+
   const bookings = bookingData?.data || [];
+
+  const loadSuburbsData = useCallback(async (query: string) => {
+    const data = await fetchSuburbs(query);
+    return data.map((s: SuburbType) => ({
+      id: s.id.toString(),
+      label: `${s.name}, ${s.stateCode} (${s.postalcode})`,
+    }));
+  }, []);
 
   const handlePrev = () => {
     if (view === 'Month') setCurrentDate(subMonths(currentDate, 1));
@@ -213,6 +237,47 @@ export default function InstructorBookingsPage() {
     }
     setSelectedDate(day);
     setSelectedTime(hour);
+    setEditingBookingId(null);
+    setNote('');
+    setDuration(60);
+    setCustomerName('');
+    setSelectedSuburb(null);
+    setSelectedPackageId(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditClick = (booking: Booking) => {
+    const start = parseISO(booking.bookingSlots[0].startTime);
+    setSelectedDate(start);
+    setSelectedTime(start.getHours());
+    setEditingBookingId(booking.id);
+    setNote(booking.note || '');
+
+    // Calculate duration from slots
+    const firstSlot = booking.bookingSlots[0];
+    const durationMins = (parseISO(firstSlot.endTime).getTime() - parseISO(firstSlot.startTime).getTime()) / 60000;
+    setDuration(durationMins);
+
+    setCustomerName(booking.customerName || '');
+
+    // Set suburb if available
+    if (booking.suburbId && booking.suburb) {
+      setSelectedSuburb({
+        id: booking.suburb.id || booking.suburbId.toString(),
+        name: booking.suburb.name,
+        stateCode: booking.suburb.stateCode || '',
+        postalcode: booking.suburb.postalcode
+      });
+    } else {
+      setSelectedSuburb(null);
+    }
+
+    // Find package ID by name from current packages list
+    const pkg = packages.find(p => p.name === booking.package);
+    if (pkg) {
+      setSelectedPackageId(Number(pkg.id));
+    }
+
     setIsModalOpen(true);
   };
 
@@ -223,20 +288,34 @@ export default function InstructorBookingsPage() {
       const timeStr = `${selectedTime.toString().padStart(2, '0')}:00`;
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
-      await createManualBooking({
+      const payload = {
         date: dateStr,
         time: timeStr,
         duration,
-        note
-      });
+        note,
+        customerName,
+        suburbId: selectedSuburb?.id ? Number(selectedSuburb.id) : null,
+        packageId: selectedPackageId || undefined
+      };
 
-      toast.success('Manual booking added successfully.');
+      if (editingBookingId) {
+        await updateManualBooking(editingBookingId, payload);
+        toast.success('Manual booking updated successfully.');
+      } else {
+        await createManualBooking(payload);
+        toast.success('Manual booking added successfully.');
+      }
+
       setIsModalOpen(false);
       setNote('');
       setDuration(60);
+      setCustomerName('');
+      setSelectedSuburb(null);
+      setSelectedPackageId(null);
+      setEditingBookingId(null);
       refetch(); // Reload calendar
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create manual booking.');
+      toast.error(error.response?.data?.message || 'Failed to process manual booking.');
     } finally {
       setIsSubmitting(false);
     }
@@ -275,7 +354,7 @@ export default function InstructorBookingsPage() {
   }
 
   return (
-    <main className="w-full flex flex-col h-[calc(100vh-[120px])] md:h-[calc(100vh-80px)] overflow-hidden">
+    <main className="w-full flex flex-col h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] overflow-hidden">
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 px-1 shrink-0">
         <div>
@@ -389,18 +468,29 @@ export default function InstructorBookingsPage() {
                               <>
                                 <div className="flex justify-between items-start font-semibold">
                                   <span>{format(parseISO(slot.startTime), "h:mm a")}</span>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setBookingToDelete(booking.id);
-                                      setIsDeleteModalOpen(true);
-                                    }}
-                                    className="text-yellow-600 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
+                                  <div className="flex gap-1 hidden group-hover:flex">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setBookingToDelete(booking.id);
+                                        setIsDeleteModalOpen(true);
+                                      }}
+                                      className="text-yellow-600 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
                                 </div>
                                 <div className="truncate opacity-90 font-medium">{booking.note || "Manual Booking"}</div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditClick(booking);
+                                  }}
+                                  className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block bg-yellow-100/80 shadow-sm"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
                               </>
                             ) : (
                               <>
@@ -515,7 +605,10 @@ export default function InstructorBookingsPage() {
                                 className={`rounded-md border p-2 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
                                       ${getStatusColor(booking)} ${booking.isManualBooking ? "cursor-default" : "cursor-pointer"}`}
                                 style={styles}
-                                title={`${booking.isManualBooking ? booking.note || "Manual Booking" : booking.package}`}
+                                title={`${booking.isManualBooking
+                                  ? `${booking.customerName} - ${booking.note}` || "Manual Booking"
+                                  : `${booking?.bookingDetails?.customerFirstName} - ${booking?.bookingDetails?.notes}`
+                                  }`}
                                 onClick={(e) => {
                                   if (!booking.isManualBooking) {
                                     e.stopPropagation();
@@ -528,22 +621,35 @@ export default function InstructorBookingsPage() {
                                     {format(parseISO(slot.startTime), "h:mm")} - {format(parseISO(slot.endTime), "h:mm a")}
                                   </span>
                                   {booking.isManualBooking && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setBookingToDelete(booking.id);
-                                        setIsDeleteModalOpen(true);
-                                      }}
-                                      className="text-yellow-600 hover:text-red-600 transition-colors bg-yellow-100 p-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30"
-                                    >
-                                      <X className="w-3.5 h-3.5" />
-                                    </button>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setBookingToDelete(booking.id);
+                                          setIsDeleteModalOpen(true);
+                                        }}
+                                        className="text-yellow-600 hover:text-red-600 transition-colors bg-yellow-100 p-0.5 rounded shadow-sm"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
                                 {booking.isManualBooking ? (
-                                  <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
-                                    {booking.note || "Manual Booking"}
-                                  </div>
+                                  <>
+                                    <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
+                                      {booking.note || "Manual Booking"}
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditClick(booking);
+                                      }}
+                                      className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors bg-yellow-100 p-1 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30 transform transition-all hover:scale-110"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                  </>
                                 ) : (
                                   <>
                                     <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
@@ -573,10 +679,10 @@ export default function InstructorBookingsPage() {
 
       {/* Manual Booking Modal */}
       {isModalOpen && selectedDate && selectedTime !== null && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/50 backdrop-blur-sm p-4 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md my-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">Add Manual Booking</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{editingBookingId ? 'Edit Manual Booking' : 'Add Manual Booking'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -588,6 +694,53 @@ export default function InstructorBookingsPage() {
                   {format(selectedDate, "MMMM d, yyyy")} at{" "}
                   {selectedTime === 12 ? "12 PM" : selectedTime > 12 ? `${selectedTime - 12} PM` : `${selectedTime} AM`}
                 </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Customer Name</label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Enter customer name"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Suburb</label>
+                <SearchableDropdown
+                  onSelect={(option) => {
+                    if (option) {
+                      // We need to find the suburb by label or ID if we don't have the original object
+                      // Since loadSuburbsData returns DropdownOption, we might need a better way
+                      // For now, let's just store the name and id
+                      setSelectedSuburb({ id: option.id.toString(), name: option.label.split(',')[0] } as any);
+                    } else {
+                      setSelectedSuburb(null);
+                    }
+                  }}
+                  fetchOptions={loadSuburbsData}
+                  placeholder="Search and select suburb"
+                  value={selectedSuburb ? `${selectedSuburb.name}` : ''}
+                  hasSelection={!!selectedSuburb}
+                  onClear={() => setSelectedSuburb(null)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Package</label>
+                <select
+                  value={selectedPackageId || ''}
+                  onChange={(e) => setSelectedPackageId(Number(e.target.value))}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  {packages.map((pkg: any) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.name} (${pkg.price})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -609,7 +762,7 @@ export default function InstructorBookingsPage() {
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="e.g. manual student booking"
+                  placeholder="e.g. Contact number, address"
                   className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[80px]"
                 />
               </div>
@@ -637,8 +790,8 @@ export default function InstructorBookingsPage() {
 
       {/* Booking Details Modal */}
       {selectedBookingForDetails && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/50 backdrop-blur-sm p-4 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md my-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold text-gray-900">Booking Details</h2>
               <button onClick={() => setSelectedBookingForDetails(null)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
