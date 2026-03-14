@@ -24,7 +24,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, AlertCir
 import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { fetchInstructorBookings, cancelBooking } from '../api/booking-api';
+import { fetchInstructorBookings, cancelBooking, updateManualBooking } from '../api/booking-api';
 import { fetchPackages } from '../api/package-api';
 import ManualBookingModal from '../components/ManualBookingModal';
 
@@ -96,6 +96,9 @@ export default function InstructorBookingsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [bookingToDelete, setBookingToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Drag & Drop State
+  const [draggedOverCell, setDraggedOverCell] = useState<{ day: string; hour: number } | null>(null);
 
   // Calculate fetch bounds based on the current view
   const { startDateStr, endDateStr } = useMemo(() => {
@@ -250,6 +253,71 @@ export default function InstructorBookingsPage() {
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, booking: Booking) => {
+    const start = parseISO(booking.bookingSlots[0].startTime);
+    if (start < new Date()) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.setData('bookingId', booking.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, day: Date, hour: number) => {
+    e.preventDefault();
+    const cellTime = new Date(day);
+    cellTime.setHours(hour, 0, 0, 0);
+
+    if (cellTime < new Date()) {
+      e.dataTransfer.dropEffect = 'none';
+      return;
+    }
+
+    e.dataTransfer.dropEffect = 'move';
+    const dayKey = day.toISOString();
+    if (draggedOverCell?.day !== dayKey || draggedOverCell?.hour !== hour) {
+      setDraggedOverCell({ day: dayKey, hour });
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, day: Date, hour: number) => {
+    e.preventDefault();
+    setDraggedOverCell(null);
+
+    const bookingId = e.dataTransfer.getData('bookingId');
+    if (!bookingId) return;
+
+    const cellTime = new Date(day);
+    cellTime.setHours(hour, 0, 0, 0);
+    if (cellTime < new Date()) {
+      toast.error('Cannot reschedule to a past time.');
+      return;
+    }
+
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking || !booking.isManualBooking) return;
+
+    const originalStart = parseISO(booking.bookingSlots[0].startTime);
+    const originalEnd = parseISO(booking.bookingSlots[0].endTime);
+    const durationMinutes = (originalEnd.getTime() - originalStart.getTime()) / (1000 * 60);
+
+    try {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+
+      await updateManualBooking(bookingId, {
+        date: dateStr,
+        time: timeStr,
+        duration: durationMinutes
+      });
+
+      toast.success('Booking rescheduled successfully.');
+      refetch();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to reschedule booking.');
+    }
+  };
+
   if (isError) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
@@ -361,8 +429,10 @@ export default function InstructorBookingsPage() {
                         {daySlots.map(({ booking, slot }) => (
                           <div
                             key={booking.id + slot.startTime}
+                            draggable={booking.isManualBooking && parseISO(slot.startTime) > new Date()}
+                            onDragStart={(e) => handleDragStart(e, booking)}
                             className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group mr-[1px]
-                              ${getStatusColor(booking)} cursor-pointer hover:shadow transition-shadow`}
+                              ${getStatusColor(booking)} cursor-pointer hover:shadow transition-shadow ${booking.isManualBooking ? 'active:cursor-grabbing' : ''}`}
                             title={`${booking.package || "Manual Lock"} - ${booking.isManualBooking ? "Instructor booked" : booking.suburb?.name}`}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -487,12 +557,15 @@ export default function InstructorBookingsPage() {
                             return (
                               <div
                                 key={`empty-${hourIdx}`}
-                                className={`w-full absolute ${isPastSlot ? "cursor-not-allowed bg-gray-50/40" : "cursor-pointer hover:bg-primary/5 transition-colors"}`}
+                                className={`w-full absolute transition-colors ${isPastSlot ? "cursor-not-allowed bg-gray-50/40" : "cursor-pointer hover:bg-primary/5"} 
+                                  ${draggedOverCell?.day === day.toISOString() && draggedOverCell?.hour === START_HOUR + hourIdx ? 'bg-primary/20 ring-2 ring-primary ring-inset z-20' : 'z-1'}`}
                                 style={{
                                   top: `${hourIdx * PIXELS_PER_HOUR}px`,
                                   height: `${PIXELS_PER_HOUR}px`,
-                                  zIndex: 1, // Underneath actual bookings
                                 }}
+                                onDragOver={(e) => handleDragOver(e, day, START_HOUR + hourIdx)}
+                                onDragLeave={() => setDraggedOverCell(null)}
+                                onDrop={(e) => handleDrop(e, day, START_HOUR + hourIdx)}
                                 onClick={() => {
                                   if (!isPastSlot) handleGridClick(day, START_HOUR + hourIdx);
                                 }}
@@ -507,8 +580,10 @@ export default function InstructorBookingsPage() {
                             return (
                               <div
                                 key={booking.id + slot.startTime}
+                                draggable={booking.isManualBooking && parseISO(slot.startTime) > new Date()}
+                                onDragStart={(e) => handleDragStart(e, booking)}
                                 className={`rounded-md border flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
-                                      ${getStatusColor(booking)} cursor-pointer ${booking.isManualBooking ? 'p-1' : 'p-2'}`}
+                                      ${getStatusColor(booking)} cursor-pointer ${booking.isManualBooking ? 'p-1 active:cursor-grabbing' : 'p-2'}`}
                                 style={styles}
                                 title={`${booking.isManualBooking
                                   ? `${booking.customerName} - ${booking.note}` || "Manual Booking"
