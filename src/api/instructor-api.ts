@@ -20,6 +20,8 @@ export interface Instructor {
     transmission: 'Automatic' | 'Manual' | 'Both';
     isActive: boolean;
     profileImage?: string;
+    about?: string;
+    qualifications?: string;
 }
 
 export const fetchTestingCenters = async () => {
@@ -31,6 +33,11 @@ export const fetchAvailableInstructors = async (suburbId: string | number, trans
     const response = await apiClient.get<Instructor[]>('/instructors/available', {
         params: { suburbId, transmission },
     });
+    return response.data;
+};
+
+export const fetchAllInstructors = async () => {
+    const response = await apiClient.get<Instructor[]>('/instructors/all');
     return response.data;
 };
 

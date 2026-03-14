@@ -75,6 +75,11 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<any | null>(null);
 
+  // Auto-scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
   const maxSlots = (() => {
     // if (!selectedPackage) return 1;
     // if (selectedPackage.name.includes('5 X 1HR')) return 5;

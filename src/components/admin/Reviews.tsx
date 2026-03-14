@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchAllReviews, updateReviewStatus } from '../../api/review-api';
 import { toast } from 'sonner';
 import { Star, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
@@ -8,30 +9,19 @@ import { format } from 'date-fns';
 import Spinner from '../Spinner';
 
 export default function Reviews() {
-    const [reviews, setReviews] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const limit = 10;
+
+    // Data Fetching
+    const { data: reviews = [], isLoading } = useQuery({
+        queryKey: ['adminReviews'],
+        queryFn: fetchAllReviews,
+    });
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedReview, setSelectedReview] = useState<{ id: string; action: 'APPROVED' | 'REJECTED' } | null>(null);
     const [isConfirming, setIsConfirming] = useState(false);
-
-    useEffect(() => {
-        loadReviews();
-    }, []);
-
-    const loadReviews = async () => {
-        setIsLoading(true);
-        try {
-            const data = await fetchAllReviews();
-            setReviews(data);
-        } catch (error) {
-            console.error("Failed to load reviews", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleAction = (id: string, action: 'APPROVED' | 'REJECTED') => {
         setSelectedReview({ id, action });
@@ -44,7 +34,7 @@ export default function Reviews() {
         try {
             await updateReviewStatus(selectedReview.id, selectedReview.action);
             toast.success(`Review ${selectedReview.action.toLowerCase()} successfully`);
-            loadReviews();
+            queryClient.invalidateQueries({ queryKey: ['adminReviews'] });
         } catch (error: any) {
             toast.error(error?.response?.data?.message || 'Failed to update review');
         } finally {

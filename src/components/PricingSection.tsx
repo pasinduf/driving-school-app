@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchPackages } from '../api/package-api';
 import Spinner from './Spinner';
+import { Check, Star } from 'lucide-react';
 
 interface PackageData {
     id: number;
@@ -11,43 +12,60 @@ interface PackageData {
     isHighlight: boolean;
 }
 
-const PACKAGE_IMAGES = [
-    "https://images.unsplash.com/photo-1517524206127-48bbd363f3d7?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1444723121867-c61267198d42?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1506469717969-08fc1dd260f3?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1532585620931-50e4171d9d13?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1580273916550-e323be2ebdd9?q=80&w=800&auto=format&fit=crop"
-];
-
-const PricingCard = ({ pkg, index }: { pkg: PackageData, index: number }) => {
-    const image = PACKAGE_IMAGES[index % PACKAGE_IMAGES.length];
+const PricingCard = ({ pkg }: { pkg: PackageData, index: number }) => {
     return (
-        <div className="flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
-            <div className={`py-6 text-center ${pkg.isHighlight ? "bg-primary" : "bg-gray-800"}`}>
-                <h3 className="text-white font-bold text-xl uppercase tracking-wider">{pkg.name}</h3>
+        <div className={`relative flex flex-col h-full bg-white rounded-3xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 ${pkg.isHighlight
+                ? "ring-2 ring-primary shadow-2xl scale-105 z-10"
+                : "shadow-lg hover:shadow-xl border border-gray-100"
+            }`}>
+            {pkg.isHighlight && (
+                <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                    <Star size={10} fill="currentColor" />
+                    Most Popular
+                </div>
+            )}
+
+            <div className={`pt-10 pb-8 px-8 text-center ${pkg.isHighlight ? "bg-red-50/30" : ""}`}>
+                <h3 className={`font-black text-xs uppercase tracking-[0.2em] mb-4 ${pkg.isHighlight ? "text-primary" : "text-gray-400"}`}>
+                    {pkg.name}
+                </h3>
+                <div className="flex items-center justify-center gap-0.5">
+                    <span className="text-2xl font-bold text-gray-900 self-start mt-1">$</span>
+                    <span className="text-6xl font-black text-gray-900 tracking-tight">{pkg.price}</span>
+                </div>
             </div>
 
-            <div className="h-48 overflow-hidden relative group">
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300 z-10"></div>
-                <img src={image} alt={pkg.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-            </div>
+            <div className="flex-1 flex flex-col px-8 pb-8">
+                <div className="space-y-4 mb-8">
+                    <p className="text-gray-600 text-sm leading-relaxed text-center font-medium italic">
+                        "{pkg.description}"
+                    </p>
 
-            <div className="flex-1 flex flex-col items-center justify-center px-8 py-4 bg-white">
-                <p className="text-gray-500 font-medium text-xs uppercase tracking-widest mb-4 text-center">{pkg.description}</p>
-                <div className="text-4xl font-extrabold text-gray-900">${pkg.price}</div>
-                <div className="w-12 h-1 bg-gray-100 rounded-full"></div>
-            </div>
+                    <div className="h-px w-12 bg-gray-100 mx-auto"></div>
 
-            <div className="p-6 bg-white border-t border-gray-100">
+                    <ul className="space-y-3 pt-2">
+                        {[
+                            "Professional Instructor",
+                            "Progress Tracking"
+                        ].map((feature, i) => (
+                            <li key={i} className="flex items-center gap-3 text-gray-600">
+                                <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${pkg.isHighlight ? "bg-primary/10 text-primary" : "bg-gray-100 text-gray-400"}`}>
+                                    <Check size={12} strokeWidth={3} />
+                                </div>
+                                <span className="text-sm font-medium">{feature}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
                 <Link
                     to="/booking"
-                    className={`block w-full py-3 text-center rounded-lg font-bold uppercase tracking-wider transition-all duration-300 ${pkg.isHighlight ? "bg-primary text-white hover:bg-red-700 shadow-md hover:shadow-lg" : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    className={`mt-auto w-full py-4 text-center rounded-2xl font-bold uppercase tracking-widest text-xs transition-all duration-300 ${pkg.isHighlight
+                            ? "bg-primary text-white hover:bg-red-700 shadow-lg shadow-primary/30 active:scale-95"
+                            : "bg-gray-900 text-white hover:bg-black active:scale-95"
                         }`}
                 >
-                    Choose Plan
+                    Get Started
                 </Link>
             </div>
         </div>
@@ -55,31 +73,13 @@ const PricingCard = ({ pkg, index }: { pkg: PackageData, index: number }) => {
 };
 
 export default function PricingSection() {
-    const [packages, setPackages] = useState<PackageData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        let mounted = true;
-        const loadPackages = async () => {
-            try {
-                const data = await fetchPackages();
-                if (mounted) {
-                    const formatted = data.map((p: any, i: number) => ({
-                        ...p,
-                        highlight: i === 2 // highlight the 3rd one
-                    }));
-                    setPackages(formatted);
-                }
-            } catch (error) {
-                console.error("Failed to load packages", error);
-            } finally {
-                if (mounted) setIsLoading(false);
-            }
-        };
-
-        loadPackages();
-        return () => { mounted = false; };
-    }, []);
+    const { data: packages = [], isLoading } = useQuery({
+        queryKey: ['packages'],
+        queryFn: async () => {
+            const data = await fetchPackages();
+            return data;
+        },
+    });
     return (
         <section className="bg-gray-50 pb-20">
             {/* CTA Banner */}

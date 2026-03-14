@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import { fetchHolidays, createHoliday, deleteHoliday } from '../../api/misc-api';
 import { format } from 'date-fns';
@@ -9,9 +10,15 @@ import { toast } from 'sonner';
 import Spinner from '../Spinner';
 
 export default function Holidays() {
+    const queryClient = useQueryClient();
     const { user } = useAuth();
-    const [holidays, setHolidays] = useState<any[]>([]);
-    const [isLoadingData, setIsLoadingData] = useState(false);
+
+    // Data Fetching
+    const { data: holidays = [], isLoading: isLoadingData } = useQuery({
+        queryKey: ['adminHolidays'],
+        queryFn: fetchHolidays,
+        enabled: !!user,
+    });
 
     // Holiday Form
     const [holidayDate, setHolidayDate] = useState('');
@@ -23,24 +30,6 @@ export default function Holidays() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [isConfirming, setIsConfirming] = useState(false);
 
-    const loadData = async () => {
-        setIsLoadingData(true);
-        try {
-            const data = await fetchHolidays();
-            setHolidays(data);
-        } catch (error) {
-            console.error("Failed to load holidays", error);
-        } finally {
-            setIsLoadingData(false);
-        }
-    };
-
-    useEffect(() => {
-        if (user) {
-            loadData();
-        }
-    }, [user]);
-
     const handleAddHoliday = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsAddingHoliday(true);
@@ -49,8 +38,7 @@ export default function Holidays() {
             toast.success('Leave/Block date added successfully');
             setHolidayDate('');
             setHolidayReason('');
-            const data = await fetchHolidays();
-            setHolidays(data);
+            queryClient.invalidateQueries({ queryKey: ['adminHolidays'] });
         } catch (error) {
             toast.error("Failed to create leave/block date");
         } finally {
@@ -69,8 +57,7 @@ export default function Holidays() {
         try {
             await deleteHoliday(selectedId);
             toast.success('Leave/Block date deleted successfully');
-            const data = await fetchHolidays();
-            setHolidays(data);
+            queryClient.invalidateQueries({ queryKey: ['adminHolidays'] });
         } catch (error: any) {
             toast.error(error?.response?.data?.message || "Action failed");
         } finally {

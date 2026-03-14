@@ -67,6 +67,7 @@ function App() {
                     <Route path="instructors" element={<AdminPage />} />
                     <Route path="packages" element={<AdminPage />} />
                     <Route path="reviews" element={<AdminPage />} />
+                    <Route path="settings" element={<AdminPage />} />
                   </Route>
                 </Route>
               </Route>

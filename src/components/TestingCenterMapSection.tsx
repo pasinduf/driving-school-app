@@ -1,10 +1,9 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useQuery } from '@tanstack/react-query';
-import { fetchTestingCenters } from '../api/instructor-api';
 import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import { useMasterData } from '../context/MasterDataContext';
 
 // Fix for default marker icon
 let DefaultIcon = L.icon({
@@ -17,10 +16,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 export default function TestingCenterMapSection() {
-    const { data: centers = [], isLoading, error } = useQuery({
-        queryKey: ['testingCenters'],
-        queryFn: fetchTestingCenters,
-    });
+    const { testingCenters: centers, loading: isLoading, error } = useMasterData();
 
     // Default center (Melbourne)
     const defaultCenter: [number, number] = [-37.8136, 144.9631];
@@ -57,7 +53,7 @@ export default function TestingCenterMapSection() {
                             style={{ height: '100%', width: '100%' }}
                         >
                             <TileLayer
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                attribution=''
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
                             {centers.map((center) => (

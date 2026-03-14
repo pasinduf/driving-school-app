@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getAvailableDates } from '../api/booking-api';
 import { format, addDays } from 'date-fns';
 import Spinner from './Spinner';
@@ -17,26 +17,15 @@ interface DateOption {
 }
 
 export default function DateDropdown({ suburbId, instructorId, onSelect, selectedDate }: DateDropdownProps) {
-    const [dates, setDates] = useState<DateOption[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const loadDates = async () => {
-            if (!suburbId) return;
-            setLoading(true);
-            try {
-                const now = new Date();
-                const startDate = format(addDays(now, 1), 'yyyy-MM-dd');
-                const data = await getAvailableDates(startDate, instructorId);
-                setDates(data);
-            } catch (error) {
-                console.error("Failed to load dates", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadDates();
-    }, [suburbId, instructorId]);
+    const { data: dates = [], isLoading: loading } = useQuery<DateOption[]>({
+        queryKey: ['availableDates', suburbId, instructorId],
+        queryFn: async () => {
+            const now = new Date();
+            const startDate = format(addDays(now, 1), 'yyyy-MM-dd');
+            return getAvailableDates(startDate, instructorId);
+        },
+        enabled: !!suburbId,
+    });
 
     if (loading) {
         return (

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchCompanyBySlug } from '../api/company-api';
 import type { CompanyDetails } from '../api/company-api';
 import Spinner from '../components/Spinner';
@@ -7,53 +8,36 @@ import Spinner from '../components/Spinner';
 interface CompanyContextType {
     company: CompanyDetails | null;
     isLoading: boolean;
-    error: string | null;
+    error: any;
+    themeColor?: string;
 }
 
 export const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 
 export const CompanyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const companySlug = import.meta.env.VITE_COMPANY_SLUG;
-    const [company, setCompany] = useState<CompanyDetails | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+
+    const { data: company = null, isLoading, error } = useQuery({
+        queryKey: ['company', companySlug],
+        queryFn: () => fetchCompanyBySlug(companySlug),
+        enabled: !!companySlug,
+        staleTime: 1000 * 60 * 60, // 1 hour
+    });
 
     useEffect(() => {
-        const loadCompany = async () => {
-            if (!companySlug) {
-                // If no slug, we can't load company details. Handle gracefully or redirect.
-                setIsLoading(false);
-                return;
+        if (company) {
+            // Store companyId so the API client interceptor can use it
+            localStorage.setItem('companyId', company.id);
+
+            // Apply dynamic theme color
+            if (company?.settings?.themeColor) {
+                document.documentElement.style.setProperty('--color-primary', company.settings?.themeColor);
             }
 
-            try {
-                const data = await fetchCompanyBySlug(companySlug);
-                setCompany(data);
-
-                // Store companyId so the API client interceptor can use it
-                localStorage.setItem('companyId', data.id);
-
-                // Apply dynamic theme color
-                if (data.themeColor) {
-                    document.documentElement.style.setProperty('--color-primary', data.themeColor);
-                }
-
-                // Set page title
-                document.title = `${data.name} | Portal`;
-
-                setError(null);
-            } catch (err: any) {
-                console.error('Failed to load company:', err);
-                setError('Company not found or inactive');
-                localStorage.removeItem('companyId');
-                // You could optionally redirect to a global 404 page here
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadCompany();
-    }, [companySlug]);
+            // Set page title
+            document.title = `${company.name} | Portal`;
+        }
+    }, [company]);
 
     if (isLoading) {
         return (
@@ -113,7 +97,7 @@ export const CompanyProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
 
     return (
-        <CompanyContext.Provider value={{ company, isLoading, error }}>
+        <CompanyContext.Provider value={{ company, isLoading, error, themeColor: company?.settings?.themeColor }}>
             {children}
         </CompanyContext.Provider>
     );

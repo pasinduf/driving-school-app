@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getProfile, updateProfile, uploadProfileImage } from '../api/user-api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchSuburbs } from '../api/misc-api';
 import type { Suburb } from '../api/booking-api';
 import SearchableMultiSelect, { type DropdownOption } from '../components/SearchableMultiSelect';
@@ -18,23 +19,25 @@ export default function ProfilePage() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [selectedSuburbs, setSelectedSuburbs] = useState<DropdownOption[]>([]);
 
+  const queryClient = useQueryClient();
+
+  const { data: profileData } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: getProfile,
+  });
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile();
-        setProfile(data);
-        if (data.suburbs) {
-          setSelectedSuburbs(data.suburbs.map((s: any) => ({
-            id: s.id.toString(),
-            label: `${s.name}, ${s.stateCode} (${s.postalcode})`
-          })));
-        }
-      } finally {
-        setLoading(false);
+    if (profileData) {
+      setProfile(profileData);
+      if (profileData.suburbs) {
+        setSelectedSuburbs(profileData.suburbs.map((s: any) => ({
+          id: s.id.toString(),
+          label: `${s.name}, ${s.stateCode} (${s.postalcode})`
+        })));
       }
-    };
-    fetchProfile();
-  }, []);
+      setLoading(false);
+    }
+  }, [profileData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -74,6 +77,7 @@ export default function ProfilePage() {
       const url = typeof response === 'string' ? response : response.url;
 
       setProfile((prev: any) => ({ ...prev, [field]: url }));
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
 
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Upload failed");
@@ -95,9 +99,12 @@ export default function ProfilePage() {
         showAsInstructor: profile.showAsInstructor,
         transmission: profile.transmission || 'Automatic',
         suburbIds: selectedSuburbs.map(s => Number(s.id)),
+        about: profile.about,
+        qualifications: profile.qualifications
       };
       const updated = await updateProfile(dataToUpdate);
       setProfile(updated);
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
       toast.success('Profile updated successfully');
 
     } catch (err: any) {
@@ -297,6 +304,37 @@ export default function ProfilePage() {
                           />
                         </div>
                       )}
+
+                      <div className="md:col-span-2 pt-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">About Me</label>
+                        <textarea
+                          name="about"
+                          value={profile.about || ""}
+                          onChange={handleChange}
+                          rows={4}
+                          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm resize-none"
+                          placeholder="Tell students about your teaching experience and style..."
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 pt-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualifications (Separated by |)</label>
+                        <textarea
+                         rows={2}
+                          name="qualifications"
+                          value={profile.qualifications || ""}
+                          onChange={(e) => {
+                            if (e.target.value.includes(",")) {
+                              toast.warning("Commas are not allowed. Please use | as separator.");
+                              return;
+                            }
+                            handleChange(e);
+                          }}
+                          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                          placeholder="e.g. Cert IV in Transport & Logistics, 10+ Years Experience (no commas allowed)"
+                        />
+                        <p className="mt-1 text-xs text-gray-500 italic">Example: Cert IV in Transport & Logistics | 10+ Years Experience | Fluent in English</p>
+                      </div>
                     </div>
                   </div>
                 )}
