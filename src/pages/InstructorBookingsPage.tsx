@@ -362,31 +362,17 @@ export default function InstructorBookingsPage() {
                           <div
                             key={booking.id + slot.startTime}
                             className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group mr-[1px]
-                              ${getStatusColor(booking)} ${booking.isManualBooking ? "cursor-default" : "cursor-pointer"} hover:shadow transition-shadow`}
+                              ${getStatusColor(booking)} cursor-pointer hover:shadow transition-shadow`}
                             title={`${booking.package || "Manual Lock"} - ${booking.isManualBooking ? "Instructor booked" : booking.suburb?.name}`}
                             onClick={(e) => {
-                              if (!booking.isManualBooking) {
-                                e.stopPropagation();
-                                setSelectedBookingForDetails(booking);
-                              }
+                              e.stopPropagation();
+                              setSelectedBookingForDetails(booking);
                             }}
                           >
                             {booking.isManualBooking ? (
                               <>
                                 <div className="flex justify-between items-start font-semibold">
                                   <span>{format(parseISO(slot.startTime), "h:mm a")}</span>
-                                  <div className="flex gap-1 hidden group-hover:flex">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setBookingToDelete(booking.id);
-                                        setIsDeleteModalOpen(true);
-                                      }}
-                                      className="text-yellow-600 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50"
-                                    >
-                                      <X className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
                                 </div>
                                 <div className="truncate opacity-90 font-medium">{booking.note || "Manual Booking"}</div>
                                 {parseISO(slot.startTime) > new Date() && (
@@ -395,11 +381,21 @@ export default function InstructorBookingsPage() {
                                       e.stopPropagation();
                                       handleEditClick(booking);
                                     }}
-                                    className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block bg-yellow-100/80 shadow-sm"
+                                    className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block bg-yellow-100/90 shadow-sm z-30"
                                   >
-                                    <Edit className="w-3.5 h-3.5" />
+                                    <Edit className="w-3 h-3" />
                                   </button>
                                 )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setBookingToDelete(booking.id);
+                                    setIsDeleteModalOpen(true);
+                                  }}
+                                  className="absolute top-1 right-1 text-yellow-600 hover:text-red-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block bg-yellow-100/90 shadow-sm z-30"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
                               </>
                             ) : (
                               <>
@@ -511,43 +507,39 @@ export default function InstructorBookingsPage() {
                             return (
                               <div
                                 key={booking.id + slot.startTime}
-                                className={`rounded-md border p-2 flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
-                                      ${getStatusColor(booking)} ${booking.isManualBooking ? "cursor-default" : "cursor-pointer"}`}
+                                className={`rounded-md border flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
+                                      ${getStatusColor(booking)} cursor-pointer ${booking.isManualBooking ? 'p-1' : 'p-2'}`}
                                 style={styles}
                                 title={`${booking.isManualBooking
                                   ? `${booking.customerName} - ${booking.note}` || "Manual Booking"
                                   : `${booking?.bookingDetails?.customerFirstName} - ${booking?.bookingDetails?.notes}`
                                   }`}
                                 onClick={(e) => {
-                                  if (!booking.isManualBooking) {
-                                    e.stopPropagation();
-                                    setSelectedBookingForDetails(booking);
-                                  }
+                                  e.stopPropagation();
+                                  setSelectedBookingForDetails(booking);
                                 }}
                               >
                                 <div className="text-xs font-semibold flex justify-between items-start mb-0.5">
-                                  <span className="truncate">
+                                  <span className="truncate pr-4">
                                     {format(parseISO(slot.startTime), "h:mm")} - {format(parseISO(slot.endTime), "h:mm a")}
                                   </span>
-                                  {booking.isManualBooking && (
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+                                </div>
+                                {booking.isManualBooking ? (
+                                  <>
+                                    <div className="text-[10px] sm:text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
+                                      {booking.note || "Manual Booking"}
+                                    </div>
+                                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setBookingToDelete(booking.id);
                                           setIsDeleteModalOpen(true);
                                         }}
-                                        className="text-yellow-600 hover:text-red-600 transition-colors bg-yellow-100 p-0.5 rounded shadow-sm"
+                                        className="text-yellow-600 hover:text-red-600 transition-colors bg-yellow-100/90 p-0.5 rounded shadow-sm"
                                       >
-                                        <X className="w-3.5 h-3.5" />
+                                        <X className="w-3 h-3" />
                                       </button>
-                                    </div>
-                                  )}
-                                </div>
-                                {booking.isManualBooking ? (
-                                  <>
-                                    <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
-                                      {booking.note || "Manual Booking"}
                                     </div>
                                     {parseISO(slot.startTime) > new Date() && (
                                       <button
@@ -555,9 +547,9 @@ export default function InstructorBookingsPage() {
                                           e.stopPropagation();
                                           handleEditClick(booking);
                                         }}
-                                        className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors bg-yellow-100 p-1 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30 transform transition-all hover:scale-110"
+                                        className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors bg-yellow-100/90 p-0.5 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30 transform transition-all hover:scale-110"
                                       >
-                                        <Edit className="w-4 h-4" />
+                                        <Edit className="w-3.5 h-3.5" />
                                       </button>
                                     )}
                                   </>
@@ -617,29 +609,68 @@ export default function InstructorBookingsPage() {
                 <div className="text-gray-500">Ref:</div>
                 <div className="col-span-2 font-medium">{selectedBookingForDetails.id.substring(0, 8).toUpperCase()}</div>
 
-                <div className="text-gray-500">Customer:</div>
+                <div className="text-gray-500">Date:</div>
                 <div className="col-span-2 font-medium">
-                  {selectedBookingForDetails.bookingDetails?.customerFirstName} {selectedBookingForDetails.bookingDetails?.customerLastName}
+                  {format(parseISO(selectedBookingForDetails.bookingSlots[0].startTime), 'EEEE, MMMM d, yyyy')}
                 </div>
 
-                <div className="text-gray-500">Phone:</div>
-                <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.customerPhone}</div>
+                <div className="text-gray-500">Time:</div>
+                <div className="col-span-2 font-medium">
+                  {format(parseISO(selectedBookingForDetails.bookingSlots[0].startTime), 'h:mm a')} - {format(parseISO(selectedBookingForDetails.bookingSlots[0].endTime), 'h:mm a')}
+                </div>
 
-                <div className="text-gray-500">Pickup Address:</div>
-                <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.pickupAddress}</div>
+                <div className="text-gray-500">Type:</div>
+                <div className="col-span-2 font-medium">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${selectedBookingForDetails.isManualBooking ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-800'}`}>
+                    {selectedBookingForDetails.isManualBooking ? 'Manual Booking' : 'Web Booking'}
+                  </span>
+                </div>
 
-                {selectedBookingForDetails.bookingDetails?.notes && (
+                <div className="text-gray-500">Customer:</div>
+                <div className="col-span-2 font-medium">
+                  {selectedBookingForDetails.isManualBooking
+                    ? selectedBookingForDetails.customerName || "N/A"
+                    : `${selectedBookingForDetails.bookingDetails?.customerFirstName} ${selectedBookingForDetails.bookingDetails?.customerLastName}`}
+                </div>
+
+                {!selectedBookingForDetails.isManualBooking && (
                   <>
-                    <div className="text-gray-500">Notes:</div>
-                    <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.notes}</div>
+                    <div className="text-gray-500">Phone:</div>
+                    <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.customerPhone}</div>
                   </>
                 )}
 
-                <div className="text-gray-500">Self Booking:</div>
-                <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.isSelfBooking ? "Yes" : "No"}</div>
+                <div className="text-gray-500">Package:</div>
+                <div className="col-span-2 font-medium">{selectedBookingForDetails.package}</div>
+
+                <div className="text-gray-500">Suburb:</div>
+                <div className="col-span-2 font-medium">{selectedBookingForDetails.suburb?.name}</div>
+
+                {(!selectedBookingForDetails.isManualBooking && selectedBookingForDetails.bookingDetails?.pickupAddress) && (
+                  <>
+                    <div className="text-gray-500">Pickup:</div>
+                    <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.pickupAddress}</div>
+                  </>
+                )}
+
+                {(selectedBookingForDetails.isManualBooking ? selectedBookingForDetails.note : selectedBookingForDetails.bookingDetails?.notes) && (
+                  <>
+                    <div className="text-gray-500">Notes:</div>
+                    <div className="col-span-2 font-medium italic text-gray-600">
+                      {selectedBookingForDetails.isManualBooking ? selectedBookingForDetails.note : selectedBookingForDetails.bookingDetails?.notes}
+                    </div>
+                  </>
+                )}
+
+                {!selectedBookingForDetails.isManualBooking && (
+                  <>
+                    <div className="text-gray-500">Self Booking:</div>
+                    <div className="col-span-2 font-medium">{selectedBookingForDetails.bookingDetails?.isSelfBooking ? "Yes" : "No"}</div>
+                  </>
+                )}
               </div>
 
-              {!selectedBookingForDetails.bookingDetails?.isSelfBooking && (
+              {!selectedBookingForDetails.isManualBooking && !selectedBookingForDetails.bookingDetails?.isSelfBooking && (
                 <div className="pt-3 border-t">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">Contact Person Details</h3>
                   <div className="grid grid-cols-3 gap-y-2 gap-x-1 text-sm">
