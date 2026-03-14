@@ -20,23 +20,20 @@ import {
   startOfDay,
   endOfDay
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, Loader2, AlertCircle, Edit } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, AlertCircle, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { fetchInstructorBookings, createManualBooking, cancelBooking, updateManualBooking } from '../api/booking-api';
-import SearchableDropdown from '../components/SearchableDropdown';
-import { fetchSuburbs } from '../api/misc-api';
+import { fetchInstructorBookings, cancelBooking } from '../api/booking-api';
 import { fetchPackages } from '../api/package-api';
-import type { Suburb as SuburbType } from '../api/booking-api';
-import { useCallback } from 'react';
+import ManualBookingModal from '../components/ManualBookingModal';
 
-interface BookingSlot {
+export interface BookingSlot {
   startTime: string;
   endTime: string;
 }
 
-interface Booking {
+export interface Booking {
   id: string;
   testingCenter: string | null;
   suburb: { id: string; name: string; stateCode: string; postalcode: string };
@@ -73,7 +70,7 @@ interface BookingsResponse {
 
 type ViewType = 'Day' | 'Week' | 'Month';
 
-// Time grid constants (6 AM to 9 PM)
+// Time grid constants (6 AM to 10 PM)
 const START_HOUR = 6;
 const END_HOUR = 22;
 const HOURS_IN_GRID = END_HOUR - START_HOUR;
@@ -88,14 +85,9 @@ export default function InstructorBookingsPage() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = useState<number | null>(null);
-  const [duration, setDuration] = useState(60);
-  const [note, setNote] = useState('');
-  const [customerName, setCustomerName] = useState('');
-  const [selectedSuburb, setSelectedSuburb] = useState<SuburbType | null>(null);
-  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
-  const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startTime, setStartTime] = useState<string>('09:00');
+  const [endTime, setEndTime] = useState<string>('10:00');
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
 
   // Booking Details Modal State
   const [selectedBookingForDetails, setSelectedBookingForDetails] = useState<Booking | null>(null);
@@ -143,14 +135,6 @@ export default function InstructorBookingsPage() {
 
   const bookings = bookingData?.data || [];
 
-  const loadSuburbsData = useCallback(async (query: string) => {
-    const data = await fetchSuburbs(query);
-    return data.map((s: SuburbType) => ({
-      id: s.id.toString(),
-      label: `${s.name}, ${s.stateCode} (${s.postalcode})`,
-    }));
-  }, []);
-
   const handlePrev = () => {
     if (view === 'Month') setCurrentDate(subMonths(currentDate, 1));
     else if (view === 'Week') setCurrentDate(subWeeks(currentDate, 1));
@@ -197,21 +181,17 @@ export default function InstructorBookingsPage() {
     return 'bg-green-100 text-green-800 border-green-200';
   };
 
-  // Helper to calculate absolute positioning for time blocks
   const calculateBlockStyles = (startTimeISO: string, endTimeISO: string) => {
     const start = parseISO(startTimeISO);
     const end = parseISO(endTimeISO);
 
-    // Bounds check
     const startHourNum = start.getHours() + (start.getMinutes() / 60);
     const endHourNum = end.getHours() + (end.getMinutes() / 60);
 
-    // If perfectly out of bounds, hide it (rare if we only accept bookings in business hours)
     if (endHourNum <= START_HOUR || startHourNum >= END_HOUR) {
       return { display: 'none' };
     }
 
-    // Clamp values to visible grid
     const clampedStartHour = Math.max(startHourNum, START_HOUR);
     const clampedEndHour = Math.min(endHourNum, END_HOUR);
 
@@ -233,92 +213,24 @@ export default function InstructorBookingsPage() {
     const slotTime = new Date(day);
     slotTime.setHours(hour, 0, 0, 0);
     if (slotTime < new Date()) {
-      return; // Prevent past bookings
+      return; // Return early if slot is in the past
     }
+
     setSelectedDate(day);
-    setSelectedTime(hour);
-    setEditingBookingId(null);
-    setNote('');
-    setDuration(60);
-    setCustomerName('');
-    setSelectedSuburb(null);
-    setSelectedPackageId(null);
+    setStartTime(`${hour.toString().padStart(2, '0')}:00`);
+    setEndTime(`${(hour + 1).toString().padStart(2, '0')}:00`);
+    setEditingBooking(null);
     setIsModalOpen(true);
   };
 
   const handleEditClick = (booking: Booking) => {
     const start = parseISO(booking.bookingSlots[0].startTime);
-    setSelectedDate(start);
-    setSelectedTime(start.getHours());
-    setEditingBookingId(booking.id);
-    setNote(booking.note || '');
-
-    // Calculate duration from slots
-    const firstSlot = booking.bookingSlots[0];
-    const durationMins = (parseISO(firstSlot.endTime).getTime() - parseISO(firstSlot.startTime).getTime()) / 60000;
-    setDuration(durationMins);
-
-    setCustomerName(booking.customerName || '');
-
-    // Set suburb if available
-    if (booking.suburbId && booking.suburb) {
-      setSelectedSuburb({
-        id: booking.suburb.id || booking.suburbId.toString(),
-        name: booking.suburb.name,
-        stateCode: booking.suburb.stateCode || '',
-        postalcode: booking.suburb.postalcode
-      });
-    } else {
-      setSelectedSuburb(null);
+    if (start < new Date()) {
+      toast.error('Cannot edit past bookings.');
+      return;
     }
-
-    // Find package ID by name from current packages list
-    const pkg = packages.find(p => p.name === booking.package);
-    if (pkg) {
-      setSelectedPackageId(Number(pkg.id));
-    }
-
+    setEditingBooking(booking);
     setIsModalOpen(true);
-  };
-
-  const submitManualBooking = async () => {
-    if (!selectedDate || selectedTime === null) return;
-    setIsSubmitting(true);
-    try {
-      const timeStr = `${selectedTime.toString().padStart(2, '0')}:00`;
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-
-      const payload = {
-        date: dateStr,
-        time: timeStr,
-        duration,
-        note,
-        customerName,
-        suburbId: selectedSuburb?.id ? Number(selectedSuburb.id) : null,
-        packageId: selectedPackageId || undefined
-      };
-
-      if (editingBookingId) {
-        await updateManualBooking(editingBookingId, payload);
-        toast.success('Manual booking updated successfully.');
-      } else {
-        await createManualBooking(payload);
-        toast.success('Manual booking added successfully.');
-      }
-
-      setIsModalOpen(false);
-      setNote('');
-      setDuration(60);
-      setCustomerName('');
-      setSelectedSuburb(null);
-      setSelectedPackageId(null);
-      setEditingBookingId(null);
-      refetch(); // Reload calendar
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to process manual booking.');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleDeleteManualBooking = async () => {
@@ -337,7 +249,6 @@ export default function InstructorBookingsPage() {
       setIsDeleting(false);
     }
   };
-
 
   if (isError) {
     return (
@@ -401,17 +312,13 @@ export default function InstructorBookingsPage() {
         </div>
       </div>
 
-      {isLoading ?
+      {isLoading ? (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <Spinner text="Loading calendar..." />
-        </div> :
-
+        </div>
+      ) : (
         <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col relative min-h-0">
-          {/* 
-            =============================================
-            MONTH VIEW 
-            =============================================
-          */}
+          {/* MONTH VIEW */}
           {view === "Month" && (
             <>
               <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50/80 shrink-0">
@@ -482,15 +389,17 @@ export default function InstructorBookingsPage() {
                                   </div>
                                 </div>
                                 <div className="truncate opacity-90 font-medium">{booking.note || "Manual Booking"}</div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditClick(booking);
-                                  }}
-                                  className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block bg-yellow-100/80 shadow-sm"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                </button>
+                                {parseISO(slot.startTime) > new Date() && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditClick(booking);
+                                    }}
+                                    className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors p-0.5 rounded hover:bg-yellow-200/50 hidden group-hover:block bg-yellow-100/80 shadow-sm"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </>
                             ) : (
                               <>
@@ -512,11 +421,7 @@ export default function InstructorBookingsPage() {
             </>
           )}
 
-          {/* 
-            =============================================
-            DAY & WEEK VIEW
-            =============================================
-          */}
+          {/* DAY & WEEK VIEW */}
           {(view === "Day" || view === "Week") && (
             <div className="flex flex-col h-full overflow-hidden">
               {/* Header Row */}
@@ -552,7 +457,11 @@ export default function InstructorBookingsPage() {
                   {/* Time Gutter Columns */}
                   <div className="w-16 border-r border-gray-200 bg-white shrink-0 relative">
                     {Array.from({ length: HOURS_IN_GRID }).map((_, i) => (
-                      <div key={i} className="absolute w-full text-right pr-2 text-xs text-gray-400 font-medium" style={{ top: `${i * PIXELS_PER_HOUR - 8}px` }}>
+                      <div
+                        key={i}
+                        className="absolute w-full text-right pr-2 text-xs text-gray-400 font-medium"
+                        style={{ top: `${i * PIXELS_PER_HOUR - 8}px` }}
+                      >
                         {format(new Date().setHours(START_HOUR + i, 0, 0, 0), "h a")}
                       </div>
                     ))}
@@ -640,15 +549,17 @@ export default function InstructorBookingsPage() {
                                     <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
                                       {booking.note || "Manual Booking"}
                                     </div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleEditClick(booking);
-                                      }}
-                                      className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors bg-yellow-100 p-1 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30 transform transition-all hover:scale-110"
-                                    >
-                                      <Edit className="w-4 h-4" />
-                                    </button>
+                                    {parseISO(slot.startTime) > new Date() && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEditClick(booking);
+                                        }}
+                                        className="absolute bottom-1 right-1 text-yellow-600 hover:text-blue-600 transition-colors bg-yellow-100 p-1 rounded shadow-sm opacity-0 group-hover:opacity-100 z-30 transform transition-all hover:scale-110"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </button>
+                                    )}
                                   </>
                                 ) : (
                                   <>
@@ -674,126 +585,29 @@ export default function InstructorBookingsPage() {
             </div>
           )}
         </div>
-      }
-
+      )}
 
       {/* Manual Booking Modal */}
-      {isModalOpen && selectedDate && selectedTime !== null && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/50 backdrop-blur-sm p-4 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md my-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">{editingBookingId ? 'Edit Manual Booking' : 'Add Manual Booking'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 flex items-center gap-2 border border-gray-100">
-                <CalendarIcon className="w-4 h-4 text-primary shrink-0" />
-                <span className="font-medium">
-                  {format(selectedDate, "MMMM d, yyyy")} at{" "}
-                  {selectedTime === 12 ? "12 PM" : selectedTime > 12 ? `${selectedTime - 12} PM` : `${selectedTime} AM`}
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Customer Name</label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Enter customer name"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Suburb</label>
-                <SearchableDropdown
-                  onSelect={(option) => {
-                    if (option) {
-                      // We need to find the suburb by label or ID if we don't have the original object
-                      // Since loadSuburbsData returns DropdownOption, we might need a better way
-                      // For now, let's just store the name and id
-                      setSelectedSuburb({ id: option.id.toString(), name: option.label.split(',')[0] } as any);
-                    } else {
-                      setSelectedSuburb(null);
-                    }
-                  }}
-                  fetchOptions={loadSuburbsData}
-                  placeholder="Search and select suburb"
-                  value={selectedSuburb ? `${selectedSuburb.name}` : ''}
-                  hasSelection={!!selectedSuburb}
-                  onClear={() => setSelectedSuburb(null)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Package</label>
-                <select
-                  value={selectedPackageId || ''}
-                  onChange={(e) => setSelectedPackageId(Number(e.target.value))}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  {packages.map((pkg: any) => (
-                    <option key={pkg.id} value={pkg.id}>
-                      {pkg.name} (${pkg.price})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Duration</label>
-                <select
-                  value={duration}
-                  onChange={(e) => setDuration(Number(e.target.value))}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  <option value={45}>45 Minutes</option>
-                  <option value={60}>1 Hour</option>
-                  <option value={90}>1.5 Hours</option>
-                  <option value={120}>2 Hours</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium border-gray-200 text-gray-700 mb-1">Note (Optional)</label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="e.g. Contact number, address"
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[80px]"
-                />
-              </div>
-            </div>
-            <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors w-28"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitManualBooking}
-                disabled={isSubmitting}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-dark transition-colors flex justify-center items-center gap-2 w-36 disabled:opacity-70"
-              >
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                Save Booking
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ManualBookingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => {
+          setIsModalOpen(false);
+          refetch();
+        }}
+        selectedDate={selectedDate}
+        initialStartTime={startTime}
+        initialEndTime={endTime}
+        editingBooking={editingBooking}
+        packages={packages}
+      />
 
       {/* Booking Details Modal */}
       {selectedBookingForDetails && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/50 backdrop-blur-sm p-4 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md my-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/50 backdrop-blur-sm p-4 flex items-start justify-center sm:items-center">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">Booking Details</h2>
+              <h2 className="text-lg font-semibold text-gray-900 pr-8">Booking Details</h2>
               <button onClick={() => setSelectedBookingForDetails(null)} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
