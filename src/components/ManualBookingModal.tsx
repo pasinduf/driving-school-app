@@ -7,6 +7,7 @@ import SearchableDropdown from './SearchableDropdown';
 import { fetchSuburbs } from '../api/misc-api';
 import type { Suburb as SuburbType } from '../api/booking-api';
 import type { Booking } from '../pages/InstructorBookingsPage';
+import { CALENDAR_END_HOUR, CALENDAR_START_HOUR } from '../util/const';
 
 interface ManualBookingModalProps {
     isOpen: boolean;
@@ -19,8 +20,8 @@ interface ManualBookingModalProps {
     packages: any[];
 }
 
-const START_HOUR = 6;
-const END_HOUR = 22;
+const START_HOUR = CALENDAR_START_HOUR;
+const END_HOUR = CALENDAR_END_HOUR;
 
 export default function ManualBookingModal({
     isOpen,
