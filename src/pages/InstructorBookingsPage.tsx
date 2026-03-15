@@ -27,6 +27,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import { fetchInstructorBookings, cancelBooking, updateManualBooking } from '../api/booking-api';
 import { fetchPackages } from '../api/package-api';
 import ManualBookingModal from '../components/ManualBookingModal';
+import { CALENDAR_END_HOUR, CALENDAR_START_HOUR } from '../util/const';
 
 export interface BookingSlot {
   startTime: string;
@@ -70,9 +71,9 @@ interface BookingsResponse {
 
 type ViewType = 'Day' | 'Week' | 'Month';
 
-// Time grid constants (6 AM to 10 PM)
-const START_HOUR = 6;
-const END_HOUR = 22;
+// Time grid constants
+const START_HOUR = CALENDAR_START_HOUR;
+const END_HOUR = CALENDAR_END_HOUR;
 const HOURS_IN_GRID = END_HOUR - START_HOUR;
 // Pixels per hour for the time grid
 const PIXELS_PER_HOUR = 60;
