@@ -29,6 +29,7 @@ import { fetchPackages } from '../api/package-api';
 import ManualBookingModal from '../components/ManualBookingModal';
 import { CALENDAR_END_HOUR, CALENDAR_START_HOUR } from '../util/const';
 import Pagination from '../components/Pagination';
+import { useDebounce } from '../hooks/useDebounce';
 import type { Booking, BookingsResponse } from '../api/types/booking-response';
 import BookingDetailsModal from '../components/BookingDetailsModal';
 
@@ -67,6 +68,7 @@ export default function InstructorBookingsPage() {
   // Table View Filters & Pagination
   const [tablePage, setTablePage] = useState(1);
   const [tableSearch, setTableSearch] = useState("");
+  const debouncedSearch = useDebounce(tableSearch, 500);
   const tableLimit = 10;
 
   // Drag & Drop State
@@ -92,9 +94,9 @@ export default function InstructorBookingsPage() {
     };
   }, [currentDate, view]);
 
-  // Table View Date Range (Initial load 7 days)
-  const [tableStartDate, setTableStartDate] = useState(startDateStr);
-  const [tableEndDate, setTableEndDate] = useState(endDateStr);
+  // Table View Date Range (Initial load last 7 days)
+  const [tableStartDate, setTableStartDate] = useState(format(subDays(new Date(), 7), "yyyy-MM-dd"));
+  const [tableEndDate, setTableEndDate] = useState(format(addDays(new Date(), 7), "yyyy-MM-dd"));
 
   // Calendar View Data (existing logic)
   const {
@@ -122,12 +124,12 @@ export default function InstructorBookingsPage() {
     isError: isTableError,
     refetch: refetchTable,
   } = useQuery<BookingsResponse>({
-    queryKey: ["instructor-bookings-table", tablePage, tableSearch, tableStartDate, tableEndDate],
+    queryKey: ["instructor-bookings-table", tablePage, debouncedSearch, tableStartDate, tableEndDate],
     queryFn: () =>
       fetchInstructorBookings({
         page: tablePage,
         limit: tableLimit,
-        search: tableSearch || undefined,
+        search: debouncedSearch || undefined,
         startDate: tableStartDate,
         endDate: tableEndDate,
       }),
@@ -163,8 +165,8 @@ export default function InstructorBookingsPage() {
   const resetTableFilters = () => {
     setTableSearch("");
     setTablePage(1);
-    setTableStartDate(startDateStr);
-    setTableEndDate(endDateStr);
+    setTableStartDate(format(subDays(new Date(), 7), "yyyy-MM-dd"));
+    setTableEndDate(format(addDays(new Date(), 7), "yyyy-MM-dd"));
   };
 
   // Generate calendar grid for Month View
@@ -344,7 +346,7 @@ export default function InstructorBookingsPage() {
   }
 
   return (
-    <main className="w-full flex flex-col h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] overflow-hidden">
+    <main className={`w-full flex flex-col ${viewMode === 'calendar' ? 'h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] overflow-hidden' : 'h-auto overflow-visible mb-10'}`}>
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 px-1 shrink-0">
         <div className="flex items-center gap-4">
@@ -383,9 +385,8 @@ export default function InstructorBookingsPage() {
                   <button
                     key={v}
                     onClick={() => setView(v)}
-                    className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium transition-all rounded-md ${
-                      view === v ? "bg-white text-primary shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
-                    }`}
+                    className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium transition-all rounded-md ${view === v ? "bg-white text-primary shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
+                      }`}
                   >
                     {v}
                   </button>
@@ -423,7 +424,7 @@ export default function InstructorBookingsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search by customer or manual booking..."
+                placeholder="Search by customer name..."
                 className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                 value={tableSearch}
                 onChange={(e) => {
@@ -432,6 +433,30 @@ export default function InstructorBookingsPage() {
                 }}
               />
             </div>
+          </div>
+          <div className="flex-none min-w-[150px]">
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">From Date</label>
+            <input
+              type="date"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              value={tableStartDate}
+              onChange={(e) => {
+                setTableStartDate(e.target.value);
+                setTablePage(1);
+              }}
+            />
+          </div>
+          <div className="flex-none min-w-[150px]">
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">To Date</label>
+            <input
+              type="date"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              value={tableEndDate}
+              onChange={(e) => {
+                setTableEndDate(e.target.value);
+                setTablePage(1);
+              }}
+            />
           </div>
           <div className="flex-none">
             <button
@@ -444,7 +469,7 @@ export default function InstructorBookingsPage() {
         </div>
       )}
 
-      <div className="flex-1 overflow-hidden">
+      <div className={`flex-1 ${viewMode === 'calendar' ? 'overflow-y-auto' : ''}`}>
         {isLoading ? (
           <div className="h-[500px] flex items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm">
             <Spinner text={`Loading ${viewMode}...`} />
@@ -465,10 +490,10 @@ export default function InstructorBookingsPage() {
           <>
             {viewMode === "table" ? (
               <div className="space-y-6">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50/50">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-visible">
+                  <div className="md:overflow-x-auto">
+                    <table className="w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50/50 hidden md:table-header-group">
                         <tr>
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Date & Time</th>
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Instructor</th>
@@ -479,14 +504,15 @@ export default function InstructorBookingsPage() {
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-100">
+                      <tbody className="bg-white divide-y divide-gray-100 block md:table-row-group">
                         {(tableBookingData?.data || []).map((booking: Booking) => (
                           <tr
                             key={booking.id}
-                            className={`hover:bg-primary/[0.02] transition-colors cursor-pointer group ${booking.isManualBooking ? "bg-yellow-50/20" : ""}`}
+                            className={`hover:bg-primary/[0.02] transition-colors cursor-pointer group block md:table-row border-b md:border-b-0 ${booking.isManualBooking ? "bg-yellow-50/20" : ""}`}
                             onClick={() => setSelectedBookingForDetails(booking)}
                           >
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
+                              <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Date & Time</span>
                               <div className="flex flex-col gap-1.5">
                                 {booking.bookingSlots.map((slot, idx) => (
                                   <div key={idx} className="flex flex-col">
@@ -498,33 +524,39 @@ export default function InstructorBookingsPage() {
                                 ))}
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
+                              <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Instructor</span>
                               <span className="text-sm text-gray-900">{booking?.instructor || "-"}</span>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-4 py-4 md:px-6 block md:table-cell">
+                              <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Customer</span>
                               {booking.isManualBooking ? (
                                 <div className="text-sm text-gray-900">{booking?.customerName || "-"}</div>
                               ) : (
                                 <div className="flex flex-col">
-                                  <span className="text-sm font-bold text-gray-900">
+                                  <span className="text-sm text-gray-900">
                                     {booking?.bookingDetails?.customerFirstName} {booking?.bookingDetails?.customerLastName}
                                   </span>
                                   <span className="text-xs text-gray-500 mt-0.5">{booking?.bookingDetails?.customerPhone}</span>
                                 </div>
                               )}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
+                              <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Suburb</span>
                               <span className="text-sm font-medium text-gray-600">{booking.suburb?.name}</span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
+                              <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Package</span>
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-600 uppercase tracking-wide">
                                 {booking.package}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
+                              <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Price</span>
                               <span className="text-sm font-black text-primary">${booking.price}</span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
+                              <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Status</span>
                               <span
                                 className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.status === "CANCELLED" ? "bg-red-50 text-red-700 border-red-200" : booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
                               >
@@ -541,7 +573,6 @@ export default function InstructorBookingsPage() {
                                   <Search className="w-8 h-8 text-gray-300" />
                                 </div>
                                 <h4 className="text-lg font-bold text-gray-900">No results found</h4>
-                                {/* <p className="text-gray-500 mt-1">Try adjusting your filters or search terms.</p> */}
                               </div>
                             </td>
                           </tr>
@@ -753,11 +784,10 @@ export default function InstructorBookingsPage() {
                                       className={`rounded-md border flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
                                       ${getStatusColor(booking)} cursor-pointer ${booking.isManualBooking ? "p-1 active:cursor-grabbing" : "p-2"}`}
                                       style={styles}
-                                      title={`${
-                                        booking.isManualBooking
-                                          ? `${booking.customerName} - ${booking.note}` || "Manual Booking"
-                                          : `${booking?.bookingDetails?.customerFirstName} - ${booking?.bookingDetails?.notes}`
-                                      }`}
+                                      title={`${booking.isManualBooking
+                                        ? `${booking.customerName} - ${booking.note}` || "Manual Booking"
+                                        : `${booking?.bookingDetails?.customerFirstName} - ${booking?.bookingDetails?.notes}`
+                                        }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedBookingForDetails(booking);
@@ -841,7 +871,7 @@ export default function InstructorBookingsPage() {
 
         {selectedBookingForDetails && (
           <BookingDetailsModal
-            isOpen ={true}
+            isOpen={true}
             onClose={setSelectedBookingForDetails}
             booking={selectedBookingForDetails}
           />
