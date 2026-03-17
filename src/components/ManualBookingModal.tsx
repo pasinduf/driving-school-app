@@ -6,8 +6,8 @@ import { createManualBooking, updateManualBooking } from '../api/booking-api';
 import SearchableDropdown from './SearchableDropdown';
 import { fetchSuburbs } from '../api/misc-api';
 import type { Suburb as SuburbType } from '../api/booking-api';
-import type { Booking } from '../pages/InstructorBookingsPage';
 import { CALENDAR_END_HOUR, CALENDAR_START_HOUR } from '../util/const';
+import type { Booking } from '../api/types/booking-response';
 
 interface ManualBookingModalProps {
     isOpen: boolean;

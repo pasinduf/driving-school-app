@@ -143,9 +143,15 @@ export const fetchMyBookings = async (page: number = 1, limit: number = 10) => {
     return response.data;
 };
 
-export const fetchInstructorBookings = async (page: number = 1, limit: number = 10, startDate?: string, endDate?: string) => {
+export const fetchInstructorBookings = async (params: {
+    page?: number;
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+}) => {
     const response = await apiClient.get<{ data: any[]; total: number }>("/bookings/instructor-bookings", {
-        params: { page, limit, startDate, endDate },
+        params,
     });
     return response.data;
 };

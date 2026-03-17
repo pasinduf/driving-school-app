@@ -7,6 +7,8 @@ import { format } from 'date-fns';
 import Spinner from '../Spinner';
 import Pagination from '../Pagination';
 import SearchableDropdown from '../SearchableDropdown';
+import type { Booking } from '../../api/types/booking-response';
+import BookingDetailsModal from '../BookingDetailsModal';
 
 export default function Bookings() {
     const { user } = useAuth();
@@ -15,6 +17,7 @@ export default function Bookings() {
     const [filterDate, setFilterDate] = useState('');
     const [filterInstructorId, setFilterInstructorId] = useState('');
     const [searchInstructorText, setSearchInstructorText] = useState('');
+    const [selectedBookingForDetails, setSelectedBookingForDetails] = useState<Booking | null>(null);
     const [page, setPage] = useState(1);
     const limit = 10;
 
@@ -100,18 +103,23 @@ export default function Bookings() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Date & Time</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Instructor</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Customer</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Suburb</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Package</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Date & Time</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Instructor</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Customer</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Suburb</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Package</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {bookings.map((booking: any) => (
-                    <tr key={booking.id} className={booking.isManualBooking ? "bg-yellow-100" : ""}>
+                    <tr
+                      key={booking.id}
+                      // className={booking.isManualBooking ? "bg-yellow-100" : ""}
+                      className={`hover:bg-primary/[0.02] transition-colors cursor-pointer group ${booking.isManualBooking ? "bg-yellow-50/20" : ""}`}
+                      onClick={() => setSelectedBookingForDetails(booking)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
                           {booking.bookingSlots.map((slot: any, idx: number) => (
@@ -139,17 +147,17 @@ export default function Bookings() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.suburb?.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.package}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.price}$</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-600 uppercase tracking-wide">
+                          {booking.package}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-black text-primary">${booking.price}</span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            booking.status === "CONFIRMED"
-                              ? "bg-green-100 text-green-800"
-                              : booking.status === "PENDING"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                          }`}
+                          className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.status === "CANCELLED" ? "bg-red-50 text-red-700 border-red-200" : booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
                         >
                           {booking.isManualBooking ? "Manual" : booking.status}
                         </span>
@@ -169,6 +177,14 @@ export default function Bookings() {
 
             <Pagination currentPage={page} totalPages={Math.ceil(totalBookings / limit)} onPageChange={setPage} />
           </>
+        )}
+
+        {selectedBookingForDetails && (
+          <BookingDetailsModal
+            isOpen ={true}
+            onClose={setSelectedBookingForDetails}
+            booking={selectedBookingForDetails}
+          />
         )}
       </div>
     );
