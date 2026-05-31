@@ -31,7 +31,7 @@ function App() {
   return (
     <AuthProvider>
       <MasterDataProvider>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" richColors closeButton />
         <BrowserRouter>
           <Routes>
             {/* Public routes wrapped with Company Context for branding */}

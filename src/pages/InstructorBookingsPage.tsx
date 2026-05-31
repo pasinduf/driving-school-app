@@ -675,7 +675,9 @@ export default function InstructorBookingsPage() {
                                         <span>{format(parseBookingTime(slot.startTime), "h:mm a")}</span>
                                         <span className="truncate max-w-[50px] ml-1 opacity-70 font-normal">{booking.transmission?.substring(0, 4)}</span>
                                       </div>
-                                      <div className="truncate opacity-90 font-medium">{booking.package || "Lesson"}</div>
+                                      <div className="truncate opacity-90 font-medium">
+                                        {booking.bookingDetails?.customerFirstName || "Web Booking"}
+                                      </div>
                                       {booking.suburb && <div className="truncate text-[10px] opacity-75">{booking.suburb.name}</div>}
                                     </>
                                   )}
@@ -838,7 +840,7 @@ export default function InstructorBookingsPage() {
                                       ) : (
                                         <>
                                           <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
-                                            {booking.package || "Lesson"}
+                                            {booking.bookingDetails?.customerFirstName || "Web Booking"}
                                           </div>
                                           {booking.suburb && (
                                             <div className="text-[10px] opacity-75 truncate mt-auto hidden sm:block">
