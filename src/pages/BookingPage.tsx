@@ -5,7 +5,8 @@ import { fetchSlots, lockSlots, createBooking, unlockSlots } from '../api/bookin
 import { fetchAvailableInstructors, type Instructor } from '../api/instructor-api';
 import { fetchSuburbs } from '../api/misc-api';
 import type { Suburb, Slot } from '../api/booking-api';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
+import { parseBookingTime } from '../util/parseBookingTime';
 import { Loader2, Trash2, Calendar, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import BookingForm from '../components/BookingForm';
@@ -131,7 +132,7 @@ export default function BookingPage() {
 
     const getMinutes = (d: string | Date) => {
       const date = typeof d === 'string' ? new Date(d) : d;
-      return date.getHours() * 60 + date.getMinutes();
+      return date.getUTCHours() * 60 + date.getUTCMinutes();
     };
 
     // Derive selected slots from rawSlots to ensure consistency
@@ -604,9 +605,9 @@ export default function BookingPage() {
                     .map((slot, idx) => (
                       <div key={idx} className="flex justify-between items-center bg-white p-2 rounded shadow-sm text-sm">
                         <div className="flex flex-col">
-                          <span className="font-medium text-gray-900">{format(parseISO(slot.startTime), "EEE, d MMM yyyy")}</span>
+                          <span className="font-medium text-gray-900">{format(parseBookingTime(slot.startTime), "EEE, d MMM yyyy")}</span>
                           <span className="text-gray-600">
-                            {format(parseISO(slot.startTime), "h:mm a")} - {format(parseISO(slot.endTime), "h:mm a")}
+                            {format(parseBookingTime(slot.startTime), "h:mm a")} - {format(parseBookingTime(slot.endTime), "h:mm a")}
                           </span>
                         </div>
                         <button onClick={() => handleSlotClick(slot)} className="text-red-500 hover:text-red-700 p-1">
@@ -651,8 +652,8 @@ export default function BookingPage() {
                               : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
                             } `}
                         >
-                          {format(parseISO(slot.startTime), "h:mm a")}
-                          <span className="block text-xs font-normal opacity-75">to {format(parseISO(slot.endTime), "h:mm a")}</span>
+                          {format(parseBookingTime(slot.startTime), "h:mm a")}
+                          <span className="block text-xs font-normal opacity-75">to {format(parseBookingTime(slot.endTime), "h:mm a")}</span>
                         </button>
                       );
                     })}
@@ -705,7 +706,7 @@ export default function BookingPage() {
                 <ul className="list-disc list-inside mt-1 ml-1 space-y-1">
                   {selectedSlotDetails.map((s, idx) => (
                     <li key={idx}>
-                      {format(parseISO(s.startTime), "MMM dd, yyyy")} ({format(parseISO(s.startTime), "h:mm a")} - {format(parseISO(s.endTime), "h:mm a")})
+                      {format(parseBookingTime(s.startTime), "MMM dd, yyyy")} ({format(parseBookingTime(s.startTime), "h:mm a")} - {format(parseBookingTime(s.endTime), "h:mm a")})
                     </li>
                   ))}
                 </ul>
