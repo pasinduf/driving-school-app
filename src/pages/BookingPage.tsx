@@ -128,8 +128,6 @@ export default function BookingPage() {
   const displaySlots = (() => {
     if (!rawSlots) return [];
 
-    const totalStep = duration + margin;
-
     const getMinutes = (d: string | Date) => {
       const date = typeof d === 'string' ? new Date(d) : d;
       return date.getUTCHours() * 60 + date.getUTCMinutes();
@@ -138,17 +136,7 @@ export default function BookingPage() {
     // Derive selected slots from rawSlots to ensure consistency
     const currentSelectedSlots = rawSlots.filter(s => selectedSlots.some(sel => sel.time === s.startTime));
 
-    // Find the LATEST end time among selected slots to re-anchor the grid
-    let lastEndMinutes: number | null = null;
-    if (currentSelectedSlots.length > 0) {
-      const maxEnd = currentSelectedSlots.reduce((max, slot) => {
-        const sEnd = getMinutes(slot.endTime);
-        return sEnd > max ? sEnd : max;
-      }, 0);
-      lastEndMinutes = maxEnd;
-    }
-
-    // Pass 1: Filter out unavailable and overlapping slots
+    // Filter out unavailable and overlapping slots
     const candidateSlots = rawSlots.filter(slot => {
       // 1. Is Selected? Always show.
       if (selectedSlots.some(s => s.time === slot.startTime)) return true;
@@ -172,78 +160,7 @@ export default function BookingPage() {
       return true;
     });
 
-    // Pass 2: Filter to ensure proper spacing (duration + margin) between displayed available slots
-    // This prevents showing 2:00, 2:15, 2:30 etc. — only shows 2:00, 3:15, 4:30...
-    // IMPORTANT: Selected slots don't create margin requirements — consecutive slots after
-    // a selected slot are allowed without margin (e.g., select 8-9 → next shows 9-10, not 9:15-10:15)
-    const result: typeof candidateSlots = [];
-    let lastShownEnd: number | null = null; // tracks end of last displayed NON-SELECTED slot
-
-    for (const slot of candidateSlots) {
-      // Always include selected slots — don't update lastShownEnd
-      if (selectedSlots.some(s => s.time === slot.startTime)) {
-        result.push(slot);
-        continue;
-      }
-
-      const slotStart = getMinutes(slot.startTime);
-
-      // Enforce margin only from previously displayed NON-SELECTED slots
-      if (lastShownEnd !== null && slotStart < lastShownEnd + margin) {
-        continue;
-      }
-
-      // Check if slot falls on a valid grid position
-      let isOnGrid = false;
-
-      // Re-anchoring from selected slots (allows consecutive without margin)
-      // e.g., selected 8-9 (end=540): slot 9-10 (540) → diff=0, 0%75=0 ✅
-      //        slot 10:15-11:15 (615) → diff=75, 75%75=0 ✅
-      if (lastEndMinutes !== null && slotStart >= lastEndMinutes) {
-        const diff = slotStart - lastEndMinutes;
-        if (diff % totalStep === 0) {
-          isOnGrid = true;
-        }
-      }
-
-      if (!isOnGrid) {
-        // Anchored from last displayed available slot's end + margin
-        if (lastShownEnd !== null) {
-          const firstValidStart = lastShownEnd + margin;
-          if (slotStart >= firstValidStart) {
-            const diff = slotStart - firstValidStart;
-            if (diff % totalStep === 0 || diff === 0) {
-              isOnGrid = true;
-            }
-          }
-        }
-      }
-
-      if (!isOnGrid) {
-        // Standard grid from day start (8:00 AM = 480 min)
-        const fromDayStart = (slotStart - 480) % totalStep === 0;
-        if (fromDayStart && (lastShownEnd === null || slotStart >= lastShownEnd + margin)) {
-          isOnGrid = true;
-        }
-      }
-
-      if (!isOnGrid) {
-        // Edge detection: first available slot after a booking gap
-        const step = 15;
-        const prevTime = slotStart - step;
-        const prevSlot = rawSlots.find(s => getMinutes(s.startTime) === prevTime);
-        if (!prevSlot || !prevSlot.available) {
-          isOnGrid = true;
-        }
-      }
-
-      if (isOnGrid) {
-        result.push(slot);
-        lastShownEnd = getMinutes(slot.endTime);
-      }
-    }
-
-    return result;
+    return candidateSlots;
   })();
 
   const handleExpire = () => {
