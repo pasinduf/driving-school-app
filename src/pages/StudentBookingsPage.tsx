@@ -3,6 +3,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { fetchMyBookings } from '../api/booking-api';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
+import { parseBookingTime } from '../util/parseBookingTime';
 import { AlertCircle } from 'lucide-react';
 import Spinner from '../components/Spinner';
 import Pagination from '../components/Pagination';
@@ -97,7 +98,7 @@ export default function StudentBookingsPage() {
                     <ul className="list-disc list-inside ml-2">
                       {booking.bookingSlots.map((slot, idx) => (
                         <li key={idx}>
-                          {format(new Date(slot.startTime), "MMMM do yyyy, h:mm a")} - {format(new Date(slot.endTime), "h:mm a")}
+                          {format(parseBookingTime(slot.startTime), "MMMM do yyyy, h:mm a")} - {format(parseBookingTime(slot.endTime), "h:mm a")}
                         </li>
                       ))}
                     </ul>
