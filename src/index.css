@@ -9,3 +9,9 @@ html {
 input[type="checkbox"] {
     accent-color: var(--color-primary);
 }
+
+/* Move sonner toast close button to top-right */
+[data-sonner-toast] > [data-close-button] {
+    left: unset !important;
+    right: 0 !important;
+}

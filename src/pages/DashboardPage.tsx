@@ -130,9 +130,9 @@ export default function DashboardPage() {
               <table className="w-full text-sm divide-y divide-gray-100">
                 <thead className="bg-gray-50/80">
                   <tr>
-                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
                     <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
                     <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Time</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
                     <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Suburb</th>
                   </tr>
                 </thead>
@@ -140,24 +140,17 @@ export default function DashboardPage() {
                   {recentBookings.map((booking) => {
                     const firstSlot = booking.bookingSlots?.[0];
                     return (
-                      <tr
-                        key={booking.id}
-                        className="hover:bg-primary/[0.02] cursor-pointer transition-colors"
-                        onClick={() => setSelectedBooking(booking)}
-                      >
-                        <td className="px-5 py-3 font-medium text-gray-900">
-                          {[booking.bookingDetails?.customerFirstName, booking.bookingDetails?.customerLastName]
-                            .filter(Boolean).join(' ') || '—'}
-                        </td>
-                        <td className="px-5 py-3 text-gray-600">
-                          {firstSlot ? format(parseBookingTime(firstSlot.startTime), 'EEE, d MMM yyyy') : '—'}
-                        </td>
+                      <tr key={booking.id} className="hover:bg-primary/[0.02] cursor-pointer transition-colors" onClick={() => setSelectedBooking(booking)}>
+                        <td className="px-5 py-3 text-gray-600">{firstSlot ? format(parseBookingTime(firstSlot.startTime), "EEE, d MMM yyyy") : "—"}</td>
                         <td className="px-5 py-3 text-gray-600">
                           {firstSlot
-                            ? `${format(parseBookingTime(firstSlot.startTime), 'h:mm a')} – ${format(parseBookingTime(firstSlot.endTime), 'h:mm a')}`
-                            : '—'}
+                            ? `${format(parseBookingTime(firstSlot.startTime), "h:mm a")} – ${format(parseBookingTime(firstSlot.endTime), "h:mm a")}`
+                            : "—"}
                         </td>
-                        <td className="px-5 py-3 text-gray-600">{booking.suburb?.name || '—'}</td>
+                        <td className="px-5 py-3 font-medium text-gray-900">
+                          {[booking.bookingDetails?.customerFirstName, booking.bookingDetails?.customerLastName].filter(Boolean).join(" ") || "—"}
+                        </td>
+                        <td className="px-5 py-3 text-gray-600">{booking.suburb?.name || "—"}</td>
                       </tr>
                     );
                   })}
