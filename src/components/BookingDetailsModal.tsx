@@ -38,12 +38,17 @@ export default function BookingDetailsModal({ isOpen, onClose, booking }: Manual
             </div>
 
             <div className="text-gray-500">Type:</div>
-            <div className="col-span-2 font-medium">
+            <div className="col-span-2 font-medium flex flex-wrap gap-1">
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${booking.isManualBooking ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-800"}`}
               >
                 {booking.isManualBooking ? "Manual Booking" : "Web Booking"}
               </span>
+              {booking.status === "CANCELLED" && (
+                <span className="px-2 py-0.5 text-[10px] uppercase font-bold text-red-700">
+                  Cancelled
+                </span>
+              )}
             </div>
 
             <div className="text-gray-500">Customer:</div>

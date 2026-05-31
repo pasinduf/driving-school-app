@@ -643,7 +643,10 @@ export default function InstructorBookingsPage() {
                                       <div className="flex justify-between items-start font-semibold">
                                         <span>{format(parseBookingTime(slot.startTime), "h:mm a")}</span>
                                       </div>
-                                      <div className="truncate opacity-90 font-medium">{booking.note || "Manual Booking"}</div>
+                                      {booking.customerName && (
+                                        <div className="truncate font-semibold">{booking.customerName}</div>
+                                      )}
+                                      <div className="truncate opacity-75 text-[10px]">{booking.note || "Manual Booking"}</div>
                                       {parseBookingTime(slot.startTime) > new Date() && (
                                         <button
                                           onClick={(e) => {
@@ -800,7 +803,12 @@ export default function InstructorBookingsPage() {
                                       </div>
                                       {booking.isManualBooking ? (
                                         <>
-                                          <div className="text-[10px] sm:text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
+                                          {booking.customerName && (
+                                            <div className="text-[10px] sm:text-xs font-semibold truncate leading-tight pr-4">
+                                              {booking.customerName}
+                                            </div>
+                                          )}
+                                          <div className="text-[10px] sm:text-xs font-medium truncate leading-tight opacity-75 group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
                                             {booking.note || "Manual Booking"}
                                           </div>
                                           <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">

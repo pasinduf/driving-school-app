@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchBookings } from '../../api/booking-api';
 import { searchInstructorsDropdown } from '../../api/instructor-api';
 import { format } from 'date-fns';
+import { parseBookingTime } from '../../util/parseBookingTime';
 import Spinner from '../Spinner';
 import Pagination from '../Pagination';
 import SearchableDropdown from '../SearchableDropdown';
@@ -125,8 +126,8 @@ export default function Bookings() {
                           {booking.bookingSlots.map((slot: any, idx: number) => (
                             <div key={idx} className="py-1">
                               <>
-                                <div className="text-sm font-medium text-gray-900">{slot ? format(new Date(slot.startTime), "PPP") : "N/A"}</div>
-                                {format(new Date(slot.startTime), "h:mm a")} - {format(new Date(slot.endTime), "h:mm a")}
+                                <div className="text-sm font-medium text-gray-900">{slot ? format(parseBookingTime(slot.startTime), "PPP") : "N/A"}</div>
+                                {format(parseBookingTime(slot.startTime), "h:mm a")} - {format(parseBookingTime(slot.endTime), "h:mm a")}
                               </>
                             </div>
                           ))}
@@ -156,11 +157,18 @@ export default function Bookings() {
                         <span className="text-sm font-black text-primary">${booking.price}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.status === "CANCELLED" ? "bg-red-50 text-red-700 border-red-200" : booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
-                        >
-                          {booking.isManualBooking ? "Manual" : booking.status}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span
+                            className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
+                          >
+                            {booking.isManualBooking ? "Manual" : "Web"}
+                          </span>
+                          {booking.status === "CANCELLED" && (
+                            <span className="px-3 inline-flex text-[10px] font-black uppercase text-red-700">
+                              Cancelled
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
