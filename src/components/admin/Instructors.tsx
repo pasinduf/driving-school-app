@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchAdminInstructors, createInstructor, updateInstructor, deleteInstructor } from '../../api/instructor-api';
+import { fetchAdminInstructors, createInstructor, updateInstructor, deleteInstructor, resetInstructorPassword } from '../../api/instructor-api';
 import { toast } from 'sonner';
-import { Plus, Edit2, Trash2, Users } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, KeyRound, Eye, EyeOff, X } from 'lucide-react';
 import InstructorModal from './InstructorModal';
 import ConfirmationModal from '../ConfirmationModal';
 import Pagination from '../Pagination';
 import { useAuth } from '../../context/AuthContext';
 import Spinner from '../Spinner';
+import { generateRandomPassword } from '../../util/generateRandomPassword';
 
 export default function Instructors() {
   const queryClient = useQueryClient();
@@ -31,6 +32,12 @@ export default function Instructors() {
   const [instructorToDelete, setInstructorToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Reset password modal state
+  const [resetTargetId, setResetTargetId] = useState<string | null>(null);
+  const [resetPassword, setResetPassword] = useState('');
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
   const handleAddClick = () => {
     setSelectedInstructor(null);
     setIsModalOpen(true);
@@ -44,6 +51,35 @@ export default function Instructors() {
   const handleDeleteClick = (id: string) => {
     setInstructorToDelete(id);
     setIsDeleteModalOpen(true);
+  };
+
+  const openResetPasswordModal = (id: string) => {
+    setResetTargetId(id);
+    setResetPassword('');
+    setShowResetPassword(false);
+  };
+
+  const closeResetPasswordModal = () => {
+    setResetTargetId(null);
+    setResetPassword('');
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetTargetId) return;
+    if (resetPassword.length < 8 || !/[A-Za-z]/.test(resetPassword) || !/\d/.test(resetPassword)) {
+      toast.error('Password must be at least 8 characters and include at least 1 letter and 1 number.');
+      return;
+    }
+    setIsResetting(true);
+    try {
+      await resetInstructorPassword(resetTargetId, resetPassword);
+      toast.success('Password reset successfully.');
+      closeResetPasswordModal();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to reset password.');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleSaveInstructor = async (data: any) => {
@@ -149,6 +185,13 @@ export default function Instructors() {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={() => openResetPasswordModal(inst.id)}
+                          className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                          title="Reset Password"
+                        >
+                          <KeyRound className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleDeleteClick(inst.id)}
                           className={`p-1.5 rounded-md transition-colors ${!inst.isActive ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
                           title={inst.isActive ? "Deactivate Instructor" : "Delete"}
@@ -186,6 +229,61 @@ export default function Instructors() {
         confirmText="Deactivate"
         variant="danger"
       />
+
+      {/* Reset Password Modal */}
+      {resetTargetId && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 relative">
+            <button onClick={closeResetPasswordModal} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2 mb-4">
+              <KeyRound className="w-5 h-5 text-amber-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Reset Instructor Password</h2>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Set a temporary password. The instructor will be required to change it on next login.
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">New Password <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <input
+                  type={showResetPassword ? 'text' : 'password'}
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-3 pr-24 text-sm focus:ring-primary focus:border-primary"
+                  placeholder="Enter temporary password"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { const p = generateRandomPassword(); setResetPassword(p); }}
+                    className="text-xs text-primary hover:underline font-medium"
+                  >
+                    Generate
+                  </button>
+                  <button type="button" onClick={() => setShowResetPassword((v) => !v)} className="text-gray-400 hover:text-gray-600">
+                    {showResetPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">At least 8 characters, 1 letter and 1 number.</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={closeResetPasswordModal} className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={handleResetPassword}
+                disabled={isResetting}
+                className="px-4 py-2 text-sm text-white bg-primary rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60"
+              >
+                {isResetting ? 'Resetting…' : 'Reset Password'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
