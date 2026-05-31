@@ -16,10 +16,10 @@ import {
   subWeeks,
   addDays,
   subDays,
-  parseISO,
   startOfDay,
   endOfDay
 } from 'date-fns';
+import { parseBookingTime } from '../util/parseBookingTime';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, AlertCircle, Edit, List, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
@@ -187,7 +187,7 @@ export default function InstructorBookingsPage() {
   const getSlotsForDay = (day: Date) => {
     return bookings
       .filter((b) => b.status === "CONFIRMED")
-      .flatMap((booking) => booking.bookingSlots.filter((slot) => isSameDay(parseISO(slot.startTime), day)).map((slot) => ({ booking, slot })));
+      .flatMap((booking) => booking.bookingSlots.filter((slot) => isSameDay(parseBookingTime(slot.startTime), day)).map((slot) => ({ booking, slot })));
   };
 
   const getStatusColor = (booking: Booking) => {
@@ -198,8 +198,8 @@ export default function InstructorBookingsPage() {
   };
 
   const calculateBlockStyles = (startTimeISO: string, endTimeISO: string) => {
-    const start = parseISO(startTimeISO);
-    const end = parseISO(endTimeISO);
+    const start = parseBookingTime(startTimeISO);
+    const end = parseBookingTime(endTimeISO);
 
     const startHourNum = start.getHours() + start.getMinutes() / 60;
     const endHourNum = end.getHours() + end.getMinutes() / 60;
@@ -240,7 +240,7 @@ export default function InstructorBookingsPage() {
   };
 
   const handleEditClick = (booking: Booking) => {
-    const start = parseISO(booking.bookingSlots[0].startTime);
+    const start = parseBookingTime(booking.bookingSlots[0].startTime);
     if (start < new Date()) {
       toast.error("Cannot edit past bookings.");
       return;
@@ -267,7 +267,7 @@ export default function InstructorBookingsPage() {
   };
 
   const handleDragStart = (e: React.DragEvent, booking: Booking) => {
-    const start = parseISO(booking.bookingSlots[0].startTime);
+    const start = parseBookingTime(booking.bookingSlots[0].startTime);
     if (start < new Date()) {
       e.preventDefault();
       return;
@@ -310,8 +310,8 @@ export default function InstructorBookingsPage() {
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking || !booking.isManualBooking) return;
 
-    const originalStart = parseISO(booking.bookingSlots[0].startTime);
-    const originalEnd = parseISO(booking.bookingSlots[0].endTime);
+    const originalStart = parseBookingTime(booking.bookingSlots[0].startTime);
+    const originalEnd = parseBookingTime(booking.bookingSlots[0].endTime);
     const durationMinutes = (originalEnd.getTime() - originalStart.getTime()) / (1000 * 60);
 
     try {
@@ -516,9 +516,9 @@ export default function InstructorBookingsPage() {
                               <div className="flex flex-col gap-1.5">
                                 {booking.bookingSlots.map((slot, idx) => (
                                   <div key={idx} className="flex flex-col">
-                                    <span className="text-sm text-gray-900">{format(parseISO(slot.startTime), "PPP")}</span>
+                                    <span className="text-sm text-gray-900">{format(parseBookingTime(slot.startTime), "PPP")}</span>
                                     <span className="text-xs text-gray-500 font-medium">
-                                      {format(parseISO(slot.startTime), "p")} - {format(parseISO(slot.endTime), "p")}
+                                      {format(parseBookingTime(slot.startTime), "p")} - {format(parseBookingTime(slot.endTime), "p")}
                                     </span>
                                   </div>
                                 ))}
@@ -628,7 +628,7 @@ export default function InstructorBookingsPage() {
                               {daySlots.map(({ booking, slot }) => (
                                 <div
                                   key={booking.id + slot.startTime}
-                                  draggable={booking.isManualBooking && parseISO(slot.startTime) > new Date()}
+                                  draggable={booking.isManualBooking && parseBookingTime(slot.startTime) > new Date()}
                                   onDragStart={(e) => handleDragStart(e, booking)}
                                   className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group mr-[1px]
                               ${getStatusColor(booking)} cursor-pointer hover:shadow transition-shadow ${booking.isManualBooking ? "active:cursor-grabbing" : ""}`}
@@ -641,10 +641,10 @@ export default function InstructorBookingsPage() {
                                   {booking.isManualBooking ? (
                                     <>
                                       <div className="flex justify-between items-start font-semibold">
-                                        <span>{format(parseISO(slot.startTime), "h:mm a")}</span>
+                                        <span>{format(parseBookingTime(slot.startTime), "h:mm a")}</span>
                                       </div>
                                       <div className="truncate opacity-90 font-medium">{booking.note || "Manual Booking"}</div>
-                                      {parseISO(slot.startTime) > new Date() && (
+                                      {parseBookingTime(slot.startTime) > new Date() && (
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -669,7 +669,7 @@ export default function InstructorBookingsPage() {
                                   ) : (
                                     <>
                                       <div className="flex items-center justify-between font-semibold pr-1">
-                                        <span>{format(parseISO(slot.startTime), "h:mm a")}</span>
+                                        <span>{format(parseBookingTime(slot.startTime), "h:mm a")}</span>
                                         <span className="truncate max-w-[50px] ml-1 opacity-70 font-normal">{booking.transmission?.substring(0, 4)}</span>
                                       </div>
                                       <div className="truncate opacity-90 font-medium">{booking.package || "Lesson"}</div>
@@ -779,7 +779,7 @@ export default function InstructorBookingsPage() {
                                   return (
                                     <div
                                       key={booking.id + slot.startTime}
-                                      draggable={booking.isManualBooking && parseISO(slot.startTime) > new Date()}
+                                      draggable={booking.isManualBooking && parseBookingTime(slot.startTime) > new Date()}
                                       onDragStart={(e) => handleDragStart(e, booking)}
                                       className={`rounded-md border flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
                                       ${getStatusColor(booking)} cursor-pointer ${booking.isManualBooking ? "p-1 active:cursor-grabbing" : "p-2"}`}
@@ -795,7 +795,7 @@ export default function InstructorBookingsPage() {
                                     >
                                       <div className="text-xs font-semibold flex justify-between items-start mb-0.5">
                                         <span className="truncate pr-4">
-                                          {format(parseISO(slot.startTime), "h:mm")} - {format(parseISO(slot.endTime), "h:mm a")}
+                                          {format(parseBookingTime(slot.startTime), "h:mm")} - {format(parseBookingTime(slot.endTime), "h:mm a")}
                                         </span>
                                       </div>
                                       {booking.isManualBooking ? (
@@ -815,7 +815,7 @@ export default function InstructorBookingsPage() {
                                               <X className="w-3 h-3" />
                                             </button>
                                           </div>
-                                          {parseISO(slot.startTime) > new Date() && (
+                                          {parseBookingTime(slot.startTime) > new Date() && (
                                             <button
                                               onClick={(e) => {
                                                 e.stopPropagation();

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
+import { parseBookingTime } from '../util/parseBookingTime';
 import { Calendar as CalendarIcon, Clock, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createManualBooking, updateManualBooking } from '../api/booking-api';
@@ -46,8 +47,8 @@ export default function ManualBookingModal({
     useEffect(() => {
         if (isOpen) {
             if (editingBooking) {
-                const start = parseISO(editingBooking.bookingSlots[0].startTime);
-                const end = parseISO(editingBooking.bookingSlots[0].endTime);
+                const start = parseBookingTime(editingBooking.bookingSlots[0].startTime);
+                const end = parseBookingTime(editingBooking.bookingSlots[0].endTime);
 
                 setSelectedDate(start);
                 setStartTime(format(start, 'HH:mm'));

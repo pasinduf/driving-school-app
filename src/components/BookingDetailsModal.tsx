@@ -1,5 +1,6 @@
 
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
+import { parseBookingTime } from '../util/parseBookingTime';
 import {  X  } from 'lucide-react';
 import type { Booking } from '../api/types/booking-response';
 
@@ -28,12 +29,12 @@ export default function BookingDetailsModal({ isOpen, onClose, booking }: Manual
             <div className="col-span-2 font-medium">{booking.id.substring(0, 8).toUpperCase()}</div>
 
             <div className="text-gray-500">Date:</div>
-            <div className="col-span-2 font-medium">{format(parseISO(booking.bookingSlots[0].startTime), "EEEE, MMMM d, yyyy")}</div>
+            <div className="col-span-2 font-medium">{format(parseBookingTime(booking.bookingSlots[0].startTime), "EEEE, MMMM d, yyyy")}</div>
 
             <div className="text-gray-500">Time:</div>
             <div className="col-span-2 font-medium">
-              {format(parseISO(booking.bookingSlots[0].startTime), "h:mm a")} -{" "}
-              {format(parseISO(booking.bookingSlots[0].endTime), "h:mm a")}
+              {format(parseBookingTime(booking.bookingSlots[0].startTime), "h:mm a")} -{" "}
+              {format(parseBookingTime(booking.bookingSlots[0].endTime), "h:mm a")}
             </div>
 
             <div className="text-gray-500">Type:</div>
