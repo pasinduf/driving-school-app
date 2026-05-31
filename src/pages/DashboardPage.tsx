@@ -1,16 +1,28 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { fetchDashboardMetrics } from '../api/misc-api';
+import { fetchDashboardMetrics, fetchRecentBookings } from '../api/misc-api';
 import { Users, CarFront, DollarSign, Calendar } from 'lucide-react';
 import Spinner from '../components/Spinner';
+import { format } from 'date-fns';
+import { parseBookingTime } from '../util/parseBookingTime';
+import BookingDetailsModal from '../components/BookingDetailsModal';
+import type { Booking } from '../api/types/booking-response';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const { data: metrics, isLoading } = useQuery({
     queryKey: ['dashboardMetrics'],
     queryFn: fetchDashboardMetrics,
-    enabled: !!user
+    enabled: !!user,
+  });
+
+  const { data: recentBookings = [] } = useQuery<Booking[]>({
+    queryKey: ['recentBookings'],
+    queryFn: fetchRecentBookings,
+    enabled: !!user && user.role === 'Instructor',
   });
 
   if (isLoading) {
@@ -104,6 +116,65 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Recent Web Bookings — Instructor only */}
+      {role === 'Instructor' && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">Recent Bookings</h2>
+          {recentBookings.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-center text-sm text-gray-400">
+              No recent web bookings.
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <table className="w-full text-sm divide-y divide-gray-100">
+                <thead className="bg-gray-50/80">
+                  <tr>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Time</th>
+                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Suburb</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {recentBookings.map((booking) => {
+                    const firstSlot = booking.bookingSlots?.[0];
+                    return (
+                      <tr
+                        key={booking.id}
+                        className="hover:bg-primary/[0.02] cursor-pointer transition-colors"
+                        onClick={() => setSelectedBooking(booking)}
+                      >
+                        <td className="px-5 py-3 font-medium text-gray-900">
+                          {[booking.bookingDetails?.customerFirstName, booking.bookingDetails?.customerLastName]
+                            .filter(Boolean).join(' ') || '—'}
+                        </td>
+                        <td className="px-5 py-3 text-gray-600">
+                          {firstSlot ? format(parseBookingTime(firstSlot.startTime), 'EEE, d MMM yyyy') : '—'}
+                        </td>
+                        <td className="px-5 py-3 text-gray-600">
+                          {firstSlot
+                            ? `${format(parseBookingTime(firstSlot.startTime), 'h:mm a')} – ${format(parseBookingTime(firstSlot.endTime), 'h:mm a')}`
+                            : '—'}
+                        </td>
+                        <td className="px-5 py-3 text-gray-600">{booking.suburb?.name || '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedBooking && (
+        <BookingDetailsModal
+          isOpen={true}
+          onClose={() => setSelectedBooking(null)}
+          booking={selectedBooking}
+        />
+      )}
     </div>
   );
 }

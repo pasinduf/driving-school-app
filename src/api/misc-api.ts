@@ -28,6 +28,11 @@ export const fetchDashboardMetrics = async () => {
     return response.data;
 };
 
+export const fetchRecentBookings = async () => {
+    const response = await apiClient.get('/dashboard/recent-bookings');
+    return response.data;
+};
+
 export const sendMessage = async (message: string) => {
     const response = await apiClient.post('/chat', { message });
     return response.data;
