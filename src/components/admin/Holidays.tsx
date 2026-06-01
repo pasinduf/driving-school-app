@@ -35,12 +35,12 @@ export default function Holidays() {
         setIsAddingHoliday(true);
         try {
             await createHoliday(holidayDate, holidayReason);
-            toast.success('Leave/Block date added successfully');
+            toast.success('Leave/Block date added successfully.');
             setHolidayDate('');
             setHolidayReason('');
             queryClient.invalidateQueries({ queryKey: ['adminHolidays'] });
         } catch (error) {
-            toast.error("Failed to create leave/block date");
+            toast.error("Failed to create leave/block date.");
         } finally {
             setIsAddingHoliday(false);
         }
