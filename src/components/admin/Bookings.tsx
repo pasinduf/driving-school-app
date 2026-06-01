@@ -14,7 +14,7 @@ import BookingDetailsModal from '../BookingDetailsModal';
 export default function Bookings() {
     const { user } = useAuth();
 
-    // Filters & Pagination
+    // Filters & Pagination State
     const [filterDate, setFilterDate] = useState('');
     const [filterInstructorId, setFilterInstructorId] = useState('');
     const [searchInstructorText, setSearchInstructorText] = useState('');
