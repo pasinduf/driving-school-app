@@ -54,16 +54,19 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
         <div className={`${collapsed ? "h-16" : "h-20"} flex items-center justify-between px-4 border-b border-gray-800 transition-all duration-300`}>
           {!collapsed && (
             <div className="flex-1 flex items-center justify-center overflow-hidden h-full py-3">
-              {companyDetails?.logoUrl ? (
+              {/* {companyDetails?.logoUrl ? (
                 <img src={companyDetails.logoUrl} alt="Logo" className="w-full h-full object-contain" />
               ) : (
                 <div className="flex items-center space-x-2">
-                  {/* <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                    <span className="font-bold text-xl">{companyDetails?.name ? companyDetails.name.charAt(0) : "D"}</span>
-                  </div> */}
                   <span className="font-bold text-xl tracking-tight truncate">{companyDetails?.name || ""}</span>
                 </div>
-              )}
+              )} */}
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shrink-0">
+                    <span className="font-bold text-xl">{companyDetails?.name ? companyDetails.name.charAt(0) : "D"}</span>
+                  </div>
+                <span className="font-bold text-xl tracking-tight truncate">{companyDetails?.name || ""}</span>
+              </div>
             </div>
           )}
           <button

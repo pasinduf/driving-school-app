@@ -31,12 +31,16 @@ export default function StudentBookingsPage() {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
-  const { data: bookingData, isLoading, isError } = useQuery<BookingsResponse>({
+  const { data: bookingData, isLoading, isFetching, isError } = useQuery<BookingsResponse>({
     queryKey: ['my-bookings', page, limit],
     queryFn: () => fetchMyBookings(page, limit),
     placeholderData: keepPreviousData,
     enabled: !!user,
   });
+
+  // keepPreviousData leaves isLoading false after the first fetch, so also rely on
+  // isFetching to show the spinner during pagination and refetches.
+  const isBookingsLoading = isLoading || isFetching;
 
   const bookings = bookingData?.data || [];
   const total = bookingData?.total || 0;
@@ -62,7 +66,7 @@ export default function StudentBookingsPage() {
     <>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">My Bookings</h1>
       <main className="w-full">
-        {isLoading ? (
+        {isBookingsLoading ? (
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <Spinner size="lg" text="Loading bookings..." />
           </div>

@@ -121,6 +121,11 @@ export const cancelBooking = async (id: string) => {
     return response.data;
 };
 
+export const completeBooking = async (id: string) => {
+    const response = await apiClient.post(`/bookings/${id}/complete`);
+    return response.data;
+};
+
 export const fetchBookings = async (params?: { date?: string; instructorId?: string; page?: number; limit?: number }) => {
     const response = await apiClient.get<{ data: any[]; total: number }>('/bookings', { params });
     return response.data;

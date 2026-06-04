@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { loginUser } from '../api/auth-api';
@@ -10,6 +10,7 @@ import { Eye, EyeOff } from 'lucide-react';
 export default function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { company } = useCompany();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -26,8 +27,9 @@ export default function LoginPage() {
             // Decode token to get role
             jwtDecode(data.access_token);
 
-            // Navigate everyone to the newly implemented Dashboard layout view natively
-            navigate('/portal/dashboard');
+            // Return the user to where their session expired, if known; otherwise the dashboard.
+            const returnTo = searchParams.get('returnTo');
+            navigate(returnTo || '/portal/dashboard');
         } catch (err: any) {
             console.error(err);
             setError('Invalid credentials');
