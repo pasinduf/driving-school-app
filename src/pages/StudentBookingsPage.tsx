@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { fetchMyBookings } from '../api/booking-api';
+import { fetchMyBookings, cancelMyBooking } from '../api/booking-api';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { parseBookingTime } from '../util/parseBookingTime';
 import { AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
 import Pagination from '../components/Pagination';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 interface Booking {
   id: string;
@@ -31,7 +33,7 @@ export default function StudentBookingsPage() {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
-  const { data: bookingData, isLoading, isFetching, isError } = useQuery<BookingsResponse>({
+  const { data: bookingData, isLoading, isFetching, isError, refetch } = useQuery<BookingsResponse>({
     queryKey: ['my-bookings', page, limit],
     queryFn: () => fetchMyBookings(page, limit),
     placeholderData: keepPreviousData,
@@ -44,6 +46,27 @@ export default function StudentBookingsPage() {
 
   const bookings = bookingData?.data || [];
   const total = bookingData?.total || 0;
+
+  // Cancellation State
+  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancelBooking = async () => {
+    if (!bookingToCancel) return;
+    setIsCancelling(true);
+    try {
+      await cancelMyBooking(bookingToCancel);
+      toast.success('Booking cancelled successfully.');
+      setIsCancelModalOpen(false);
+      setBookingToCancel(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to cancel booking.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
 
   if (isError) {
@@ -79,19 +102,21 @@ export default function StudentBookingsPage() {
                 <div className="flex flex-col md:flex-row justify-between md:items-center mb-4">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{booking.package || "Driving Lesson"}</h3>
-                    <p className="text-sm text-gray-500">Ref: {booking.id.substring(0, 8)}</p>
+                    <p className="text-sm text-gray-500">Ref: {booking.id.substring(0, 8).toUpperCase()}</p>
                   </div>
                   <div className="mt-2 md:mt-0">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium 
-                                            ${booking.status === "CONFIRMED"
-                          ? "bg-green-100 text-green-800"
-                          : booking.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                      className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${
+                        booking.status === "CANCELLED"
+                          ? "bg-red-50 text-red-700 border-red-200"
+                          : booking.status === "COMPLETED"
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : booking.status === "PENDING"
+                              ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                              : "bg-green-50 text-green-700 border-green-200"
+                      }`}
                     >
-                      {booking.status}
+                      {booking.status === "CONFIRMED" ? "PENDING" : booking.status}
                     </span>
                   </div>
                 </div>
@@ -127,6 +152,20 @@ export default function StudentBookingsPage() {
                     )}
                   </div>
                 </div>
+
+                {booking.status === "CONFIRMED" && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+                    <button
+                      onClick={() => {
+                        setBookingToCancel(booking.id);
+                        setIsCancelModalOpen(true);
+                      }}
+                      className="px-4 py-2 text-sm font-bold rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                    >
+                      Cancel Booking
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
 
@@ -135,6 +174,22 @@ export default function StudentBookingsPage() {
           </div>
         )}
       </main>
+
+      {/* Cancel Booking Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => {
+          setIsCancelModalOpen(false);
+          setBookingToCancel(null);
+        }}
+        onConfirm={handleCancelBooking}
+        isConfirming={isCancelling}
+        title="Cancel Booking"
+        message="Are you sure you want to cancel this booking? This action cannot be undone."
+        confirmText="Cancel"
+        cancelText="Keep"
+        variant="danger"
+      />
     </>
   );
 }

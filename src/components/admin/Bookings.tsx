@@ -101,7 +101,8 @@ export default function Bookings() {
         ) : (
           <>
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Date & Time</th>
@@ -160,7 +161,7 @@ export default function Bookings() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1 items-start">
                           <span
-                            className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
+                            className={`px-3 py-1 inline-flex whitespace-nowrap text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
                           >
                             {booking.isManualBooking ? "Manual" : "Web"}
                           </span>
@@ -169,7 +170,7 @@ export default function Bookings() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${
+                          className={`px-3 py-1 inline-flex whitespace-nowrap text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${
                             booking.status === "CANCELLED"
                               ? "bg-red-50 text-red-700 border-red-200"
                               : booking.status === "COMPLETED"
@@ -193,6 +194,7 @@ export default function Bookings() {
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
 
             <Pagination currentPage={page} totalPages={Math.ceil(totalBookings / limit)} onPageChange={setPage} />

@@ -1,9 +1,16 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { fetchDashboardMetrics, fetchRecentBookings } from '../api/misc-api';
-import { Users, CarFront, DollarSign, Calendar } from 'lucide-react';
+import {
+  fetchDashboardMetrics,
+  fetchDashboardSummary,
+  fetchBookingChart,
+  fetchRecentBookingsAnalytics,
+  type DashboardMetric,
+} from '../api/misc-api';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import Spinner from '../components/Spinner';
+import BookingBarChart from '../components/dashboard/BookingBarChart';
 import { format } from 'date-fns';
 import { parseBookingTime } from '../util/parseBookingTime';
 import BookingDetailsModal from '../components/BookingDetailsModal';
@@ -11,18 +18,211 @@ import type { Booking } from '../api/types/booking-response';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+
+  if (!user) return null;
+
+  if (user.role === 'Admin' || user.role === 'Instructor') {
+    return <AnalyticsDashboard />;
+  }
+
+  return <StudentDashboard />;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Admin & Instructor analytics dashboard                                     */
+/* -------------------------------------------------------------------------- */
+
+function AnalyticsDashboard() {
+  const { user } = useAuth();
+  const [period, setPeriod] = useState<'week' | 'month' | 'year'>('week');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
+  const { data: summary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['dashboardSummary'],
+    queryFn: fetchDashboardSummary,
+    enabled: !!user,
+  });
+
+  const { data: chart, isLoading: chartLoading, isFetching: chartFetching } = useQuery({
+    queryKey: ['bookingChart', period],
+    queryFn: () => fetchBookingChart(period),
+    placeholderData: keepPreviousData,
+    enabled: !!user,
+  });
+
+  const { data: recent = [], isLoading: recentLoading } = useQuery<Booking[]>({
+    queryKey: ['recentBookingsAnalytics'],
+    queryFn: fetchRecentBookingsAnalytics,
+    enabled: !!user,
+  });
+
+  if (summaryLoading) {
+    return (
+      <div className="flex-1 flex justify-center items-center min-h-[50vh]">
+        <Spinner text="Loading dashboard..." />
+      </div>
+    );
+  }
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(amount);
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <p className="text-sm font-medium text-gray-400">Welcome back</p>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Operations overview</h1>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <SummaryCard title="Revenue (month)" value={summary ? formatCurrency(summary.revenue.value) : "—"} metric={summary?.revenue} />
+        <SummaryCard title="Lessons booked (month)" value={summary ? summary.lessons.value.toLocaleString() : "—"} metric={summary?.lessons} />
+        <SummaryCard title="No-show rate (month)" value={summary ? `${summary.noShow.value}%` : "—"} metric={summary?.noShow} changeSuffix="%" />
+      </div>
+
+      {/* Analytics + Recent Bookings */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
+        {/* Bar Chart */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-base font-bold text-gray-900">Bookings this {period}</h2>
+            <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
+              {(["week", "month", "year"] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md capitalize transition-all ${
+                    period === p ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {chartLoading ? (
+            <div className="h-64 flex items-center justify-center">
+              <Spinner text="Loading chart..." />
+            </div>
+          ) : (
+            <div className={chartFetching ? "opacity-60 transition-opacity" : "transition-opacity"}>
+              <BookingBarChart data={chart?.data ?? []} />
+            </div>
+          )}
+        </div>
+
+        {/* Recent Bookings */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+          <h2 className="text-base font-bold text-gray-900 mb-4">Recent Bookings</h2>
+          {recentLoading ? (
+            <div className="py-10 flex justify-center">
+              <Spinner size="sm" />
+            </div>
+          ) : recent.length === 0 ? (
+            <div className="py-10 text-center text-sm text-gray-400">No recent bookings.</div>
+          ) : (
+            <div className="space-y-1">
+              {recent.map((booking) => (
+                <RecentBookingItem key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selectedBooking && <BookingDetailsModal isOpen={true} onClose={() => setSelectedBooking(null)} booking={selectedBooking} />}
+    </div>
+  );
+}
+
+function SummaryCard({
+  title,
+  value,
+  metric,
+  changeSuffix = '%',
+}: {
+  title: string;
+  value: string;
+  metric?: DashboardMetric;
+  changeSuffix?: string;
+}) {
+  const change = metric?.change ?? 0;
+  const good = metric?.isPositiveTrend ?? true;
+  const changeLabel = `${change >= 0 ? '+' : ''}${change}${changeSuffix}`;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <p className="text-sm font-medium text-gray-400 mb-1">{title}</p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">{value}</h3>
+      {metric && (
+        <div className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold ${good ? 'text-emerald-600' : 'text-red-500'}`}>
+          {change >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+          {changeLabel}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RecentBookingItem({ booking, onClick }: { booking: Booking; onClick: () => void }) {
+  const name = booking.isManualBooking
+    ? booking.customerName || 'Manual Booking'
+    : [booking.bookingDetails?.customerFirstName, booking.bookingDetails?.customerLastName].filter(Boolean).join(' ') || 'Web Booking';
+
+  const initials =
+    name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase())
+      .join('') || '?';
+
+  const slots = booking.bookingSlots ?? [];
+  const firstSlot = slots[0];
+  const extraSlots = slots.length - 1;
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left"
+    >
+      <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">
+        {initials}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
+        <p className="text-xs text-gray-500 truncate">
+          {[booking.package, booking.instructor].filter(Boolean).join(' · ') || '—'}
+        </p>
+      </div>
+      <div className="text-right shrink-0">
+        {firstSlot ? (
+          <>
+            <p className="text-xs font-medium text-gray-900">{format(parseBookingTime(firstSlot.startTime), 'd MMM')}</p>
+            <p className="text-[11px] text-gray-500">
+              {format(parseBookingTime(firstSlot.startTime), 'h:mm a')}
+              {extraSlots > 0 && <span className="text-gray-400"> +{extraSlots}</span>}
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-gray-400">—</p>
+        )}
+      </div>
+    </button>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Student dashboard (unchanged behaviour)                                    */
+/* -------------------------------------------------------------------------- */
+
+function StudentDashboard() {
+  const { user } = useAuth();
 
   const { data: metrics, isLoading } = useQuery({
     queryKey: ['dashboardMetrics'],
     queryFn: fetchDashboardMetrics,
     enabled: !!user,
-  });
-
-  const { data: recentBookings = [] } = useQuery<Booking[]>({
-    queryKey: ['recentBookings'],
-    queryFn: fetchRecentBookings,
-    enabled: !!user && user.role === 'Instructor',
   });
 
   if (isLoading) {
@@ -33,155 +233,18 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user || !metrics) return null;
+  if (!metrics) return null;
 
-  const role = user.role;
-
-  // Formatting helper
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-AU', {
-      style: 'currency',
-      currency: 'AUD'
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
 
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Welcome back</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Admin Cards */}
-        {role === "Admin" && (
-          <>
-            <MetricCard
-              title="Total Active Instructors"
-              value={metrics.totalInstructors || 0}
-              icon={<Users className="w-6 h-6 text-blue-600" />}
-              gradient="from-blue-50 to-blue-100/50"
-            />
-            <MetricCard
-              title="Global Bookings"
-              value={metrics.totalBookings || 0}
-              icon={<CarFront className="w-6 h-6 text-indigo-600" />}
-              gradient="from-indigo-50 to-indigo-100/50"
-            />
-            <MetricCard
-              title="Total Estimated Revenue"
-              value={formatCurrency(metrics.totalRevenue || 0)}
-              icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
-              gradient="from-emerald-50 to-emerald-100/50"
-            />
-          </>
-        )}
-
-        {/* Instructor Cards */}
-        {role === "Instructor" && (
-          <>
-            <MetricCard
-              title="My Total Bookings"
-              value={metrics.totalBookings || 0}
-              icon={<CarFront className="w-6 h-6 text-purple-600" />}
-              gradient="from-purple-50 to-purple-100/50"
-            />
-            <MetricCard
-              title="Unique Students Taught"
-              value={metrics.totalStudents || 0}
-              icon={<Users className="w-6 h-6 text-orange-600" />}
-              gradient="from-orange-50 to-orange-100/50"
-            />
-            <MetricCard
-              title="Total Revenue Earned"
-              value={formatCurrency(metrics.totalRevenue || 0)}
-              icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
-              gradient="from-emerald-50 to-emerald-100/50"
-            />
-          </>
-        )}
-
-        {/* Student Cards */}
-        {role === "Student" && (
-          <>
-            <MetricCard
-              title="Total Lessons Booked"
-              value={metrics.totalBookings || 0}
-              icon={<Calendar className="w-6 h-6 text-blue-600" />}
-              gradient="from-blue-50 to-blue-100/50"
-            />
-            <MetricCard
-              title="Overall Amount Spent"
-              value={formatCurrency(metrics.totalSpent || 0)}
-              icon={<DollarSign className="w-6 h-6 text-emerald-600" />}
-              gradient="from-emerald-50 to-emerald-100/50"
-            />
-          </>
-        )}
-      </div>
-
-      {/* Recent Web Bookings — Instructor only */}
-      {role === 'Instructor' && (
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Recent Bookings</h2>
-          {recentBookings.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-center text-sm text-gray-400">
-              No recent web bookings.
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              <table className="w-full text-sm divide-y divide-gray-100">
-                <thead className="bg-gray-50/80">
-                  <tr>
-                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Time</th>
-                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
-                    <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Suburb</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {recentBookings.map((booking) => {
-                    const firstSlot = booking.bookingSlots?.[0];
-                    return (
-                      <tr key={booking.id} className="hover:bg-primary/[0.02] cursor-pointer transition-colors" onClick={() => setSelectedBooking(booking)}>
-                        <td className="px-5 py-3 text-gray-600">{firstSlot ? format(parseBookingTime(firstSlot.startTime), "EEE, d MMM yyyy") : "—"}</td>
-                        <td className="px-5 py-3 text-gray-600">
-                          {firstSlot
-                            ? `${format(parseBookingTime(firstSlot.startTime), "h:mm a")} – ${format(parseBookingTime(firstSlot.endTime), "h:mm a")}`
-                            : "—"}
-                        </td>
-                        <td className="px-5 py-3 font-medium text-gray-900">
-                          {[booking.bookingDetails?.customerFirstName, booking.bookingDetails?.customerLastName].filter(Boolean).join(" ") || "—"}
-                        </td>
-                        <td className="px-5 py-3 text-gray-600">{booking.suburb?.name || "—"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {selectedBooking && (
-        <BookingDetailsModal
-          isOpen={true}
-          onClose={() => setSelectedBooking(null)}
-          booking={selectedBooking}
-        />
-      )}
-    </div>
-  );
-}
-
-// Simple internal component for UI consistency
-function MetricCard({ title, value, icon, gradient }: { title: string, value: string | number, icon: React.ReactNode, gradient: string }) {
-  return (
-    <div className={`bg-gradient-to-br ${gradient} p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between transition-transform hover:-translate-y-1 hover:shadow-md`}>
-      <div>
-        <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-        <h3 className="text-3xl font-bold text-gray-900">{value}</h3>
-      </div>
-      <div className="bg-white p-3 rounded-xl shadow-sm">
-        {icon}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <SummaryCard title="Total Lessons Booked" value={(metrics.totalBookings || 0).toLocaleString()} />
+        <SummaryCard title="Overall Amount Spent" value={formatCurrency(metrics.totalSpent || 0)} />
       </div>
     </div>
   );
