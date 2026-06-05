@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { loginUser } from '../api/auth-api';
 import { jwtDecode } from 'jwt-decode';
-import { Eye, EyeOff } from 'lucide-react';
+import PasswordInput from '../components/PasswordInput';
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -15,7 +15,6 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,52 +39,61 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-6 text-center">Login to {company?.name || 'Portal'}</h2>
-                {error && <div className="bg-red-100 text-red-500 p-2 rounded mb-4 text-center">{error}</div>}
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Email</label>
-                        <input
-                            type="email"
-                            className="w-full border p-2 rounded"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+        <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-surface px-4">
+            {/* Soft brand-tinted backdrop (tracks the company theme color) */}
+            <div className="pointer-events-none absolute inset-x-0 -top-40 flex justify-center">
+                <div className="h-[420px] w-[680px] rounded-full bg-primary-100 blur-3xl opacity-60" />
+            </div>
+
+            <div className="relative w-full max-w-md">
+                <div className="mb-6 flex flex-col items-center gap-3 text-center">
+                    {/* <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-lg font-bold text-white shadow-glow">
+                        {company?.name ? company.name.charAt(0) : 'D'}
+                    </div> */}
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-ink">Welcome back</h1>
+                        <p className="mt-1 text-sm text-muted">Sign in to {company?.name || 'your portal'}</p>
                     </div>
-                    <div className="mb-6">
-                        <div className='relative'>
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="block text-gray-700">Password</label>
-                                <Link to="/forgot-password" className="text-sm text-primary hover:underline font-medium">Forgot password?</Link>
-                            </div>
+                </div>
+
+                <div className="rounded-3xl border border-line bg-white p-6 shadow-card sm:p-8">
+                    {error && (
+                        <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-center text-sm text-red-600">{error}</div>
+                    )}
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label className="mb-1.5 block text-sm font-semibold text-ink">Email</label>
                             <input
-                                type={showConfirmPassword ? "text" : "password"}
-                                className="w-full border p-2 rounded block"
+                                type="email"
+                                className="w-full"
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="mb-6">
+                            <div className="mb-1.5 flex items-center justify-between">
+                                <label className="block text-sm font-semibold text-ink">Password</label>
+                                <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">Forgot password?</Link>
+                            </div>
+                            <PasswordInput
+                                placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-2/3 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                            >
-                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
                         </div>
+                        <button
+                            type="submit"
+                            className="w-full rounded-full bg-primary py-3 text-sm font-semibold text-white shadow-glow transition-all hover:-translate-y-0.5 hover:opacity-95"
+                        >
+                            Sign in
+                        </button>
+                    </form>
+                    <div className="mt-5 text-center">
+                        <Link to="/" className="text-sm text-muted hover:text-primary transition-colors">← Back to home</Link>
                     </div>
-                    <button
-                        type="submit"
-                        className="w-full bg-primary text-white p-2 rounded hover:bg-primary"
-                    >
-                        Login
-                    </button>
-                </form>
-                <div className="mt-4 text-center">
-                    <Link to="/" className="text-primary hover:underline text-sm">Back to Home</Link>
                 </div>
             </div>
         </div>

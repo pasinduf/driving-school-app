@@ -23,9 +23,9 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
 
   // Common styles
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive
-      ? 'bg-primary text-white'
-      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+    `flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${isActive
+      ? 'bg-primary text-white shadow-glow'
+      : 'text-gray-400 hover:bg-white/5 hover:text-white'
     }`;
 
   const handleMobileDismiss = () => {
@@ -34,8 +34,8 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
 
   const subLinkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center pl-11 pr-4 py-2 text-sm rounded-lg transition-colors ${isActive
-      ? 'text-white font-medium bg-gray-800'
-      : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+      ? 'text-white font-medium bg-white/10'
+      : 'text-gray-400 hover:text-white hover:bg-white/5'
     }`;
 
   return (
@@ -48,7 +48,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
       <aside
         className={`${mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} ${
           collapsed ? "md:w-20 w-64" : "w-64"
-        } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-900 text-white border-r border-gray-800 top-0 h-full overflow-y-auto flex flex-col z-50`}
+        } fixed md:relative transition-all duration-300 flex-shrink-0 bg-gray-950 text-white border-r border-gray-800 top-0 h-full overflow-y-auto flex flex-col z-50`}
       >
         {/* Brand Header */}
         <div className={`${collapsed ? "h-16" : "h-20"} flex items-center justify-between px-4 border-b border-gray-800 transition-all duration-300`}>
@@ -62,7 +62,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
                 </div>
               )} */}
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shrink-0 shadow-glow">
                     <span className="font-bold text-xl">{companyDetails?.name ? companyDetails.name.charAt(0) : "D"}</span>
                   </div>
                 <span className="font-bold text-xl tracking-tight truncate">{companyDetails?.name || ""}</span>
@@ -71,7 +71,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`p-1.5 rounded-md hover:bg-gray-800 text-gray-400 hover:text-white transition-colors ${collapsed ? "mx-auto" : "ml-2"}`}
+            className={`p-1.5 rounded-md hover:bg-white/5 text-gray-400 hover:text-white transition-colors ${collapsed ? "mx-auto" : "ml-2"}`}
           >
             {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
@@ -88,7 +88,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileMenuOpen, setMo
             <div>
               <button
                 onClick={() => setBookingsOpen(!bookingsOpen)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors ${!collapsed && bookingsOpen ? "bg-gray-800/50" : ""}`}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-colors ${!collapsed && bookingsOpen ? "bg-white/5" : ""}`}
               >
                 <div className="flex items-center space-x-3">
                   <CarFront size={20} className={collapsed ? "mx-auto" : ""} />

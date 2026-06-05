@@ -85,7 +85,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                                 <input
                                     type={showCurrentPassword ? "text" : "password"}
                                     {...register('currentPassword', { required: 'Current password is required' })}
-                                    className={`w-full px-4 py-2 bg-gray-50 border ${errors.currentPassword ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary'} rounded-lg focus:outline-none focus:ring-2 transition-all text-sm pr-10`}
+                                    className={`w-full pr-10 ${errors.currentPassword ? 'border-red-300 focus:border-red-300 focus:ring-red-200' : ''}`}
                                 />
                                 <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none">
                                     {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -108,7 +108,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                                         required: 'New password is required',
                                         minLength: { value: 8, message: 'Password must be at least 8 characters' }
                                     })}
-                                    className={`w-full px-4 py-2 bg-gray-50 border ${errors.newPassword ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary'} rounded-lg focus:outline-none focus:ring-2 transition-all text-sm pr-10`}
+                                    className={`w-full pr-10 ${errors.newPassword ? 'border-red-300 focus:border-red-300 focus:ring-red-200' : ''}`}
                                 />
                                 <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none">
                                     {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -126,7 +126,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                                         required: 'Please confirm your new password',
                                         validate: (val) => watch('newPassword') === val || 'Passwords do not match'
                                     })}
-                                    className={`w-full px-4 py-2 bg-gray-50 border ${errors.confirmPassword ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:ring-primary/20 focus:border-primary'} rounded-lg focus:outline-none focus:ring-2 transition-all text-sm pr-10`}
+                                    className={`w-full pr-10 ${errors.confirmPassword ? 'border-red-300 focus:border-red-300 focus:ring-red-200' : ''}`}
                                 />
                                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none">
                                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}

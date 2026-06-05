@@ -599,7 +599,7 @@ export default function InstructorBookingsPage() {
                             </td>
                             <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
                               <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Price</span>
-                              <span className="text-sm font-black text-primary">${booking.price}</span>
+                              <span className="text-sm text-primary">${booking.price}</span>
                             </td>
                             <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
                               <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Type</span>

@@ -32,7 +32,12 @@ function App() {
   return (
     <AuthProvider>
       <MasterDataProvider>
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{ className: 'rounded-xl border border-line shadow-card' }}
+        />
         <BrowserRouter>
           <Routes>
             {/* Public routes wrapped with Company Context for branding */}

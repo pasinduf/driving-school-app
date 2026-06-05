@@ -1,9 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html {
-    scroll-behavior: smooth;
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        color: #0b1020; /* ink */
+        background-color: #ffffff;
+    }
+
+    h1, h2, h3, h4, h5 {
+        font-weight: 600;
+        letter-spacing: -0.011em;
+    }
+
+    ::selection {
+        background-color: var(--color-primary, #d2232a);
+        color: #fff;
+    }
+
+    /* Unified form-control styling so every text input/textarea/select matches
+       the Drive Me public website. Uses :where() (0 specificity) so any inline
+       utility classes on a given field still override these defaults. Focus is
+       a single border + ring (no UA outline) — this also removes the previous
+       double-border (outline + ring) on focus. */
+    input:where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"])),
+    textarea:where(*),
+    select:where(*) {
+        @apply rounded-xl border border-line bg-white px-4 py-2.5 text-sm text-ink transition-colors;
+    }
+
+    input:where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]))::placeholder,
+    textarea::placeholder {
+        @apply text-gray-400;
+    }
+
+    input:where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"])):focus,
+    textarea:where(*):focus,
+    select:where(*):focus {
+        @apply outline-none border-primary ring-1 ring-primary-200;
+    }
+
+    input:where(*):disabled,
+    textarea:where(*):disabled,
+    select:where(*):disabled {
+        @apply cursor-not-allowed bg-gray-50 text-gray-400;
+    }
+
+    /* Refined thin scrollbars (slate). */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    *::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 9999px;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8;
+    }
+}
+
+@layer components {
+    /* Reusable Drive Me-style primitives. Use where helpful; existing inline
+       utilities elsewhere already inherit the new font/neutrals/tokens. */
+    .dm-card {
+        @apply rounded-2xl border border-line bg-white shadow-card;
+    }
+
+    .dm-btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:opacity-95 focus:outline-none disabled:translate-y-0 disabled:opacity-60;
+    }
+
+    .dm-btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-ink ring-1 ring-line transition-all hover:-translate-y-0.5 hover:ring-gray-300 focus:outline-none disabled:translate-y-0 disabled:opacity-60;
+    }
+
+    .dm-input {
+        @apply w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm text-ink placeholder:text-gray-400 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-200;
+    }
+
+    .dm-badge {
+        @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+    }
 }
 
 input[type="checkbox"] {

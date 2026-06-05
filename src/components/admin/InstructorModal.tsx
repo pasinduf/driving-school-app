@@ -220,7 +220,7 @@ export default function InstructorModal({ isOpen, onClose, onSave, instructor }:
                         required: "Password is required",
                         minLength: { value: 8, message: "Password must be at least 8 characters" },
                       })}
-                      className="w-full outline-none bg-transparent p-2 pr-28 appearance-none"
+                      className="w-full outline-none bg-transparent p-2 pr-28 appearance-none border-0 focus:ring-0"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
                       <button
@@ -292,7 +292,7 @@ export default function InstructorModal({ isOpen, onClose, onSave, instructor }:
             <button
               type="submit"
               disabled={isSaving}
-              className="bg-primary text-white px-6 py-2 rounded hover:bg-red-700 flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="bg-primary text-white px-6 py-2 rounded hover:opacity-90 flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               {isSaving ? "Saving..." : "Save Instructor"}
             </button>

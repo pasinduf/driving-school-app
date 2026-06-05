@@ -88,7 +88,7 @@ export default function SearchableMultiSelect({
                     <Search className="absolute left-2 w-4 h-4 text-gray-400 pointer-events-none" />
                     <input
                         type="text"
-                        className="w-full bg-transparent outline-none p-1 pl-8 text-sm"
+                        className="w-full bg-transparent outline-none p-1 pl-8 text-sm border-0 focus:ring-0"
                         placeholder={selectedOptions.length === 0 ? placeholder : 'Add more...'}
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}

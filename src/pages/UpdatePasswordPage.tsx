@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { updateFirstLoginPassword } from '../api/user-api';
+import PasswordInput from '../components/PasswordInput';
 
 const PASSWORD_HINT = 'Must be at least 8 characters and include at least 1 letter and 1 number.';
 
@@ -24,9 +25,6 @@ export default function UpdatePasswordPage() {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [showCurrent, setShowCurrent] = useState(false);
-    const [showNew, setShowNew] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (!user) {
@@ -77,22 +75,11 @@ export default function UpdatePasswordPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Current / Temporary Password <span className="text-red-500">*</span>
                         </label>
-                        <div className="relative">
-                            <input
-                                type={showCurrent ? 'text' : 'password'}
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md shadow-sm p-3 pr-10 focus:ring-primary focus:border-primary text-sm"
-                                placeholder="Enter your current password"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowCurrent((v) => !v)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            >
-                                {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                        </div>
+                        <PasswordInput
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            placeholder="Enter your current password"
+                        />
                     </div>
 
                     {/* New password */}
@@ -100,22 +87,11 @@ export default function UpdatePasswordPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             New Password <span className="text-red-500">*</span>
                         </label>
-                        <div className="relative">
-                            <input
-                                type={showNew ? 'text' : 'password'}
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md shadow-sm p-3 pr-10 focus:ring-primary focus:border-primary text-sm"
-                                placeholder="Enter new password"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowNew((v) => !v)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            >
-                                {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                        </div>
+                        <PasswordInput
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Enter new password"
+                        />
                         <p className="text-xs text-gray-400 mt-1">{PASSWORD_HINT}</p>
                     </div>
 
@@ -124,22 +100,11 @@ export default function UpdatePasswordPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Confirm New Password <span className="text-red-500">*</span>
                         </label>
-                        <div className="relative">
-                            <input
-                                type={showConfirm ? 'text' : 'password'}
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md shadow-sm p-3 pr-10 focus:ring-primary focus:border-primary text-sm"
-                                placeholder="Re-enter new password"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirm((v) => !v)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                            >
-                                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                        </div>
+                        <PasswordInput
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Re-enter new password"
+                        />
                     </div>
 
                     <button
