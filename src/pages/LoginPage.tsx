@@ -21,7 +21,10 @@ export default function LoginPage() {
         e.preventDefault();
         setError('');
         try {
-            const data = await loginUser(email, password);
+            // Pass the current portal's company slug so the backend can enforce
+            // that the user belongs to this company (multi-tenant isolation).
+            const companySlug = company?.slug || import.meta.env.VITE_COMPANY_SLUG;
+            const data = await loginUser(email, password, companySlug);
             login(data.access_token);
 
             // Decode token to get role
