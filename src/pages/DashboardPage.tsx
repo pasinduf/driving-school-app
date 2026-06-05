@@ -152,10 +152,10 @@ function SummaryCard({
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-      <p className="text-sm font-medium text-gray-400 mb-1">{title}</p>
-      <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">{value}</h3>
+      <p className="text-sm font-medium text-gray-900 mb-1">{title}</p>
+      <h3 className="text-2xl sm:text-3xl font-bold text-primary-500">{value}</h3>
       {metric && (
-        <div className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold ${good ? 'text-emerald-600' : 'text-red-500'}`}>
+        <div className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold ${good ? "text-emerald-600" : "text-red-500"}`}>
           {change >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
           {changeLabel}
         </div>
@@ -186,7 +186,7 @@ function RecentBookingItem({ booking, onClick }: { booking: Booking; onClick: ()
       onClick={onClick}
       className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors text-left"
     >
-      <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">
+      <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-50 text-primary-500 flex items-center justify-center text-xs font-bold">
         {initials}
       </div>
       <div className="flex-1 min-w-0">

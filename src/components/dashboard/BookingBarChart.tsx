@@ -5,8 +5,8 @@ interface ChartPoint {
 
 /**
  * Lightweight, dependency-free bar chart for dashboard booking analytics.
- * Bars use a violet→indigo gradient with rounded tops; hovering reveals the
- * exact count. Handles the empty/no-data state gracefully.
+ * Bars use the company theme color (primary) gradient with rounded tops;
+ * hovering reveals the exact count. Handles the empty/no-data state gracefully.
  */
 export default function BookingBarChart({ data }: { data: ChartPoint[] }) {
   const max = Math.max(1, ...data.map((d) => d.count));
@@ -29,7 +29,7 @@ export default function BookingBarChart({ data }: { data: ChartPoint[] }) {
             <div className="flex-1 flex items-end justify-center">
               <div className="relative w-full max-w-[44px] mx-auto flex items-end" style={{ height: '100%' }}>
                 <div
-                  className="w-full rounded-t-lg bg-gradient-to-b from-violet-400 to-indigo-600 hover:from-violet-500 hover:to-indigo-700 transition-[height,background-color] duration-500 ease-out group/bar relative"
+                  className="w-full rounded-t-lg bg-gradient-to-b from-primary-400 to-primary-600 hover:from-primary-500 hover:to-primary-700 transition-[height,background-color] duration-500 ease-out group/bar relative"
                   style={{ height: `${Math.max(heightPct, d.count > 0 ? 4 : 0)}%` }}
                 >
                   <div className="opacity-0 group-hover/bar:opacity-100 transition-opacity absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[10px] font-semibold px-2 py-1 rounded whitespace-nowrap pointer-events-none">
