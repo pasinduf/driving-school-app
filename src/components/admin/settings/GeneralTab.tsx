@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, Copy, Check, ExternalLink } from 'lucide-react';
 import { updateCompanyGeneral } from '../../../api/company-api';
 import { useCompany } from '../../../context/CompanyContext';
 
@@ -98,6 +98,14 @@ export default function GeneralTab() {
                         </div>
 
                         <div className="md:col-span-2 pt-6 border-t">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">Portal Links</h3>
+                            <div className="grid grid-cols-1 gap-4 mt-4">
+                                <ReadOnlyUrlField label="Admin Panel URL" url={company?.adminPanelUrl} />
+                                <ReadOnlyUrlField label="Website URL" url={company?.websiteUrl} />
+                            </div>
+                        </div>
+
+                        <div className="md:col-span-2 pt-6 border-t">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Legal & Policies</h3>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Terms & Conditions</label>
                             <textarea
@@ -122,5 +130,52 @@ export default function GeneralTab() {
                 </button>
             </div>
         </form>
+    );
+}
+
+/** Read-only label/value URL row with a copy-to-clipboard button. */
+function ReadOnlyUrlField({ label, url }: { label: string; url?: string | null }) {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        if (!url) return;
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            toast.success('URL copied successfully');
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            toast.error('Failed to copy URL');
+        }
+    };
+
+    return (
+        <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+            <div className="flex items-center gap-2 w-full px-4 py-2 border border-gray-100 bg-gray-50 rounded-lg">
+                {url ? (
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 min-w-0 truncate text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                    >
+                        <span className="truncate">{url}</span>
+                        <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                ) : (
+                    <span className="flex-1 min-w-0 text-sm text-gray-400 italic">Not set</span>
+                )}
+                <button
+                    type="button"
+                    onClick={handleCopy}
+                    disabled={!url}
+                    title="Copy URL"
+                    className="shrink-0 p-1.5 rounded-md text-gray-500 hover:text-primary hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                    {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                </button>
+            </div>
+        </div>
     );
 }
