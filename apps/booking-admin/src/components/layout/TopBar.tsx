@@ -6,7 +6,7 @@ interface TopBarProps {
     linkLabel?: string;
 }
 
-export default function TopBar({ linkTo = '/', linkLabel = 'Dashboard11' }: TopBarProps) {
+export default function TopBar({ linkTo = '/', linkLabel = 'Dashboard' }: TopBarProps) {
 
     const { company } = useCompany() ?? null;
 
