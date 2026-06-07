@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Footer from './Footer';
 import TopBar from './layout/TopBar';
 import { useCompany } from '../context/CompanyContext';
+import { loginUrl, bookingUrl } from '../config';
 
 
 export default function Layout() {
@@ -18,7 +19,7 @@ export default function Layout() {
     <div className={isPortal ? "h-screen flex flex-col bg-gray-50 overflow-hidden" : "min-h-screen bg-gray-50 flex flex-col"}>
       <div className="sticky top-0 z-50 w-full shadow-sm">
         {/* Top Bar */}
-        <TopBar linkTo={isPortal ? "/" : user ? "/portal/dashboard" : "/login"} linkLabel={isPortal ? "Home" : user ? "Dashboard" : "Login"} />
+        <TopBar linkTo={loginUrl()} linkLabel="Login" />
 
         {/* Main Header */}
         {!isPortal && (
@@ -51,12 +52,12 @@ export default function Layout() {
                   )}
                 </nav>
                 {showFullNav && (
-                  <Link
-                    to="/booking"
+                  <a
+                    href={bookingUrl()}
                     className="px-6 py-3 bg-primary text-white font-bold rounded-full shadow-glow hover:opacity-90 transition-transform transform hover:scale-105"
                   >
                     BOOK LESSON
-                  </Link>
+                  </a>
                 )}
               </div>
 

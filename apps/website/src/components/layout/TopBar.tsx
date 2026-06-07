@@ -22,12 +22,21 @@ export default function TopBar({ linkTo = '/', linkLabel = 'Home' }: TopBarProps
                 </div>
                 <div className="ml-auto flex items-center space-x-6">
                     <span className="hidden sm:block">⏰ Mon - Sat : 8AM - 6PM</span>
-                    <Link
-                        to={linkTo}
-                        className="hover:text-primary transition-colors underline uppercase font-bold tracking-wide"
-                    >
-                        {linkLabel}
-                    </Link>
+                    {/^https?:\/\//.test(linkTo) ? (
+                        <a
+                            href={linkTo}
+                            className="hover:text-primary transition-colors underline uppercase font-bold tracking-wide"
+                        >
+                            {linkLabel}
+                        </a>
+                    ) : (
+                        <Link
+                            to={linkTo}
+                            className="hover:text-primary transition-colors underline uppercase font-bold tracking-wide"
+                        >
+                            {linkLabel}
+                        </Link>
+                    )}
                 </div>
             </div>
         </div>

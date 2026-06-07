@@ -1,12 +1,11 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { MasterDataProvider } from './context/MasterDataContext';
 import { Toaster } from 'sonner';
 import AdminPage from './pages/AdminPage';
@@ -28,6 +27,15 @@ const CompanyLayout = () => {
   );
 };
 
+// The booking-admin app has no marketing home page. The root route sends
+// users to their dashboard when authenticated, otherwise to login. We wait
+// for the auth state to resolve so a refresh doesn't redirect prematurely.
+const RootRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return <Navigate to={user ? '/portal/dashboard' : '/login'} replace />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -40,16 +48,18 @@ function App() {
         />
         <BrowserRouter>
           <Routes>
+            {/* Root: auth-based redirect (marketing home lives in the website app) */}
+            <Route path="/" element={<RootRedirect />} />
+
             {/* Public routes wrapped with Company Context for branding */}
             <Route element={<CompanyLayout />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-              {/* main web page & booking page routes */}
+              {/* public booking page */}
               <Route element={<Layout />}>
                 <Route path="/booking" element={<BookingPage />} />
-                <Route path="/" element={<HomePage />} />
               </Route>
 
             </Route>

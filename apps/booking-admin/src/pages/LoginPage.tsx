@@ -6,6 +6,7 @@ import { useCompany } from '../context/CompanyContext';
 import { loginUser } from '../api/auth-api';
 import { jwtDecode } from 'jwt-decode';
 import PasswordInput from '../components/PasswordInput';
+import { WEBSITE_URL } from '../config';
 
 export default function LoginPage() {
     const { login, user, loading } = useAuth();
@@ -98,7 +99,7 @@ export default function LoginPage() {
                         </button>
                     </form>
                     <div className="mt-5 text-center">
-                        <Link to="/" className="text-sm text-muted hover:text-primary transition-colors">← Back to home</Link>
+                        <a href={WEBSITE_URL} className="text-sm text-muted hover:text-primary transition-colors">← Back to home</a>
                     </div>
                 </div>
             </div>
