@@ -69,7 +69,7 @@ function AnalyticsDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <p className="text-sm font-medium text-gray-400">Welcome back</p>
+      <p className="text-sm font-medium text-gray-400">Welcome Back</p>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Operations overview</h1>
 
       {/* Summary Cards */}
