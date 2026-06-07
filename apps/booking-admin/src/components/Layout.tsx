@@ -13,7 +13,7 @@ export default function Layout() {
     <div className={isPortal ? "h-screen flex flex-col bg-gray-50 overflow-hidden" : "min-h-screen bg-gray-50 flex flex-col"}>
       <div className="sticky top-0 z-50 w-full shadow-sm">
         {/* Top Bar */}
-        <TopBar linkTo={isPortal ? "/" : user ? "/portal/dashboard" : "/login"} linkLabel={isPortal ? "Home" : user ? "Dashboard" : "Login"} />
+        <TopBar linkTo={isPortal ? "/" : user ? "/portal/dashboard" : "/login"} linkLabel={user ? "Dashboard" : "Login"} />
       </div>
 
       <main className={isPortal ? "flex-grow flex flex-col overflow-hidden" : "flex-grow"}>
