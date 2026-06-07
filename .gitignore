@@ -15,6 +15,9 @@ dist-ssr
 # Turborepo
 .turbo
 
+# Vercel Build Output API
+.vercel
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useCompany } from '../../context/CompanyContext';
 
 interface TopBarProps {
@@ -22,21 +21,15 @@ export default function TopBar({ linkTo = '/', linkLabel = 'Home' }: TopBarProps
                 </div>
                 <div className="ml-auto flex items-center space-x-6">
                     <span className="hidden sm:block">⏰ Mon - Sat : 8AM - 6PM</span>
-                    {/^https?:\/\//.test(linkTo) ? (
-                        <a
-                            href={linkTo}
-                            className="hover:text-primary transition-colors underline uppercase font-bold tracking-wide"
-                        >
-                            {linkLabel}
-                        </a>
-                    ) : (
-                        <Link
-                            to={linkTo}
-                            className="hover:text-primary transition-colors underline uppercase font-bold tracking-wide"
-                        >
-                            {linkLabel}
-                        </Link>
-                    )}
+                    {/* Cross-app link (login lives in booking-admin). Always a full
+                        navigation so a relative path (subpath hosting) is handled by
+                        the edge rewrite rather than the website's client router. */}
+                    <a
+                        href={linkTo}
+                        className="hover:text-primary transition-colors underline uppercase font-bold tracking-wide"
+                    >
+                        {linkLabel}
+                    </a>
                 </div>
             </div>
         </div>

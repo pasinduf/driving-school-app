@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
+import { bookingUrl } from '../config';
 
 
 export default function ImageCarousel() {
@@ -36,12 +36,12 @@ export default function ImageCarousel() {
           <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-2xl mx-auto drop-shadow-md font-light">
             Professional driving lessons tailored to your needs. Book online in minutes.
           </p>
-          <Link
-            to="/booking"
+          <a
+            href={bookingUrl()}
             className="inline-block bg-primary text-white font-bold py-4 px-10 rounded-full text-lg shadow-xl hover:opacity-90 transition-all transform hover:scale-105 hover:shadow-2xl"
           >
             Book Your Lesson
-          </Link>
+          </a>
         </div>
       </div>
 
