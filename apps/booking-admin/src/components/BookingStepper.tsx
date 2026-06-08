@@ -8,8 +8,8 @@ interface BookingStepperProps {
 
 const BookingStepper: React.FC<BookingStepperProps> = ({ currentStep, steps }) => {
     return (
-        <div className="w-full py-6">
-            <div className="flex items-center justify-center">
+        <div className="mx-auto w-full max-w-3xl">
+            <div className="flex items-start justify-between">
                 {steps.map((step, index) => {
                     const stepNumber = index + 1;
                     const isCompleted = stepNumber < currentStep;
@@ -17,25 +17,38 @@ const BookingStepper: React.FC<BookingStepperProps> = ({ currentStep, steps }) =
 
                     return (
                         <React.Fragment key={index}>
-                            {/* Step Circle */}
-                            <div className="flex flex-col items-center relative z-10">
-                                <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors duration-300 border-2
-                                        ${isCompleted ? 'bg-primary text-white border-primary' :
-                                            isCurrent ? 'bg-primary text-white border-primary' :
-                                                'bg-white text-gray-400 border-gray-300'
-                                        }`}
+                            {/* Step node */}
+                            <div className="flex flex-shrink-0 flex-col items-center">
+                                <div className="relative">
+                                    <div
+                                        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-300 sm:h-11 sm:w-11
+                                            ${isCompleted
+                                                ? 'border-primary bg-primary text-white'
+                                                : isCurrent
+                                                    ? 'border-primary bg-primary text-white scale-110 shadow-glow'
+                                                    : 'border-line bg-white text-gray-400'}`}
+                                    >
+                                        {isCompleted ? <Check className="h-5 w-5" /> : stepNumber}
+                                    </div>
+                                    {isCurrent && (
+                                        <span className="pointer-events-none absolute -inset-1 rounded-full border-2 border-primary/30 animate-pulse" />
+                                    )}
+                                </div>
+                                <span
+                                    className={`mt-2.5 w-16 text-center text-[11px] font-semibold leading-tight transition-colors sm:w-28 sm:text-xs
+                                        ${isCurrent || isCompleted ? 'text-primary' : 'text-gray-400'}`}
                                 >
-                                    {isCompleted ? <Check className="w-5 h-5" /> : stepNumber}
-                                </div>
-                                <div className={`absolute top-12 text-xs font-medium w-32 text-center ${isCurrent ? 'text-primary' : isCompleted ? 'text-primary' : 'text-gray-400'}`}>
                                     {step}
-                                </div>
+                                </span>
                             </div>
 
-                            {/* Connector Line */}
+                            {/* Connector */}
                             {index < steps.length - 1 && (
-                                <div className={`flex-1 h-1 mx-2 transition-colors duration-300 ${stepNumber < currentStep ? 'bg-primary' : 'bg-gray-200'}`} style={{ minWidth: '3rem' }}></div>
+                                <div className="relative mx-1 mt-5 h-1 flex-1 overflow-hidden rounded-full bg-line sm:mx-2 sm:mt-[22px]">
+                                    <div
+                                        className={`absolute inset-y-0 left-0 rounded-full bg-primary transition-all duration-500 ease-out ${isCompleted ? 'w-full' : 'w-0'}`}
+                                    />
+                                </div>
                             )}
                         </React.Fragment>
                     );

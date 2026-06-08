@@ -269,40 +269,59 @@ export default function BookingPage() {
   // SUCCESS VIEW
   if (successData) {
     return (
-      <div className="max-w-2xl mx-auto p-8 text-center space-y-6">
-        <div className="bg-green-100 text-green-800 p-6 rounded-lg">
-          <h2 className="text-2xl font-bold mb-2">Booking Submitted!</h2>
-          <p className="mb-4">Your booking has been submitted successfully. An instructor will contact you shortly.</p>
+      <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
+        <div className="w-full max-w-lg animate-fade-in rounded-3xl border border-line bg-white p-8 text-center shadow-card sm:p-10">
+          <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-full bg-green-100 text-green-600">
+            <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-ink">Booking Submitted!</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
+            Your booking has been submitted successfully. An instructor will contact you shortly.
+          </p>
 
           {successData.instructor && (
-            <div className="bg-white p-4 rounded-md shadow-sm inline-block text-left mt-4 border border-green-200">
-              <h3 className="font-semibold text-gray-900 mb-2">Driving Instructor</h3>
-              <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-                <span className="text-gray-500">Name:</span>
-                <span className="font-medium">{successData.instructor.name}</span>
-                <span className="text-gray-500">Contact:</span>
-                <span className="font-medium">{successData.instructor.contact}</span>
+            <div className="mt-6 rounded-2xl border border-line bg-surface p-5 text-left">
+              <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted">Driving Instructor</h3>
+              <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                <span className="text-muted">Name:</span>
+                <span className="font-semibold text-ink">{successData.instructor.name}</span>
+                <span className="text-muted">Contact:</span>
+                <span className="font-semibold text-ink">{successData.instructor.contact}</span>
               </div>
             </div>
           )}
+
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-8 w-full rounded-xl bg-primary px-6 py-3 font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:opacity-90 hover:shadow-glow"
+          >
+            Book Another
+          </button>
         </div>
-        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition-colors">
-          Book Another
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Progress Bar or Title */}
-      <h1 className="text-3xl font-bold mb-8 text-center">Book a Driving Lesson</h1>
-      <BookingStepper currentStep={step} steps={["Location & Instructor", "Package", "Date & Time", "Details"]} />
+    <div className="min-h-screen bg-surface">
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Book a Driving Lesson</h1>
+          <p className="mt-2 text-sm text-muted">Find an instructor, pick a package, and reserve your time — in a few simple steps.</p>
+        </div>
 
-      <div className="my-12">
+        {/* Stepper */}
+        <div className="rounded-2xl border border-line bg-white p-6 shadow-soft sm:p-8">
+          <BookingStepper currentStep={step} steps={["Location & Instructor", "Package", "Date & Time", "Details"]} />
+        </div>
+
+      <div className="my-10">
         {/* Step 1: Location */}
         {step === 1 && (
-          <div className="max-w-3xl mx-auto pt-12">
+          <div className="mx-auto max-w-3xl animate-fade-in rounded-2xl border border-line bg-white p-6 shadow-soft sm:p-8">
             <div className="space-y-4">
               <div className="flex flex-col md:flex-row items-end gap-4">
                 {/* Suburb Selection */}
@@ -334,7 +353,7 @@ export default function BookingPage() {
                 <div className="flex-1 w-full">
                   <label className="block text-sm font-medium mb-1 text-gray-700">Transmission</label>
                   <select
-                    className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    className="h-[46px] w-full rounded-lg border border-gray-200 bg-white px-3 text-ink outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-gray-100 disabled:text-gray-400"
                     onChange={(e) => {
                       setSelectedTransmission(e.target.value);
                       setSelectedInstructor(null);
@@ -353,7 +372,7 @@ export default function BookingPage() {
                     type="button"
                     onClick={() => setIsSearched(true)}
                     disabled={!selectedSuburb || !selectedTransmission || loadingInstructors || isFetching}
-                    className="w-full sm:w-auto px-6 py-2 bg-primary text-white font-medium rounded hover:bg-opacity-90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed h-[42px] flex items-center justify-center min-w-[120px]"
+                    className="flex h-[46px] w-full min-w-[120px] items-center justify-center rounded-lg bg-primary px-6 font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none sm:w-auto"
                   >
                     {isFetching ? <Loader2 className="animate-spin w-5 h-5" /> : "Search"}
                   </button>
@@ -458,7 +477,7 @@ export default function BookingPage() {
                 <div className="flex justify-end pt-4">
                   <button
                     onClick={handleStep1Next}
-                    className="gap-2 flex items-center px-6 py-2 border-2 border-primary text-primary font-medium rounded hover:opacity-80 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:opacity-90 hover:shadow-glow"
                   >
                     Next <ArrowRight className="w-4 h-4" />
                   </button>
@@ -470,12 +489,16 @@ export default function BookingPage() {
 
         {/* Step 2: Package */}
         {step === 2 && (
-          <div>
+          <div className="animate-fade-in">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-ink">Choose your package</h2>
+              <p className="mt-1 text-sm text-muted">Select the lesson package that suits you best.</p>
+            </div>
             <PackageSelect onSelect={setSelectedPackage} selectedPackage={selectedPackage} />
-            <div className="flex justify-between items-center pt-6">
+            <div className="flex items-center justify-between pt-8">
               <button
                 onClick={() => setStep(1)}
-                className="gap-2 flex items-center px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-medium transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-6 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
@@ -483,7 +506,7 @@ export default function BookingPage() {
               <button
                 onClick={handleStep2Next}
                 disabled={!selectedPackage}
-                className="gap-2 flex items-center px-6 py-2 border-2 border-primary text-primary rounded font-medium disabled:border-gray-300 disabled:text-gray-400 hover:opacity-80 transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
               >
                 Next <ArrowRight className="w-4 h-4" />
               </button>
@@ -493,20 +516,20 @@ export default function BookingPage() {
 
         {/* Step 3: Date & Slots */}
         {step === 3 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="md:col-span-1 space-y-6">
-              <div className="bg-blue-50 p-4 rounded-lg border border-primary mb-4">
-                <h3 className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Selected Package</h3>
-                <p className="text-lg font-medium text-primary">{selectedPackage?.name}</p>
+          <div className="grid animate-fade-in grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
+            <div className="space-y-6 md:col-span-1">
+              <div className="rounded-2xl border border-primary/30 bg-primary-50 p-4">
+                <h3 className="mb-1 text-[11px] font-bold uppercase tracking-wider text-primary">Selected Package</h3>
+                <p className="text-lg font-semibold text-primary">{selectedPackage?.name}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Select Date</label>
+                <label className="mb-1.5 block text-sm font-semibold text-ink">Select Date</label>
                 <DateDropdown suburbId={selectedSuburb!.id} instructorId={selectedInstructor?.id} selectedDate={selectedDate} onSelect={setSelectedDate} />
               </div>
 
               {/* Selected Slots List */}
-              <div className="bg-gray-50 p-4 rounded-lg border">
+              <div className="rounded-2xl border border-line bg-white p-5 shadow-soft">
                 {selectedPackage && (selectedPackage.name.includes("PACKAGE") || selectedPackage.name.includes("DRIVE TEST")) ? (
                   <h3 className="font-semibold mb-2">
                     Selected Slots ({selectedSlots.length}/{maxSlots})
@@ -520,14 +543,14 @@ export default function BookingPage() {
                   {[...selectedSlotDetails]
                     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
                     .map((slot, idx) => (
-                      <div key={idx} className="flex justify-between items-center bg-white p-2 rounded shadow-sm text-sm">
+                      <div key={idx} className="flex items-center justify-between rounded-lg border border-line bg-surface p-2.5 text-sm">
                         <div className="flex flex-col">
-                          <span className="font-medium text-gray-900">{format(parseBookingTime(slot.startTime), "EEE, d MMM yyyy")}</span>
-                          <span className="text-gray-600">
+                          <span className="font-semibold text-ink">{format(parseBookingTime(slot.startTime), "EEE, d MMM yyyy")}</span>
+                          <span className="text-muted">
                             {format(parseBookingTime(slot.startTime), "h:mm a")} - {format(parseBookingTime(slot.endTime), "h:mm a")}
                           </span>
                         </div>
-                        <button onClick={() => handleSlotClick(slot)} className="text-red-500 hover:text-red-700 p-1">
+                        <button onClick={() => handleSlotClick(slot)} className="rounded-md p-1.5 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -553,8 +576,8 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <>
-                  <p className="text-md font-semibold mt-8 mb-4">Available Time Slots</p>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  <p className="mb-4 mt-8 text-base font-bold text-ink">Available Time Slots</p>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                     {displaySlots.map((slot: Slot) => {
                       const isSelected = selectedSlots.some((s) => s.time === slot.startTime);
                       return (
@@ -562,11 +585,11 @@ export default function BookingPage() {
                           key={slot.startTime}
                           onClick={() => handleSlotClick(slot)}
                           disabled={!slot.available && !isSelected}
-                          className={`p-3 rounded border text-sm font-medium transition-colors ${isSelected
-                            ? "bg-primary text-white border-primary"
+                          className={`rounded-xl border p-3 text-sm font-semibold transition-all ${isSelected
+                            ? "border-primary bg-primary text-white shadow-glow"
                             : slot.available
-                              ? "bg-white text-primary border-primary hover:border-primary hover:shadow-md"
-                              : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                              ? "border-line bg-white text-ink hover:-translate-y-0.5 hover:border-primary hover:text-primary hover:shadow-soft"
+                              : "cursor-not-allowed border-line bg-gray-100 text-gray-400"
                             } `}
                         >
                           {format(parseBookingTime(slot.startTime), "h:mm a")}
@@ -575,7 +598,7 @@ export default function BookingPage() {
                       );
                     })}
                     {(!displaySlots || displaySlots.length === 0) && selectedDate && (
-                      <div className="col-span-full text-center py-10 text-gray-500">No available slots for this date.</div>
+                      <div className="col-span-full py-10 text-center text-muted">No available slots for this date.</div>
                     )}
                   </div>
                 </>
@@ -586,7 +609,7 @@ export default function BookingPage() {
                     setSelectedDate("");
                     setStep(2);
                   }}
-                  className="gap-2 flex items-center px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-medium transition-colors ml-2"
+                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-6 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50"
                 >
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
@@ -594,7 +617,7 @@ export default function BookingPage() {
                 <button
                   onClick={handleStep3Next}
                   disabled={selectedSlots.length === 0}
-                  className="gap-2 flex items-center px-6 py-2 border-2 border-primary text-primary rounded font-medium disabled:border-gray-300 disabled:text-gray-400 hover:opacity-80 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 font-semibold text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
                 >
                   Next <ArrowRight className="w-4 h-4" />
                 </button>
@@ -605,22 +628,25 @@ export default function BookingPage() {
 
         {/* Step 4: Details */}
         {step === 4 && (
-          <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow border">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b">
-              <h2 className="text-xl font-bold">Finalize Booking</h2>
-              <div className="text-red-600 font-medium bg-red-50 px-3 py-1 rounded">Time Remaining: {timeLeft}</div>
+          <div className="mx-auto max-w-2xl animate-fade-in rounded-2xl border border-line bg-white p-6 shadow-card sm:p-8">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+              <h2 className="text-xl font-bold text-ink">Finalize Booking</h2>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-600">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+                Time Remaining: {timeLeft}
+              </div>
             </div>
 
-            <div className="mb-6 p-4 bg-blue-100 rounded text-sm text-primary space-y-2">
+            <div className="mb-6 space-y-2 rounded-2xl border border-primary/20 bg-primary-50 p-4 text-sm text-primary">
               <p>
-                <strong>Instructor:</strong> {selectedInstructor?.name}
+                <strong className="font-semibold">Instructor:</strong> {selectedInstructor?.name}
               </p>
               <p>
-                <strong>Package:</strong> {selectedPackage?.name}
+                <strong className="font-semibold">Package:</strong> {selectedPackage?.name}
               </p>
               <div>
-                <strong>Selected Slots:</strong>
-                <ul className="list-disc list-inside mt-1 ml-1 space-y-1">
+                <strong className="font-semibold">Selected Slots:</strong>
+                <ul className="ml-1 mt-1 list-inside list-disc space-y-1">
                   {selectedSlotDetails.map((s, idx) => (
                     <li key={idx}>
                       {format(parseBookingTime(s.startTime), "MMM dd, yyyy")} ({format(parseBookingTime(s.startTime), "h:mm a")} - {format(parseBookingTime(s.endTime), "h:mm a")})
@@ -628,7 +654,7 @@ export default function BookingPage() {
                   ))}
                 </ul>
               </div>
-              <p className="font-bold pt-3 mt-2 border-t border-blue-200/50">Total Amount: ${getPrice()}</p>
+              <p className="mt-2 border-t border-primary/20 pt-3 text-base font-bold">Total Amount: ${getPrice()}</p>
             </div>
 
             <BookingForm
@@ -654,6 +680,7 @@ export default function BookingPage() {
             />
           </div>
         )}
+      </div>
       </div>
     </div>
   );

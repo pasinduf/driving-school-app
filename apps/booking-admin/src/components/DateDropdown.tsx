@@ -35,7 +35,7 @@ export default function DateDropdown({ suburbId, instructorId, onSelect, selecte
 
     return (
         <select
-            className="w-full border p-3 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
+            className="w-full rounded-lg border border-gray-200 bg-white p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
             value={selectedDate}
             onChange={(e) => onSelect(e.target.value)}
         >

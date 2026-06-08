@@ -105,7 +105,7 @@ export default function BookingForm({
           </label>
           <input type="hidden" {...register("suburb", { required: "Please select a suburb" })} />
           <input
-            className="w-full border p-2 rounded bg-gray-100 text-gray-500 cursor-not-allowed"
+            className="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 p-3 text-gray-500"
             disabled
             value={selectedSuburb ? `${selectedSuburb.name} (${selectedSuburb.postalcode})` : ""}
           />
@@ -120,7 +120,7 @@ export default function BookingForm({
             <input
               {...register("pickupAddress", { required: "Address is required" })}
               placeholder="Enter a complete address (including street)"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+              className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
             {errors.pickupAddress && <p className="text-red-500 text-sm mt-1">{errors.pickupAddress.message as string}</p>}
           </div>
@@ -149,7 +149,7 @@ export default function BookingForm({
                 </label>
                 <input
                   {...register("firstName", { required: "First name is required" })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+                  className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName.message as string}</p>}
               </div>
@@ -159,7 +159,7 @@ export default function BookingForm({
                 </label>
                 <input
                   {...register("lastName", { required: "Last name is required" })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+                  className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName.message as string}</p>}
               </div>
@@ -173,7 +173,7 @@ export default function BookingForm({
               <input
                 type="email"
                 {...register("email", { required: "Email is required", pattern: { value: EMAIL_REGEX, message: "Invalid email" } })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+                className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message as string}</p>}
             </div>
@@ -186,7 +186,7 @@ export default function BookingForm({
               <input
                 {...register("phone", { required: "Phone number is required" })}
                 placeholder="0400 000 000"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+                className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message as string}</p>}
             </div>
@@ -204,7 +204,7 @@ export default function BookingForm({
                       required: "Password is required",
                       minLength: { value: 8, message: "Password must be at least 8 characters" },
                     })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 pr-24 focus:ring-primary focus:border-primary"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 p-3 pr-24 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
                     <button type="button" onClick={generatePassword} className="text-xs text-primary hover:underline font-medium">
@@ -231,7 +231,7 @@ export default function BookingForm({
                       required: "Please confirm your password",
                       validate: (val) => watch("password") === val || "Passwords do not match",
                     })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 pr-10 focus:ring-primary focus:border-primary"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 p-3 pr-10 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <button
                     type="button"
@@ -279,7 +279,7 @@ export default function BookingForm({
                   </label>
                   <input
                     {...register("contactPersonFirstName", { required: "First name is required" })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                   {errors.contactPersonFirstName && <p className="text-red-500 text-sm mt-1">{errors.contactPersonFirstName.message as string}</p>}
                 </div>
@@ -289,7 +289,7 @@ export default function BookingForm({
                   </label>
                   <input
                     {...register("contactPersonLastName", { required: "Last name is required" })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                   {errors.contactPersonLastName && <p className="text-red-500 text-sm mt-1">{errors.contactPersonLastName.message as string}</p>}
                 </div>
@@ -302,7 +302,7 @@ export default function BookingForm({
               <input
                 type="email"
                 {...register("contactPersonEmail", { required: "Email is required", pattern: { value: EMAIL_REGEX, message: "Invalid email" } })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+                className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               {errors.contactPersonEmail && <p className="text-red-500 text-sm mt-1">{errors.contactPersonEmail.message as string}</p>}
             </div>
@@ -314,7 +314,7 @@ export default function BookingForm({
                 <input
                   {...register("contactPersonPhone", { required: "Phone number is required" })}
                   placeholder="0400 000 000"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+                  className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 {errors.contactPersonPhone && <p className="text-red-500 text-sm mt-1">{errors.contactPersonPhone.message as string}</p>}
               </div>
@@ -332,7 +332,7 @@ export default function BookingForm({
                         required: "Password is required",
                         minLength: { value: 6, message: "Password must be at least 6 characters" },
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 pr-24 focus:ring-primary focus:border-primary"
+                      className="mt-1 block w-full rounded-lg border border-gray-200 p-3 pr-24 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
                       <button type="button" onClick={generatePassword} className="text-xs text-primary hover:underline font-medium">
@@ -356,7 +356,7 @@ export default function BookingForm({
                         required: "Please confirm your password",
                         validate: (val) => watch("password") === val || "Passwords do not match",
                       })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 pr-10 focus:ring-primary focus:border-primary"
+                      className="mt-1 block w-full rounded-lg border border-gray-200 p-3 pr-10 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                     />
                     <button
                       type="button"
@@ -390,7 +390,7 @@ export default function BookingForm({
               </label>
               <select
                 {...register("relation", { required: "Please select a relation" })}
-                className="w-full border p-2 rounded disabled:bg-gray-100 disabled:text-gray-400"
+                className="mt-1 w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-gray-100 disabled:text-gray-400"
               >
                 <option value="">Please select </option>
                 {relations.map((r) => (
@@ -409,7 +409,7 @@ export default function BookingForm({
         <label className="block text-sm font-medium text-gray-700">Notes (Optional)</label>
         <textarea
           {...register("notes")}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
+          className="mt-1 block w-full rounded-lg border border-gray-200 p-3 text-ink shadow-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
           rows={2}
         />
       </div>
@@ -457,13 +457,13 @@ export default function BookingForm({
         </div>
       )}
 
-      <div className="flex justify-end space-x-3 pt-6 border-t">
-        <button type="button" onClick={onCancel} className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50" disabled={isSubmitting}>
+      <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end">
+        <button type="button" onClick={onCancel} className="rounded-lg border border-gray-200 px-6 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50" disabled={isSubmitting}>
           Cancel
         </button>
         <button
           type="submit"
-          className={`px-8 py-2 bg-primary text-white rounded-md hover:bg-primary font-medium ${isSubmitting || !termsAccepted ? "opacity-50 cursor-not-allowed" : ""}`}
+          className={`rounded-lg bg-primary px-8 py-2.5 font-semibold text-white shadow-sm transition-all hover:opacity-90 ${isSubmitting || !termsAccepted ? "cursor-not-allowed opacity-50" : "hover:-translate-y-0.5 hover:shadow-glow"}`}
           disabled={isSubmitting || !termsAccepted}
         >
           {isSubmitting ? "Confirming..." : "Confirm Booking"}
