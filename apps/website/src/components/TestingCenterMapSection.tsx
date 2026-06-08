@@ -18,6 +18,13 @@ L.Marker.prototype.options.icon = DefaultIcon;
 export default function TestingCenterMapSection() {
     const { testingCenters: centers, loading: isLoading, error } = useMasterData();
 
+    // Only render "Our Locations" when this company has active testing centers
+    // configured. While loading / on error / when empty, render nothing so the
+    // section never appears as an empty placeholder.
+    if (isLoading || error || !centers || centers.length === 0) {
+        return null;
+    }
+
     // Default center (Melbourne)
     const defaultCenter: [number, number] = [-37.8136, 144.9631];
 

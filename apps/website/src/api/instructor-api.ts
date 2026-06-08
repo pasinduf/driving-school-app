@@ -25,7 +25,9 @@ export interface Instructor {
 }
 
 export const fetchTestingCenters = async () => {
-    const response = await apiClient.get<TestingCenter[]>('/testing-centers');
+    // Only this company's active testing centers (resolved from the slug).
+    const slug = import.meta.env.VITE_COMPANY_SLUG;
+    const response = await apiClient.get<TestingCenter[]>(`/testing-centers/public/${slug}`);
     return response.data;
 };
 

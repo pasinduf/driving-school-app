@@ -20,6 +20,7 @@ export interface CompanyDetails {
   settings: {
     themeColor: string;
     bookingSessionDuration: number;
+    testingCentersEnabled?: boolean;
   };
   carouselImages?: CarouselImage[];
 }
