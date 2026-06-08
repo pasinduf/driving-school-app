@@ -303,7 +303,7 @@ function TestingCentersSection() {
                                     <input
                                         value={row.name}
                                         onChange={(e) => updateRow(row.key, { name: e.target.value })}
-                                        placeholder="e.g. Deer Park Testing Center"
+                                        placeholder="e.g. Deer Park"
                                         className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                     />
                                 </div>
