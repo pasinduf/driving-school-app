@@ -388,7 +388,7 @@ export default function BookingPage() {
                       <Loader2 className="animate-spin w-4 h-4" /> <span>Finding instructors...</span>
                     </div>
                   ) : availableInstructors.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {availableInstructors.map((instructor) => (
                         <label
                           key={instructor.id}
