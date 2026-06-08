@@ -95,6 +95,52 @@
     .dm-badge {
         @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
     }
+
+    /* Small uppercase "eyebrow" label above section headings (Drive Me style). */
+    .dm-eyebrow {
+        @apply inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-bold uppercase tracking-widest text-primary;
+    }
+
+    /* Section heading + lead paragraph rhythm. */
+    .dm-heading {
+        @apply text-3xl font-extrabold tracking-tight text-ink sm:text-4xl;
+    }
+}
+
+@layer utilities {
+    /* Tints the company primary into a soft heading gradient (brand-safe). */
+    .text-gradient-primary {
+        background-image: linear-gradient(120deg,
+            var(--color-primary, #d2232a),
+            color-mix(in srgb, var(--color-primary, #d2232a) 55%, #7c3aed) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Subtle grid + radial-fade backdrop for hero/section backgrounds. */
+    .bg-grid {
+        background-image:
+            linear-gradient(to right, rgb(15 23 42 / 0.045) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(15 23 42 / 0.045) 1px, transparent 1px);
+        background-size: 56px 56px;
+    }
+    .bg-radial-fade {
+        -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%);
+        mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 60%, transparent 100%);
+    }
+
+    /* Frosted sticky header. */
+    .glass {
+        background: rgb(255 255 255 / 0.85);
+        backdrop-filter: saturate(180%) blur(12px);
+        -webkit-backdrop-filter: saturate(180%) blur(12px);
+    }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .glass {
+            background: rgb(255 255 255 / 0.98);
+        }
+    }
 }
 
 input[type="checkbox"] {

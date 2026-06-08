@@ -11,7 +11,7 @@ export default function Footer() {
   const address = company?.address || '';
 
   return (
-    <footer id="contact" className="bg-gray-900 text-white pt-10 pb-4">
+    <footer id="contact" className="border-t-4 border-primary bg-gray-900 text-white pt-12 pb-5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between md:items-start gap-12 mb-8">
           {/* Brand Column */}

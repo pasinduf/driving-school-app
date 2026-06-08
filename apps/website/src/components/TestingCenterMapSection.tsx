@@ -31,19 +31,13 @@ export default function TestingCenterMapSection() {
     return (
         <section className="py-20 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 uppercase tracking-tight">
-                        Our Locations
-                    </h2>
-                    <p className="text-gray-500 italic mb-4 text-lg">Find a testing center near you</p>
-                    <div className="flex justify-center items-center">
-                        <div className="h-[2px] w-16 bg-gray-300"></div>
-                        <span className="text-3xl mx-2">📍</span>
-                        <div className="h-[2px] w-16 bg-gray-300"></div>
-                    </div>
+                <div className="mx-auto mb-12 max-w-2xl text-center">
+                    <span className="dm-eyebrow">📍 Locations</span>
+                    <h2 className="dm-heading mt-4">Our Locations</h2>
+                    <p className="mt-3 text-muted">Find a testing center near you.</p>
                 </div>
 
-                <div className="h-[500px] w-full rounded-2xl overflow-hidden shadow-xl border border-gray-200 z-0 relative">
+                <div className="relative z-0 h-[500px] w-full overflow-hidden rounded-2xl border border-line shadow-card">
                     {isLoading ? (
                         <div className="h-full w-full flex items-center justify-center bg-gray-100">
                             Loading map...

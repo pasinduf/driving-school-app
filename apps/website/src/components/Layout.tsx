@@ -16,57 +16,50 @@ export default function Layout() {
   const isPortal = location.pathname.startsWith('/portal');
 
   return (
-    <div className={isPortal ? "h-screen flex flex-col bg-gray-50 overflow-hidden" : "min-h-screen bg-gray-50 flex flex-col"}>
-      <div className="sticky top-0 z-50 w-full shadow-sm">
+    <div className={isPortal ? "h-screen flex flex-col bg-surface overflow-hidden" : "min-h-screen bg-white flex flex-col"}>
+      <div className="sticky top-0 z-50 w-full">
         {/* Top Bar */}
         <TopBar linkTo={loginUrl()} linkLabel="Login" />
 
         {/* Main Header */}
         {!isPortal && (
-          <header className="bg-white">
+          <header className="glass border-b border-line">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-              <Link to="/" className="text-3xl font-bold text-primary tracking-tight" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                {company?.logoUrl ? <img src={company?.logoUrl} alt="Logo" className="w-36 h-36 object-contain shrink-0" /> : <p>{company?.name || ''}</p>}
+              <Link to="/" className="text-2xl font-extrabold tracking-tight text-primary" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                {company?.logoUrl ? <img src={company?.logoUrl} alt="Logo" className="h-12 w-auto max-w-[160px] object-contain shrink-0" /> : <span>{company?.name || ''}</span>}
               </Link>
 
-              <div className="hidden md:flex items-center space-x-8">
-                <nav className="flex space-x-6 font-medium text-gray-700">
-                  <Link to="/" className="hover:text-primary transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                    HOME
+              <div className="hidden md:flex items-center gap-8">
+                <nav className="flex items-center gap-1 text-sm font-medium text-muted">
+                  <Link to="/" className="rounded-full px-3 py-2 transition-colors hover:text-ink" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                    Home
                   </Link>
                   {showFullNav && (
                     <>
-                      <a href="/#about" className="hover:text-primary transition-colors">
-                        ABOUT
-                      </a>
-                      <a href="/#packages" className="hover:text-primary transition-colors">
-                        PACKAGES
-                      </a>
-                      <a href="/#testimonial" className="hover:text-primary transition-colors">
-                        TESTIMONIAL
-                      </a>
-                      <a href="/#contact" className="hover:text-primary transition-colors">
-                        CONTACT
-                      </a>
+                      <a href="/#about" className="rounded-full px-3 py-2 transition-colors hover:text-ink">About</a>
+                      <a href="/#packages" className="rounded-full px-3 py-2 transition-colors hover:text-ink">Packages</a>
+                      <a href="/#testimonial" className="rounded-full px-3 py-2 transition-colors hover:text-ink">Testimonials</a>
+                      <a href="/#contact" className="rounded-full px-3 py-2 transition-colors hover:text-ink">Contact</a>
                     </>
                   )}
                 </nav>
                 {showFullNav && (
                   <a
                     href={bookingUrl()}
-                    className="px-6 py-3 bg-primary text-white font-bold rounded-full shadow-glow hover:opacity-90 transition-transform transform hover:scale-105"
+                    className="inline-flex items-center rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-glow transition-all hover:-translate-y-0.5 hover:opacity-95"
                   >
-                    BOOK LESSON
+                    Book a Lesson
                   </a>
                 )}
               </div>
 
               <div className="md:hidden">
-                <button className="text-gray-700 hover:text-primary focus:outline-none">
-                  <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
+                <a
+                  href={bookingUrl()}
+                  className="inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                >
+                  Book
+                </a>
               </div>
             </div>
           </header>

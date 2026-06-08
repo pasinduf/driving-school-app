@@ -99,14 +99,10 @@ export default function PricingSection() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight uppercase">Our Pricing Plans</h2>
-                    <p className="text-gray-500 italic mb-4">Choose the package that suits you best</p>
-                    <div className="flex justify-center items-center">
-                        <div className="h-[2px] w-16 bg-gray-300"></div>
-                        <span className="text-3xl mx-2">🚦</span>
-                        <div className="h-[2px] w-16 bg-gray-300"></div>
-                    </div>
+                <div className="mx-auto mb-12 max-w-2xl text-center">
+                    <span className="dm-eyebrow">Pricing</span>
+                    <h2 className="dm-heading mt-4">Our Pricing Plans</h2>
+                    <p className="mt-3 text-muted">Choose the package that suits you best.</p>
                 </div>
 
                 {/* Grid */}

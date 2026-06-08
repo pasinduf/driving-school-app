@@ -74,9 +74,9 @@ export default function TestimonialSection() {
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
 
             <div className="max-w-5xl mx-auto px-4 relative z-10">
-                <div className="text-center mb-8">
-                    <h2 className="text-sm font-bold text-primary tracking-[0.2em] uppercase mb-4">Testimonials</h2>
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight uppercase">What Our Students Say</h2>
+                <div className="mx-auto mb-10 max-w-2xl text-center">
+                    <span className="dm-eyebrow">Testimonials</span>
+                    <h2 className="dm-heading mt-4">What Our Students Say</h2>
                 </div>
 
                 <div className="relative">

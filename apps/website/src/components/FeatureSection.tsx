@@ -4,12 +4,12 @@ import { FileText, Car, Rocket, User, Clock, Signpost } from 'lucide-react';
 const FeatureItem = ({ icon: Icon, title, description, align = 'left' }: { icon: any, title: string, description: string, align?: 'left' | 'right' }) => {
     return (
         <div className={`flex ${align === 'right' ? 'flex-row-reverse text-right' : 'flex-row text-left'} items-start gap-4 mb-8 group`}>
-            <div className={`p-3 rounded-full border-2 border-primary text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-white`}>
-                <Icon size={28} />
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary-50 text-primary ring-1 ring-primary/15 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:bg-primary group-hover:text-white">
+                <Icon size={26} />
             </div>
             <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">{description}</p>
+                <h3 className="mb-1.5 text-lg font-bold text-ink">{title}</h3>
+                <p className="text-sm leading-relaxed text-muted">{description}</p>
             </div>
         </div>
     );
@@ -20,14 +20,10 @@ export default function FeatureSection() {
         <section className="py-20 bg-white overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight uppercase">Our Features</h2>
-                    <p className="text-gray-500 italic mb-4">Master driving skills with our comprehensive features</p>
-                    <div className="flex justify-center items-center">
-                        <div className="h-[2px] w-16 bg-gray-300"></div>
-                        <span className="text-3xl mx-2">🚦</span>
-                        <div className="h-[2px] w-16 bg-gray-300"></div>
-                    </div>
+                <div className="mx-auto mb-16 max-w-2xl text-center">
+                    <span className="dm-eyebrow">Why choose us</span>
+                    <h2 className="dm-heading mt-4">Everything you need to learn to drive</h2>
+                    <p className="mt-3 text-muted">Master driving skills with our comprehensive, learner-friendly features.</p>
                 </div>
 
                 {/* Grid */}

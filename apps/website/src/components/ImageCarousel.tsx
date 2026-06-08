@@ -21,27 +21,54 @@ export default function ImageCarousel() {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
 
   return (
-    <div className="relative h-[600px] w-full overflow-hidden bg-gray-900">
+    <div className="relative h-[88vh] max-h-[760px] min-h-[560px] w-full overflow-hidden bg-ink">
       {/* Slides */}
       {carouselImages.map((img, index) => (
         <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? "opacity-100" : "opacity-0"}`}>
-          <img src={img} alt={`Slide ${index + 1}`} className="w-full h-full object-cover opacity-60" />
+          <img src={img} alt={`Slide ${index + 1}`} className="w-full h-full object-cover" />
         </div>
       ))}
 
+      {/* Legibility scrim */}
+      <div className="absolute inset-0 bg-gradient-to-b from-ink/65 via-ink/45 to-ink/80" />
+
       {/* Overlay Content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 z-10">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-lg tracking-tight animate-fade-in-up">Master the Road with Confidence</h1>
-          <p className="text-xl md:text-2xl text-gray-100 mb-10 max-w-2xl mx-auto drop-shadow-md font-light">
+        <div className="mx-auto max-w-4xl">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white backdrop-blur animate-fade-up"
+          >
+            ★ Trusted local driving school
+          </span>
+          <h1
+            className="mt-6 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-white drop-shadow-lg sm:text-6xl md:text-7xl animate-fade-up"
+            style={{ animationDelay: '0.06s' }}
+          >
+            Master the Road with Confidence
+          </h1>
+          <p
+            className="mx-auto mt-6 max-w-2xl text-pretty text-lg font-light leading-relaxed text-white/85 drop-shadow md:text-xl animate-fade-up"
+            style={{ animationDelay: '0.12s' }}
+          >
             Professional driving lessons tailored to your needs. Book online in minutes.
           </p>
-          <a
-            href={bookingUrl()}
-            className="inline-block bg-primary text-white font-bold py-4 px-10 rounded-full text-lg shadow-xl hover:opacity-90 transition-all transform hover:scale-105 hover:shadow-2xl"
+          <div
+            className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row animate-fade-up"
+            style={{ animationDelay: '0.18s' }}
           >
-            Book Your Lesson
-          </a>
+            <a
+              href={bookingUrl()}
+              className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-white shadow-glow transition-all hover:-translate-y-0.5 hover:opacity-95"
+            >
+              Book Your Lesson
+            </a>
+            <a
+              href="/#packages"
+              className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-8 py-3.5 text-base font-semibold text-white backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-white/20"
+            >
+              View Packages
+            </a>
+          </div>
         </div>
       </div>
 
