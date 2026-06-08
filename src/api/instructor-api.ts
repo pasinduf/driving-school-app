@@ -65,3 +65,8 @@ export const deleteInstructor = async (id: string) => {
     const response = await apiClient.delete(`/instructors/${id}`);
     return response.data;
 };
+
+export const resetInstructorPassword = async (id: string, password: string) => {
+    const response = await apiClient.post(`/instructors/${id}/reset-password`, { password });
+    return response.data;
+};

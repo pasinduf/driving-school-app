@@ -40,7 +40,7 @@ export default function Holidays() {
             setHolidayReason('');
             queryClient.invalidateQueries({ queryKey: ['adminHolidays'] });
         } catch (error) {
-            toast.error("Failed to create leave/block date");
+            toast.error("Failed to create leave/block date.");
         } finally {
             setIsAddingHoliday(false);
         }

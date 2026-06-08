@@ -82,7 +82,7 @@ export default function ResetPasswordPage() {
                   minLength: { value: 8, message: "Password must be at least 8 characters" },
                 })}
                 disabled={!token || !email || loading}
-                className={`w-full px-4 py-2 bg-gray-50 border ${errors.newPassword ? "border-red-300 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"} rounded-lg focus:outline-none focus:ring-2 transition-all text-sm pr-10`}
+                className={`w-full pr-10 ${errors.newPassword ? "border-red-300 focus:border-red-300 focus:ring-red-200" : ""}`}
               />
               <button
                 type="button"
@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
                   validate: (val) => watch("newPassword") === val || "Passwords do not match",
                 })}
                 disabled={!token || !email || loading}
-                className={`w-full px-4 py-2 bg-gray-50 border ${errors.confirmPassword ? "border-red-300 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"} rounded-lg focus:outline-none focus:ring-2 transition-all text-sm pr-10`}
+                className={`w-full pr-10 ${errors.confirmPassword ? "border-red-300 focus:border-red-300 focus:ring-red-200" : ""}`}
               />
               <button
                 type="button"

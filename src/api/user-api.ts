@@ -25,3 +25,8 @@ export const changePassword = async (data: any) => {
     const response = await apiClient.put('/users/profile/password', data);
     return response.data;
 };
+
+export const updateFirstLoginPassword = async (data: { currentPassword: string; newPassword: string }) => {
+    const response = await apiClient.post('/auth/update-first-login-password', data);
+    return response.data as { access_token: string };
+};

@@ -119,11 +119,11 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
                     </p>
                 </div>
                 <div>
-                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm ring-1 ring-inset ring-gray-300" aria-label="Pagination">
+                    <nav className="isolate inline-flex -space-x-px rounded-xl shadow-sm ring-1 ring-inset ring-line overflow-hidden" aria-label="Pagination">
                         <button
                             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
-                            className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 focus:z-20 hover:bg-gray-100 hover:text-gray-600 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            className="relative inline-flex items-center rounded-l-xl px-2 py-2 text-gray-400 focus:z-20 hover:bg-gray-100 hover:text-gray-600 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                         >
                             <span className="sr-only">Previous</span>
                             <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -135,7 +135,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
                         <button
                             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                             disabled={currentPage === totalPages}
-                            className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 focus:z-20 hover:bg-gray-100 hover:text-gray-600 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            className="relative inline-flex items-center rounded-r-xl px-2 py-2 text-gray-400 focus:z-20 hover:bg-gray-100 hover:text-gray-600 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                         >
                             <span className="sr-only">Next</span>
                             <ChevronRight className="h-5 w-5" aria-hidden="true" />

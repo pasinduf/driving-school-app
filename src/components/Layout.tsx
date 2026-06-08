@@ -25,7 +25,7 @@ export default function Layout() {
           <header className="bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
               <Link to="/" className="text-3xl font-bold text-primary tracking-tight" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                {company?.logoUrl ? <img src={company?.logoUrl} alt="Logo" className="w-36 h-36 object-contain shrink-0" /> : <p>LOGO</p>}
+                {company?.logoUrl ? <img src={company?.logoUrl} alt="Logo" className="w-36 h-36 object-contain shrink-0" /> : <p>{company?.name || ''}</p>}
               </Link>
 
               <div className="hidden md:flex items-center space-x-8">
@@ -53,7 +53,7 @@ export default function Layout() {
                 {showFullNav && (
                   <Link
                     to="/booking"
-                    className="px-6 py-3 bg-primary text-white font-bold rounded shadow-lg hover:bg-red-700 transition-transform transform hover:scale-105"
+                    className="px-6 py-3 bg-primary text-white font-bold rounded-full shadow-glow hover:opacity-90 transition-transform transform hover:scale-105"
                   >
                     BOOK LESSON
                   </Link>

@@ -15,6 +15,8 @@ export interface CompanyDetails {
   address: string;
   terms?: string;
   logoUrl?: string;
+  adminPanelUrl?: string | null;
+  websiteUrl?: string | null;
   settings: {
     themeColor: string;
     bookingSessionDuration: number;

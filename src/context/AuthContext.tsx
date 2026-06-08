@@ -12,7 +12,8 @@ interface User {
     name: string;
     companyId: string;
     existMultipleInstructors: boolean;
-    profileImage?:string
+    profileImage?: string;
+    mustChangePassword?: boolean;
 }
 
 interface AuthContextType {

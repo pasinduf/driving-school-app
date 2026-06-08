@@ -14,7 +14,7 @@ export default function TopBar({ linkTo = '/', linkLabel = 'Home' }: TopBarProps
     const email = company?.contactEmail || '';
 
     return (
-        <div className="bg-gray-900 text-white text-sm py-2 z-50 shrink-0">
+        <div className="bg-gray-950 text-white text-sm py-2 z-50 shrink-0">
             <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
                 <div className="flex space-x-4">
                     <span>📞{phone}</span>

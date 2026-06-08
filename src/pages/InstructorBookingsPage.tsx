@@ -16,15 +16,15 @@ import {
   subWeeks,
   addDays,
   subDays,
-  parseISO,
   startOfDay,
   endOfDay
 } from 'date-fns';
+import { parseBookingTime } from '../util/parseBookingTime';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, X, AlertCircle, Edit, List, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import Spinner from '../components/Spinner';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { fetchInstructorBookings, cancelBooking, updateManualBooking } from '../api/booking-api';
+import { fetchInstructorBookings, cancelBooking, updateManualBooking, completeBooking } from '../api/booking-api';
 import { fetchPackages } from '../api/package-api';
 import ManualBookingModal from '../components/ManualBookingModal';
 import { CALENDAR_END_HOUR, CALENDAR_START_HOUR } from '../util/const';
@@ -61,6 +61,11 @@ export default function InstructorBookingsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [bookingToDelete, setBookingToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Mark-as-completed State (table view only)
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const [bookingToComplete, setBookingToComplete] = useState<string | null>(null);
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
 
   // View Toggle State
   const [viewMode, setViewMode] = useState<"calendar" | "table">("calendar");
@@ -102,6 +107,7 @@ export default function InstructorBookingsPage() {
   const {
     data: bookingData,
     isLoading: isCalendarLoading,
+    isFetching: isCalendarFetching,
     isError: isCalendarError,
     refetch: refetchCalendar,
   } = useQuery<BookingsResponse>({
@@ -121,6 +127,7 @@ export default function InstructorBookingsPage() {
   const {
     data: tableBookingData,
     isLoading: isTableLoading,
+    isFetching: isTableFetching,
     isError: isTableError,
     refetch: refetchTable,
   } = useQuery<BookingsResponse>({
@@ -137,7 +144,13 @@ export default function InstructorBookingsPage() {
     enabled: !!user && viewMode === "table",
   });
 
-  const isLoading = viewMode === "calendar" ? isCalendarLoading : isTableLoading;
+  // Drive the spinner with isFetching too, so it also shows during view switching,
+  // calendar navigation, search, pagination, and refetches (keepPreviousData keeps
+  // isLoading false after the first fetch, so isLoading alone misses those cases).
+  const isLoading =
+    viewMode === "calendar"
+      ? isCalendarLoading || isCalendarFetching
+      : isTableLoading || isTableFetching;
   const isError = viewMode === "calendar" ? isCalendarError : isTableError;
   const refetch = viewMode === "calendar" ? refetchCalendar : refetchTable;
 
@@ -187,7 +200,7 @@ export default function InstructorBookingsPage() {
   const getSlotsForDay = (day: Date) => {
     return bookings
       .filter((b) => b.status === "CONFIRMED")
-      .flatMap((booking) => booking.bookingSlots.filter((slot) => isSameDay(parseISO(slot.startTime), day)).map((slot) => ({ booking, slot })));
+      .flatMap((booking) => booking.bookingSlots.filter((slot) => isSameDay(parseBookingTime(slot.startTime), day)).map((slot) => ({ booking, slot })));
   };
 
   const getStatusColor = (booking: Booking) => {
@@ -198,8 +211,8 @@ export default function InstructorBookingsPage() {
   };
 
   const calculateBlockStyles = (startTimeISO: string, endTimeISO: string) => {
-    const start = parseISO(startTimeISO);
-    const end = parseISO(endTimeISO);
+    const start = parseBookingTime(startTimeISO);
+    const end = parseBookingTime(endTimeISO);
 
     const startHourNum = start.getHours() + start.getMinutes() / 60;
     const endHourNum = end.getHours() + end.getMinutes() / 60;
@@ -240,7 +253,7 @@ export default function InstructorBookingsPage() {
   };
 
   const handleEditClick = (booking: Booking) => {
-    const start = parseISO(booking.bookingSlots[0].startTime);
+    const start = parseBookingTime(booking.bookingSlots[0].startTime);
     if (start < new Date()) {
       toast.error("Cannot edit past bookings.");
       return;
@@ -266,8 +279,24 @@ export default function InstructorBookingsPage() {
     }
   };
 
+  const handleMarkCompleted = async () => {
+    if (!bookingToComplete) return;
+    setCompletingId(bookingToComplete);
+    try {
+      await completeBooking(bookingToComplete);
+      toast.success("Booking marked as completed.");
+      setIsCompleteModalOpen(false);
+      setBookingToComplete(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to mark booking as completed.");
+    } finally {
+      setCompletingId(null);
+    }
+  };
+
   const handleDragStart = (e: React.DragEvent, booking: Booking) => {
-    const start = parseISO(booking.bookingSlots[0].startTime);
+    const start = parseBookingTime(booking.bookingSlots[0].startTime);
     if (start < new Date()) {
       e.preventDefault();
       return;
@@ -310,8 +339,8 @@ export default function InstructorBookingsPage() {
     const booking = bookings.find((b) => b.id === bookingId);
     if (!booking || !booking.isManualBooking) return;
 
-    const originalStart = parseISO(booking.bookingSlots[0].startTime);
-    const originalEnd = parseISO(booking.bookingSlots[0].endTime);
+    const originalStart = parseBookingTime(booking.bookingSlots[0].startTime);
+    const originalEnd = parseBookingTime(booking.bookingSlots[0].endTime);
     const durationMinutes = (originalEnd.getTime() - originalStart.getTime()) / (1000 * 60);
 
     try {
@@ -346,7 +375,9 @@ export default function InstructorBookingsPage() {
   }
 
   return (
-    <main className={`w-full flex flex-col ${viewMode === 'calendar' ? 'h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] overflow-hidden' : 'h-auto overflow-visible mb-10'}`}>
+    <main
+      className={`w-full flex flex-col ${viewMode === "calendar" ? "h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] overflow-hidden" : "h-auto overflow-visible mb-10"}`}
+    >
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 px-1 shrink-0">
         <div className="flex items-center gap-4">
@@ -385,8 +416,9 @@ export default function InstructorBookingsPage() {
                   <button
                     key={v}
                     onClick={() => setView(v)}
-                    className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium transition-all rounded-md ${view === v ? "bg-white text-primary shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
-                      }`}
+                    className={`flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium transition-all rounded-md ${
+                      view === v ? "bg-white text-primary shadow-sm ring-1 ring-gray-900/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/50"
+                    }`}
                   >
                     {v}
                   </button>
@@ -469,7 +501,7 @@ export default function InstructorBookingsPage() {
         </div>
       )}
 
-      <div className={`flex-1 ${viewMode === 'calendar' ? 'overflow-y-auto' : ''}`}>
+      <div className={`flex-1 ${viewMode === "calendar" ? "overflow-y-auto" : ""}`}>
         {isLoading ? (
           <div className="h-[500px] flex items-center justify-center bg-white rounded-xl border border-gray-200 shadow-sm">
             <Spinner text={`Loading ${viewMode}...`} />
@@ -501,6 +533,7 @@ export default function InstructorBookingsPage() {
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Suburb</th>
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Package</th>
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Price</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Type</th>
                           <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
                         </tr>
                       </thead>
@@ -516,13 +549,26 @@ export default function InstructorBookingsPage() {
                               <div className="flex flex-col gap-1.5">
                                 {booking.bookingSlots.map((slot, idx) => (
                                   <div key={idx} className="flex flex-col">
-                                    <span className="text-sm text-gray-900">{format(parseISO(slot.startTime), "PPP")}</span>
+                                    <span className="text-sm text-gray-900">{format(parseBookingTime(slot.startTime), "PPP")}</span>
                                     <span className="text-xs text-gray-500 font-medium">
-                                      {format(parseISO(slot.startTime), "p")} - {format(parseISO(slot.endTime), "p")}
+                                      {format(parseBookingTime(slot.startTime), "p")} - {format(parseBookingTime(slot.endTime), "p")}
                                     </span>
                                   </div>
                                 ))}
                               </div>
+                              {booking.status === "CONFIRMED" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setBookingToComplete(booking.id);
+                                    setIsCompleteModalOpen(true);
+                                  }}
+                                  disabled={completingId === booking.id}
+                                  className="mt-2 px-3 py-1.5 text-xs font-bold rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                  {completingId === booking.id ? "Updating..." : "Mark as Completed"}
+                                </button>
+                              )}
                             </td>
                             <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
                               <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Instructor</span>
@@ -553,21 +599,37 @@ export default function InstructorBookingsPage() {
                             </td>
                             <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
                               <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Price</span>
-                              <span className="text-sm font-black text-primary">${booking.price}</span>
+                              <span className="text-sm text-primary">${booking.price}</span>
+                            </td>
+                            <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
+                              <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Type</span>
+                              <span
+                                className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
+                              >
+                                {booking.isManualBooking ? "Manual" : "Web"}
+                              </span>
                             </td>
                             <td className="px-4 py-4 md:px-6 whitespace-nowrap block md:table-cell">
                               <span className="md:hidden block text-[10px] font-bold text-gray-400 uppercase mb-1">Status</span>
                               <span
-                                className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.status === "CANCELLED" ? "bg-red-50 text-red-700 border-red-200" : booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
+                                className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${
+                                  booking.status === "CANCELLED"
+                                    ? "bg-red-50 text-red-700 border-red-200"
+                                    : booking.status === "COMPLETED"
+                                      ? "bg-blue-50 text-blue-700 border-blue-200"
+                                      : booking.status === "PENDING"
+                                        ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                        : "bg-green-50 text-green-700 border-green-200"
+                                }`}
                               >
-                                {booking.isManualBooking ? "Manual" : booking.status}
+                                {booking.status === "CONFIRMED" ? "PENDING" : booking.status}
                               </span>
                             </td>
                           </tr>
                         ))}
                         {(tableBookingData?.data || []).length === 0 && (
                           <tr>
-                            <td colSpan={7} className="px-6 py-20 text-center">
+                            <td colSpan={8} className="px-6 py-20 text-center">
                               <div className="flex flex-col items-center">
                                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                   <Search className="w-8 h-8 text-gray-300" />
@@ -628,7 +690,7 @@ export default function InstructorBookingsPage() {
                               {daySlots.map(({ booking, slot }) => (
                                 <div
                                   key={booking.id + slot.startTime}
-                                  draggable={booking.isManualBooking && parseISO(slot.startTime) > new Date()}
+                                  draggable={booking.isManualBooking && parseBookingTime(slot.startTime) > new Date()}
                                   onDragStart={(e) => handleDragStart(e, booking)}
                                   className={`text-xs px-2 py-1.5 rounded border shadow-sm flex flex-col gap-0.5 relative group mr-[1px]
                               ${getStatusColor(booking)} cursor-pointer hover:shadow transition-shadow ${booking.isManualBooking ? "active:cursor-grabbing" : ""}`}
@@ -641,10 +703,11 @@ export default function InstructorBookingsPage() {
                                   {booking.isManualBooking ? (
                                     <>
                                       <div className="flex justify-between items-start font-semibold">
-                                        <span>{format(parseISO(slot.startTime), "h:mm a")}</span>
+                                        <span>{format(parseBookingTime(slot.startTime), "h:mm a")}</span>
                                       </div>
-                                      <div className="truncate opacity-90 font-medium">{booking.note || "Manual Booking"}</div>
-                                      {parseISO(slot.startTime) > new Date() && (
+                                      {booking.customerName && <div className="truncate font-semibold">{booking.customerName}</div>}
+                                      <div className="truncate opacity-75 text-[10px]">{booking.note || "Manual Booking"}</div>
+                                      {parseBookingTime(slot.startTime) > new Date() && (
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -669,10 +732,10 @@ export default function InstructorBookingsPage() {
                                   ) : (
                                     <>
                                       <div className="flex items-center justify-between font-semibold pr-1">
-                                        <span>{format(parseISO(slot.startTime), "h:mm a")}</span>
+                                        <span>{format(parseBookingTime(slot.startTime), "h:mm a")}</span>
                                         <span className="truncate max-w-[50px] ml-1 opacity-70 font-normal">{booking.transmission?.substring(0, 4)}</span>
                                       </div>
-                                      <div className="truncate opacity-90 font-medium">{booking.package || "Lesson"}</div>
+                                      <div className="truncate opacity-90 font-medium">{booking.bookingDetails?.customerFirstName || "Web Booking"}</div>
                                       {booking.suburb && <div className="truncate text-[10px] opacity-75">{booking.suburb.name}</div>}
                                     </>
                                   )}
@@ -779,15 +842,16 @@ export default function InstructorBookingsPage() {
                                   return (
                                     <div
                                       key={booking.id + slot.startTime}
-                                      draggable={booking.isManualBooking && parseISO(slot.startTime) > new Date()}
+                                      draggable={booking.isManualBooking && parseBookingTime(slot.startTime) > new Date()}
                                       onDragStart={(e) => handleDragStart(e, booking)}
                                       className={`rounded-md border flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow group relative
                                       ${getStatusColor(booking)} cursor-pointer ${booking.isManualBooking ? "p-1 active:cursor-grabbing" : "p-2"}`}
                                       style={styles}
-                                      title={`${booking.isManualBooking
-                                        ? `${booking.customerName} - ${booking.note}` || "Manual Booking"
-                                        : `${booking?.bookingDetails?.customerFirstName} - ${booking?.bookingDetails?.notes}`
-                                        }`}
+                                      title={`${
+                                        booking.isManualBooking
+                                          ? `${booking.customerName} - ${booking.note}` || "Manual Booking"
+                                          : `${booking?.bookingDetails?.customerFirstName} - ${booking?.bookingDetails?.notes}`
+                                      }`}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedBookingForDetails(booking);
@@ -795,12 +859,15 @@ export default function InstructorBookingsPage() {
                                     >
                                       <div className="text-xs font-semibold flex justify-between items-start mb-0.5">
                                         <span className="truncate pr-4">
-                                          {format(parseISO(slot.startTime), "h:mm")} - {format(parseISO(slot.endTime), "h:mm a")}
+                                          {format(parseBookingTime(slot.startTime), "h:mm")} - {format(parseBookingTime(slot.endTime), "h:mm a")}
                                         </span>
                                       </div>
                                       {booking.isManualBooking ? (
                                         <>
-                                          <div className="text-[10px] sm:text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
+                                          {booking.customerName && (
+                                            <div className="text-[10px] sm:text-xs font-semibold truncate leading-tight pr-4">{booking.customerName}</div>
+                                          )}
+                                          <div className="text-[10px] sm:text-xs font-medium truncate leading-tight opacity-75 group-hover:whitespace-normal group-hover:z-20 transition-all pr-4">
                                             {booking.note || "Manual Booking"}
                                           </div>
                                           <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
@@ -815,7 +882,7 @@ export default function InstructorBookingsPage() {
                                               <X className="w-3 h-3" />
                                             </button>
                                           </div>
-                                          {parseISO(slot.startTime) > new Date() && (
+                                          {parseBookingTime(slot.startTime) > new Date() && (
                                             <button
                                               onClick={(e) => {
                                                 e.stopPropagation();
@@ -830,7 +897,7 @@ export default function InstructorBookingsPage() {
                                       ) : (
                                         <>
                                           <div className="text-xs font-medium truncate leading-tight group-hover:whitespace-normal group-hover:z-20 transition-all">
-                                            {booking.package || "Lesson"}
+                                            {booking.bookingDetails?.customerFirstName || "Web Booking"}
                                           </div>
                                           {booking.suburb && (
                                             <div className="text-[10px] opacity-75 truncate mt-auto hidden sm:block">
@@ -869,13 +936,7 @@ export default function InstructorBookingsPage() {
           packages={packages}
         />
 
-        {selectedBookingForDetails && (
-          <BookingDetailsModal
-            isOpen={true}
-            onClose={setSelectedBookingForDetails}
-            booking={selectedBookingForDetails}
-          />
-        )}
+        {selectedBookingForDetails && <BookingDetailsModal isOpen={true} onClose={setSelectedBookingForDetails} booking={selectedBookingForDetails} />}
 
         {/* Confirmation Modal */}
         <ConfirmationModal
@@ -891,6 +952,22 @@ export default function InstructorBookingsPage() {
           confirmText="Delete"
           cancelText="Close"
           variant="danger"
+        />
+
+        {/* Mark as Completed Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={isCompleteModalOpen}
+          onClose={() => {
+            setIsCompleteModalOpen(false);
+            setBookingToComplete(null);
+          }}
+          onConfirm={handleMarkCompleted}
+          isConfirming={!!completingId}
+          title="Mark as Completed"
+          message="Are you sure you want to mark this booking as completed?"
+          confirmText="Complete"
+          cancelText="Cancel"
+          variant="primary"
         />
       </div>
     </main>

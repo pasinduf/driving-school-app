@@ -20,6 +20,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
         return <Navigate to="/login" replace />;
     }
 
+    if (user.mustChangePassword) {
+        return <Navigate to="/portal/update-password" replace />;
+    }
+
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         return <Navigate to="/portal/dashboard" replace />;
     }

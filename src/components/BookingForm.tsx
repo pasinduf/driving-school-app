@@ -215,7 +215,10 @@ export default function BookingForm({
                     </button>
                   </div>
                 </div>
-                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message as string}</p>}
+                {errors.password
+                  ? <p className="text-red-500 text-sm mt-1">{errors.password.message as string}</p>
+                  : <p className="text-gray-400 text-xs mt-1">Password must be at least 8 characters long and include at least 1 letter and 1 number.</p>
+                }
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">

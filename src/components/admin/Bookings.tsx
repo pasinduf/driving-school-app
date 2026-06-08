@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchBookings } from '../../api/booking-api';
 import { searchInstructorsDropdown } from '../../api/instructor-api';
 import { format } from 'date-fns';
+import { parseBookingTime } from '../../util/parseBookingTime';
 import Spinner from '../Spinner';
 import Pagination from '../Pagination';
 import SearchableDropdown from '../SearchableDropdown';
@@ -100,7 +101,8 @@ export default function Bookings() {
         ) : (
           <>
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Date & Time</th>
@@ -109,6 +111,7 @@ export default function Bookings() {
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Suburb</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Package</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Type</th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500  uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
@@ -125,8 +128,8 @@ export default function Bookings() {
                           {booking.bookingSlots.map((slot: any, idx: number) => (
                             <div key={idx} className="py-1">
                               <>
-                                <div className="text-sm font-medium text-gray-900">{slot ? format(new Date(slot.startTime), "PPP") : "N/A"}</div>
-                                {format(new Date(slot.startTime), "h:mm a")} - {format(new Date(slot.endTime), "h:mm a")}
+                                <div className="text-sm font-medium text-gray-900">{slot ? format(parseBookingTime(slot.startTime), "PPP") : "N/A"}</div>
+                                {format(parseBookingTime(slot.startTime), "h:mm a")} - {format(parseBookingTime(slot.endTime), "h:mm a")}
                               </>
                             </div>
                           ))}
@@ -153,39 +156,52 @@ export default function Bookings() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-black text-primary">${booking.price}</span>
+                        <span className="text-sm text-primary">${booking.price}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span
+                            className={`px-3 py-1 inline-flex whitespace-nowrap text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
+                          >
+                            {booking.isManualBooking ? "Manual" : "Web"}
+                          </span>
+                          {/* {booking.status === "CANCELLED" && <span className="px-3 inline-flex text-[10px] font-black uppercase text-red-700">Cancelled</span>} */}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`px-3 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${booking.status === "CANCELLED" ? "bg-red-50 text-red-700 border-red-200" : booking.isManualBooking ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-green-50 text-green-700 border-green-200"}`}
+                          className={`px-3 py-1 inline-flex whitespace-nowrap text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm border ${
+                            booking.status === "CANCELLED"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : booking.status === "COMPLETED"
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : booking.status === "PENDING"
+                                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                  : "bg-green-50 text-green-700 border-green-200"
+                          }`}
                         >
-                          {booking.isManualBooking ? "Manual" : booking.status}
+                          {booking.status === "CONFIRMED" ? "PENDING" : booking.status}
                         </span>
                       </td>
                     </tr>
                   ))}
                   {bookings.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                         No bookings found.
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
 
             <Pagination currentPage={page} totalPages={Math.ceil(totalBookings / limit)} onPageChange={setPage} />
           </>
         )}
 
-        {selectedBookingForDetails && (
-          <BookingDetailsModal
-            isOpen ={true}
-            onClose={setSelectedBookingForDetails}
-            booking={selectedBookingForDetails}
-          />
-        )}
+        {selectedBookingForDetails && <BookingDetailsModal isOpen={true} onClose={setSelectedBookingForDetails} booking={selectedBookingForDetails} />}
       </div>
     );
 }

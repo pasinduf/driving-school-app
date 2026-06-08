@@ -38,8 +38,8 @@ export default function ConfirmationModal({
 
     return (
         <div className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose}></div>
-            <div className={`bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 overflow-hidden relative transform transition-all duration-200 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
+            <div className="absolute inset-0 bg-gray-950/40 backdrop-blur-sm" onClick={onClose}></div>
+            <div className={`bg-white rounded-2xl shadow-card border border-line w-full max-w-sm mx-4 overflow-hidden relative transform transition-all duration-200 ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}>
 
                 <button
                     onClick={onClose}
@@ -57,7 +57,7 @@ export default function ConfirmationModal({
                         <button
                             onClick={onClose}
                             disabled={isConfirming}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm w-24"
+                            className="px-4 py-2 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm w-24"
                         >
                             {cancelText}
                         </button>
@@ -67,7 +67,7 @@ export default function ConfirmationModal({
                             }}
                             disabled={isConfirming}
                             className={
-                                `px-4 py-2 text-white rounded-md transition-colors font-medium text-sm w-24 flex items-center justify-center ${variant === 'danger' ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-400' : 'bg-primary hover:bg-opacity-90 disabled:opacity-50'}`
+                                `px-4 py-2 text-white rounded-xl transition-colors font-medium text-sm w-24 flex items-center justify-center ${variant === 'danger' ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-400' : 'bg-primary hover:opacity-90 disabled:opacity-50'}`
                             }
                         >
                             {isConfirming ? (

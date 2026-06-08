@@ -56,7 +56,7 @@ export default function TestingCenterMapSection() {
                                 attribution=''
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
-                            {centers.map((center) => (
+                            {centers?.map((center) => (
                                 center.latitude && center.longitude ? (
                                     <Marker
                                         key={center.id}

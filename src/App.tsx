@@ -17,6 +17,7 @@ import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import { Navigate, Outlet } from 'react-router-dom';
 import MyBookingsPage from './pages/MyBookingsPage';
+import UpdatePasswordPage from './pages/UpdatePasswordPage';
 import { CompanyProvider } from './context/CompanyContext';
 
 const CompanyLayout = () => {
@@ -31,7 +32,12 @@ function App() {
   return (
     <AuthProvider>
       <MasterDataProvider>
-        <Toaster position="top-right" richColors />
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{ className: 'rounded-xl border border-line shadow-card' }}
+        />
         <BrowserRouter>
           <Routes>
             {/* Public routes wrapped with Company Context for branding */}
@@ -46,6 +52,11 @@ function App() {
                 <Route path="/" element={<HomePage />} />
               </Route>
 
+            </Route>
+
+            {/* Force-password-change screen — authenticated but bypasses ProtectedRoute redirect loop */}
+            <Route element={<CompanyLayout />}>
+              <Route path="/portal/update-password" element={<UpdatePasswordPage />} />
             </Route>
 
             <Route element={<CompanyLayout />}>
