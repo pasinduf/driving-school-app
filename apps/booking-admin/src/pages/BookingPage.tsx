@@ -382,13 +382,17 @@ export default function BookingPage() {
               {/* Instructor Selection */}
               {isSearched && selectedSuburb && selectedTransmission ? (
                 <div className="pt-2">
-                  <label className="block text-sm font-medium mb-2">Available Instructors</label>
+                  <label className="block text-sm font-semibold text-ink mb-2">Available Instructors</label>
                   {loadingInstructors ? (
                     <div className="flex items-center space-x-2 text-gray-500">
                       <Loader2 className="animate-spin w-4 h-4" /> <span>Finding instructors...</span>
                     </div>
                   ) : availableInstructors.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <>
+                      <p className="mb-3 rounded-lg border border-primary/20 bg-primary-50 px-3 py-2 text-sm font-medium text-primary">
+                        Select an instructor to continue.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {availableInstructors.map((instructor) => (
                         <label
                           key={instructor.id}
@@ -446,7 +450,8 @@ export default function BookingPage() {
                           </div>
                         </label>
                       ))}
-                    </div>
+                      </div>
+                    </>
                   ) : (
                     <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm border border-yellow-200">
                       No available instructors found for the selected suburb and transmission.
