@@ -17,12 +17,23 @@ export interface CompanyDetails {
   logoUrl?: string;
   adminPanelUrl?: string | null;
   websiteUrl?: string | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  twitterUrl?: string | null;
+  tiktokUrl?: string | null;
   settings: {
     themeColor: string;
     bookingSessionDuration: number;
     testingCentersEnabled?: boolean;
   };
   carouselImages?: CarouselImage[];
+}
+
+export interface SocialLinks {
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  twitterUrl?: string | null;
+  tiktokUrl?: string | null;
 }
 
 export interface CompanySettings {
@@ -49,6 +60,11 @@ export const updateCompanyGeneral = async (data: Partial<CompanyDetails>) => {
 
 export const updateCompanySettings = async (data: Partial<CompanySettings>) => {
   const response = await apiClient.put("/companies/settings", data);
+  return response.data;
+};
+
+export const updateCompanySocial = async (data: SocialLinks) => {
+  const response = await apiClient.put("/companies/social", data);
   return response.data;
 };
 

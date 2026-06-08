@@ -17,6 +17,10 @@ export interface CompanyDetails {
   logoUrl?: string;
   adminPanelUrl?: string | null;
   websiteUrl?: string | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  twitterUrl?: string | null;
+  tiktokUrl?: string | null;
   settings: {
     themeColor: string;
     bookingSessionDuration: number;

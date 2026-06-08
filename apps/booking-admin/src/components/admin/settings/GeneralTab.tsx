@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Save, Loader2, Copy, Check, ExternalLink, MapPin, Plus, Trash2 } from 'lucide-react';
-import { updateCompanyGeneral } from '../../../api/company-api';
+import { Save, Loader2, Copy, Check, ExternalLink, MapPin, Plus, Trash2, Share2 } from 'lucide-react';
+import { updateCompanyGeneral, updateCompanySocial } from '../../../api/company-api';
 import {
     fetchManagedTestingCenters,
     saveTestingCenters,
@@ -139,6 +139,122 @@ export default function GeneralTab() {
 
             {/* Testing Centers / Locations — managed separately so it can be saved any time */}
             <TestingCentersSection />
+
+            {/* Social Media Links — shown in the public website footer */}
+            <SocialMediaSection />
+        </div>
+    );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Social Media Links management                                              */
+/* -------------------------------------------------------------------------- */
+
+const SOCIAL_FIELDS = [
+    { key: 'facebookUrl', label: 'Facebook', placeholder: 'https://facebook.com/yourpage' },
+    { key: 'instagramUrl', label: 'Instagram', placeholder: 'https://instagram.com/yourhandle' },
+    { key: 'twitterUrl', label: 'Twitter (X)', placeholder: 'https://x.com/yourhandle' },
+    { key: 'tiktokUrl', label: 'TikTok', placeholder: 'https://tiktok.com/@yourhandle' },
+] as const;
+
+type SocialKey = (typeof SOCIAL_FIELDS)[number]['key'];
+
+/** Optional URL: empty allowed; if present it must be a valid http(s) URL. */
+function isValidOptionalUrl(value: string): boolean {
+    const v = value.trim();
+    if (!v) return true;
+    try {
+        const url = new URL(v);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+function SocialMediaSection() {
+    const queryClient = useQueryClient();
+    const { company } = useCompany();
+
+    const [values, setValues] = useState<Record<SocialKey, string>>({
+        facebookUrl: '',
+        instagramUrl: '',
+        twitterUrl: '',
+        tiktokUrl: '',
+    });
+
+    // Seed from the loaded company.
+    useEffect(() => {
+        if (!company) return;
+        setValues({
+            facebookUrl: company.facebookUrl ?? '',
+            instagramUrl: company.instagramUrl ?? '',
+            twitterUrl: company.twitterUrl ?? '',
+            tiktokUrl: company.tiktokUrl ?? '',
+        });
+    }, [company]);
+
+    const mutation = useMutation({
+        mutationFn: updateCompanySocial,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['company'] });
+            toast.success('Social media links saved');
+        },
+        onError: (err: any) =>
+            toast.error(err?.response?.data?.message || 'Failed to save social links'),
+    });
+
+    const handleSave = () => {
+        const invalid = SOCIAL_FIELDS.find((f) => !isValidOptionalUrl(values[f.key]));
+        if (invalid) {
+            toast.error(`Enter a valid ${invalid.label} URL (including http:// or https://).`);
+            return;
+        }
+        mutation.mutate({
+            facebookUrl: values.facebookUrl.trim(),
+            instagramUrl: values.instagramUrl.trim(),
+            twitterUrl: values.twitterUrl.trim(),
+            tiktokUrl: values.tiktokUrl.trim(),
+        });
+    };
+
+    return (
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                    <Share2 className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Social Media Links</h3>
+                    <p className="text-sm text-gray-500">Shown as icons in your public website footer. All optional.</p>
+                </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {SOCIAL_FIELDS.map((f) => (
+                    <div key={f.key}>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+                        <input
+                            type="url"
+                            value={values[f.key]}
+                            onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                            placeholder={f.placeholder}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        />
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-6 pt-5 border-t flex justify-end">
+                <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={mutation.isPending}
+                    className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-lg hover:bg-opacity-90 transition-all font-medium disabled:opacity-50"
+                >
+                    {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Save Social Links
+                </button>
+            </div>
         </div>
     );
 }
